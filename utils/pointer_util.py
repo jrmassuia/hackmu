@@ -1,0 +1,599 @@
+import ctypes
+import struct
+import time
+from ctypes import wintypes
+
+import pymem
+
+user32 = ctypes.WinDLL("user32", use_last_error=True)
+
+
+class Pointers:
+
+    def __init__(self, hwnd, max_retries=3, retry_delay=1.0):
+        self.pm = None
+        self.MODULE_NAME = "mucabrasil.exe"  # Nome do módulo do jogo
+
+        self.CLIENT = None
+        pid = self.get_pid_from_handle(hwnd)
+
+        for tentativa in range(max_retries):
+            try:
+                self.pm = pymem.Pymem()
+                self.pm.open_process_from_id(pid)
+                self.CLIENT = self.pm.base_address
+                break
+            except RuntimeError as e:
+                print(f"[ERRO] Tentativa {tentativa + 1}: {e}")
+                time.sleep(retry_delay)
+        else:
+            raise RuntimeError("Não foi possível conectar ao processo após várias tentativas.")
+
+        try:
+            # -- NECESSARIOS ATUALIZAR
+            self.Y_POINTER = self.get_pointer(self.CLIENT + 0x025B0C44, offsets=[0xA4])
+            self.X_POINTER = self.get_pointer(self.CLIENT + 0x025B0C44, offsets=[0xA8])
+            #
+            self.MAGIA_POINTER = self.get_pointer(self.CLIENT + 0x0008E1DC, offsets=[0x0])
+            #
+            self.HP_POINTER = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x28])
+            self.HP_POINTER_MAX = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x28]) + 0x8
+            self.SD_POINTER = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x38])
+            self.SD_POINTER_MAX = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x38]) + 0x4
+            self.ZEN_POINTER1 = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0xA80])
+            self.NOME_CHAR_POINTER = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x0])
+            self.PONTO_LVL_POINTER = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x88])
+            self.RESET_POINTER = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x10])
+            self.LVL_POINTER = self.get_pointer(self.CLIENT + 0x0352D864, offsets=[0x0]) + 0x0E
+            #
+            self.MOSTRAR_DESC_POINTER = self.get_pointer(self.CLIENT + 0x0429EBCC, offsets=[0x18])
+            #
+            self.PAINEL_LATERAL_ABERTO_POINTER = self.get_pointer(self.CLIENT + 0x00295554, offsets=[0xA0])
+
+            #
+            # pointer_base = self.CLIENT + 0x0352D864
+            # if pointer_base:
+            #     print(f"Dump da estrutura em 0x{pointer_base:08X}:")
+            #
+            #     # Exemplo: ler os primeiros 32 bytes como WORDs
+            #     for offset in range(0, 32, 2):  # WORD = 2 bytes
+            #         addr = pointer_base + offset
+            #         data = self.pm.read_bytes(addr, 2)
+            #         value = int.from_bytes(data, byteorder='little', signed=False)
+            #         print(f"[0x{offset:02X}] = {value}")
+
+
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao inicializar ponteiros: {e}")
+
+        try:
+            ##PARA ESTUDAR E DESCOBRIR
+            pass
+            # -- TESTES ----
+            # self.ITEM_PICK_POINTER = self.CLIENT + 0x41EB737
+            #
+            # self.FPS_POINTER = self.get_pointer(self.CLIENT + 0x001D8CA0, offsets=[0x0])
+            #
+            # self.ITEM_SELECIONADO_INVENTARIO_POINTER = self.get_pointer(self.CLIENT + 0x03A99B38, offsets=[0x3E0])
+            # self.QTD_ITEM_SELECIONADO_INVENTARIO_POINTER = self.get_pointer(self.CLIENT + 0x0009193C, offsets=[0xC])
+            #
+            # self.DETECCAO_SM_DL_MG_PROX_POINTER = self.get_pointer(self.CLIENT + 0x0009A5A8, offsets=[0x20])
+            #
+            # self.DETECCAO_ELF_PROX_POINTER = self.get_pointer(self.CLIENT + 0x0006AE90,
+            #                                                   offsets=[0x5C8, 0x4C, 0x4C, 0x488, 0xF0])
+            #
+            # self.DETECCAO_MG_PROX_POINTER = self.get_pointer(self.CLIENT + 0x0003A6D0,
+            #                                                  offsets=[0x288, 0x138, 0xA40, 0x198, 0x58C])
+            #
+            # self.DETECCAO_SM_PROX_POINTER = self.get_pointer(self.CLIENT + 0x03A8F4AC,
+            #                                                  offsets=[0x180, 0x980, 0x2F8, 0x28, 0x4EC])
+        except:
+            pass
+
+    def imprimir_todos_tipos_do_endereco_memoria(self, endereco_raiz=None, tamanho=0x0B00):
+        """
+        Lê a estrutura apontada por (CLIENT + 0x0352D864) e imprime todos os tipos
+        em cada offset (BYTE/WORD/DWORD/FLOAT), caminhando byte a byte.
+
+        - endereco_raiz: se None, usa self.CLIENT + 0x0352D864 e dereferencia.
+                         se você já souber o endereço real da estrutura, passe-o aqui.
+        - tamanho: bytes a ler a partir da base da estrutura (ex.: 0x0B00 cobre offsets até ~0xA80).
+        """
+        import struct
+
+        try:
+            if endereco_raiz is None:
+                # 1) endereço estático que contém o ponteiro da estrutura
+                ptr_addr = self.CLIENT + 0x0352D864
+                # 2) deref para obter a base real da estrutura
+                struct_base = self.pm.read_int(ptr_addr)  # use read_longlong em processo 64-bit
+            else:
+                struct_base = endereco_raiz
+
+            if not struct_base:
+                print("[ERRO] Ponteiro raiz nulo/zero ao dereferenciar 0x0352D864.")
+                return
+
+            print(f"\n📦 Dump da estrutura em 0x{struct_base:08X} ({tamanho} bytes):")
+
+            buffer = self.pm.read_bytes(struct_base, tamanho)
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao ler memória: {e}")
+            return
+
+        for offset in range(len(buffer)):
+            linha = f"[0x{offset:04X}] "
+
+            # BYTE
+            b = buffer[offset]
+            linha += f"BYTE={b:<3} (0x{b:02X})  "
+
+            # WORD (precisa de +1)
+            if offset + 1 < len(buffer):
+                w = int.from_bytes(buffer[offset:offset + 2], "little", signed=False)
+                linha += f"WORD={w:<5} (0x{w:04X})  "
+
+            # DWORD/FLOAT (precisa de +3)
+            if offset + 3 < len(buffer):
+                d = int.from_bytes(buffer[offset:offset + 4], "little", signed=False)
+                linha += f"DWORD={d:<10} (0x{d:08X})  "
+                try:
+                    f = struct.unpack("<f", buffer[offset:offset + 4])[0]
+                    linha += f"FLOAT={f:.6f}  "
+                except Exception:
+                    linha += "FLOAT=ERR  "
+
+            print(linha)
+
+        # Extra: tentativa de string ASCII limpa
+        try:
+            ascii_string = buffer.decode('ascii', errors='ignore')
+            limpa = ''.join(c for c in ascii_string if c.isprintable()).strip()
+            for stop_char in ['\x00', '\x03', '\n', '\r']:
+                if stop_char in limpa:
+                    limpa = limpa.split(stop_char)[0]
+            print(f"\n🔹 ASCII STRING: '{limpa}'")
+        except Exception:
+            print("Erro ao decodificar como ASCII string.")
+
+    def get_pid_from_handle(self, hwnd):
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        return pid.value
+
+    def get_pointer(self, base, offsets):
+        try:
+            address = base
+            for offset in offsets:
+                address = self.pm.read_int(address) + offset
+            return address
+        except Exception as e:
+            print(f"[ERRO] get_pointer falhou: {e}")
+            return None
+
+    def read_value(self, address, data_type="byte"):
+        if address is None:
+            return None
+        try:
+            if data_type == "byte":
+                return self.pm.read_bytes(address, 1)[0]
+            elif data_type == "int":
+                return self.pm.read_int(address)
+            elif data_type == "float":
+                return self.pm.read_float(address)
+            elif data_type == "string":
+                return self.pm.read_string(address)
+            elif data_type == "short":
+                return self.pm.read_short(address)
+            elif data_type == "word":  # unsigned short (16 bits)
+                data = self.pm.read_bytes(address, 2)
+                return int.from_bytes(data, byteorder='little', signed=False)
+            else:
+                print(f"[ERRO] Tipo de dado desconhecido: {data_type}")
+                return None
+        except Exception as e:
+            print(f"[WARN] Erro ao ler valor do endereço {hex(address)}: {e}")
+            return None
+
+    def teste_pointer_necessarios(self):
+        print('HP:' + str(self.get_hp()))
+        print('HP MAX:' + str(self.get_hp_max()))
+        print('SD:' + str(self.get_sd()))
+        print('SD MAX:' + str(self.get_sd_max()))
+        print('ZEN:' + str(self.get_zen()))
+        print('MAGIA:' + str(self.get_magia()))
+        print('Y:' + str(self.get_cood_y()))
+        print('X:' + str(self.get_cood_x()))
+        print('NOME:' + str(self.get_nome_char()))
+        print('PONTO LVL:' + str(self.get_ponto_lvl()))
+        print('RESET:' + str(self.get_reset()))
+        print('LEVEL:' + str(self.get_lvl()))
+        print('MOSTRA DESC ITEM:' + str(self.get_mostrar_desc_item()))
+        print('PAINEL LATERAL ABERTO:' + str(self.get_painel_lateral_aberto_item()))
+
+    def teste_novo_pointer(self):
+
+        print('FPS:' + str(self.get_fps()))
+        pass
+
+    # print('DETECCAO INVENTARIO:' + str(self.get_deteccao_inventario()))
+    # print('ITEM SELECIONADO NO INVENTARIO:' + str(self.get_item_selecionado_inventario()))
+    # print('QTD ITEM SELECIONADO NO INVENTARIO:' + str(self.get_qtd_item_selecionado_inventario()))
+    # print('PLAYER PROXIMO:' + str(self.get_player_proximo_da_elf()))
+
+    def procurar_players(self) -> list[tuple[str, int, int]]:
+        """Varre toda a memória e busca padrões de coordenadas X/Y (X em offset 0x06, Y em offset 0x04)."""
+        base_inicio = 0x0E9C0000
+        base_fim = 0x0E9D0000
+        bloco_tamanho = 0x80
+        encontrados = []
+
+        for endereco in range(base_inicio, base_fim, bloco_tamanho):
+            try:
+                bloco = self.pm.read_bytes(endereco, bloco_tamanho)
+
+                for i in range(0, bloco_tamanho - 6):
+                    # Lê possíveis valores nos offsets i+0x04 (Y) e i+0x06 (X)
+                    try:
+                        y = struct.unpack("<H", bloco[i + 0x04:i + 0x06])[0]
+                        x = struct.unpack("<H", bloco[i + 0x06:i + 0x08])[0]
+                        if 0 < x < 255 and 0 < y < 255:
+                            encontrados.append((hex(endereco + i), x, y))
+                    except:
+                        continue
+
+            except Exception as e:
+                # Pode logar se quiser: print(f"[ERRO] {hex(endereco)}: {e}")
+                continue
+
+        for addr, x, y in encontrados:
+            print(f"Player encontrado em {addr} - X: {x}, Y: {y}")
+
+    def ler_offsets(self, tamanho: int = 0x80):
+        endereco = 0x0E9CD9DC
+        print(f"Lendo {tamanho} bytes a partir do endereço {hex(endereco)}...\n")
+        try:
+            dados = self.pm.read_bytes(endereco, tamanho)
+
+            for offset in range(0, tamanho - 1, 2):
+                try:
+                    valor = struct.unpack("<H", dados[offset:offset + 2])[0]
+                    print(
+                        f"Offset {offset:02X} | Addr {hex(endereco + offset)} | Valor (int): {valor:<5} | Hex: {valor:04X}")
+                except:
+                    print(f"Offset {offset:02X} | Erro na leitura")
+        except Exception as e:
+            print(f"Erro ao ler memória: {e}")
+
+    def print_padrao_memoria(self, endereco=0x0E9CDE90, tamanho=32):
+        try:
+            bloco = self.pm.read_bytes(endereco, tamanho)
+
+            print(f"\n[+] Dump de {tamanho} bytes a partir de {hex(endereco)}:")
+            print("Offset | Endereço    | Bytes")
+            print("-" * 40)
+
+            for i in range(0, tamanho, 16):
+                linha = bloco[i:i + 16]
+                hex_line = " ".join(f"{b:02X}" for b in linha)
+                print(f"{i:02X}     | {hex(endereco + i)} | {hex_line}")
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao ler {hex(endereco)}: {e}")
+
+    def get_pointer_dinamico(self, base_offset: int, offsets: list[int]) -> int | None:
+        """Resolve dinamicamente um ponteiro a partir do módulo base + offsets."""
+        try:
+            endereco = self.CLIENT + base_offset
+            for offset in offsets:
+                endereco = self.pm.read_int(endereco)
+                if endereco == 0:
+                    return None
+                endereco += offset
+            return endereco
+        except Exception as e:
+            print(f"[ERRO] get_pointer_dinamico falhou: {e}")
+            return None
+
+    def print_endereco_pointer_scan(self, pointer_base_offset):
+
+        # offsets = [0x508, 0x748, 0x2C, 0x164, 0x0, 0x5C, 0xA4] DEVIAS
+        # base_offset = 0x0087F61C  # do print do Cheat Engine
+        offsets = [0x2B0]
+        base_offset = pointer_base_offset
+        """
+        Resolve e printa o endereço final de um pointer scan baseado em:
+        módulo base + base_offset, seguido de offsets.
+        """
+        try:
+            endereco = self.CLIENT + base_offset
+            # print(f"[INFO] Base inicial: {hex(endereco)}")
+
+            for i, offset in enumerate(offsets):
+                endereco_antigo = endereco
+                endereco = self.pm.read_int(endereco)
+                if endereco == 0:
+                    # print(f"[ERRO] Endereço nulo ao acessar offset {i}: {hex(endereco_antigo)}")
+                    return None
+                # print(f"  [OFFSET {i}] {hex(endereco_antigo)} → {hex(endereco)} + {hex(offset)} = {hex(endereco + offset)}")
+                endereco += offset
+
+            # print(f"\n[RESULTADO] Endereço final do ponteiro: {hex(endereco)}")
+
+            # Arredonda para base de memória (zera últimos 4 dígitos hex = 0x0000)
+            endereco_base = endereco & 0xFFFF0000
+            # print(f"[BASE] Endereço base alinhado: {hex(endereco_base)}")
+
+            return endereco_base
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao resolver ponteiro: {e}")
+            return None
+
+    def buscar_nome_e_xy_na_memoria(self, nome_procurado, base_inicio, base_fim):
+        """
+        Busca por um nome específico na memória do processo e lê as coordenadas X e Y logo após o nome.
+
+        :param pm: Instância do pymem.Pymem já conectada ao processo.
+        :param nome_procurado: Nome (string) que será buscado na memória.
+        :param base_inicio: Endereço de memória inicial para varredura.
+        :param base_fim: Endereço de memória final para varredura.
+        :return: Lista de tuplas (endereco_encontrado, x, y)
+        """
+        nome_bytes = nome_procurado.encode("utf-8")
+        try:
+            memoria = self.pm.read_bytes(base_inicio, base_fim - base_inicio)
+        except Exception as e:
+            print(f"[!] Erro ao ler memória: {e}")
+            return []
+
+        resultados = []
+
+        i = 0
+        while i < len(memoria) - len(nome_bytes) - 4:
+            if memoria[i:i + len(nome_bytes)] == nome_bytes:
+                offset = i + len(nome_bytes)
+                x = struct.unpack_from('<H', memoria, offset)[0]
+                y = struct.unpack_from('<H', memoria, offset + 2)[0]
+                endereco = base_inicio + i
+                resultados.append((endereco, x, y))
+            i += 1
+
+        for endereco, x, y in resultados:
+            print(f"[+] Encontrado em {hex(endereco)} - X: {x}, Y: {y}")
+
+    def procurar_padrao_coordenadas2(self, pointer_base_offset=0x025431A0, pointer_offsets=None):
+
+        # pointer_base_offset = 0x0087F61C DEVIAS
+
+        base_inicio = self.print_endereco_pointer_scan(pointer_base_offset)
+        base_fim = base_inicio + 0x80000
+
+        if pointer_offsets is None:
+            pointer_offsets = [0x780, 0x4, 0x2B0]
+            # pointer_offsets = [0x508, 0x748, 0x2C, 0x164, 0x0, 0x5C, 0xA4]
+
+        # Usa o ponteiro dinâmico como referência de comparação
+        final_pointer = self.get_pointer_dinamico(pointer_base_offset, pointer_offsets)
+
+        if not final_pointer:
+            print("[ERRO] Não foi possível resolver o ponteiro dinâmico para coordenadas.")
+            return []
+
+        try:
+            y_compara = self.pm.read_short(final_pointer)
+            x_compara = self.pm.read_short(final_pointer + 4)
+        except Exception as e:
+            print(f"[ERRO] Falha ao ler coordenadas do ponteiro: {e}")
+            return []
+
+        coordenadas = []
+        padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
+        enderecos_detectados = set()
+        tamanho_bloco = 32
+        raio = 5
+
+        for endereco in range(base_inicio, base_fim - tamanho_bloco + 1):
+            try:
+                bloco = self.pm.read_bytes(endereco, tamanho_bloco)
+
+                for i in range(len(bloco) - len(padrao)):
+                    endereco_padrao = endereco + i
+
+                    if bloco[i:i + len(padrao)] != padrao:
+                        continue
+                    if i < 8 or endereco_padrao in enderecos_detectados:
+                        continue
+
+                    y_bytes = bloco[i - 8:i - 6]
+                    x_bytes = bloco[i - 4:i - 2]
+
+                    y = struct.unpack("<H", y_bytes)[0]
+                    x = struct.unpack("<H", x_bytes)[0]
+
+                    if y == 0 or x == 0:
+                        continue
+
+                    if abs(x - x_compara) > raio or abs(y - y_compara) > raio:
+                        continue
+
+                    print(f"\n[+] Padrão encontrado em {hex(endereco_padrao)}")
+                    print(f"    Y = {y} | X = {x}")
+                    print(f"    Y bytes @ {hex(endereco_padrao - 8)}: {y_bytes.hex(' ').upper()}")
+                    print(f"    X bytes @ {hex(endereco_padrao - 4)}: {x_bytes.hex(' ').upper()}")
+
+                    coordenadas.append((y, x))
+                    enderecos_detectados.add(endereco_padrao)
+
+            except Exception:
+                continue
+
+        return coordenadas
+
+    # def procurar_padrao_coordenadas2(self, base_inicio=0x0E83F000, base_fim=0x0E85F000):
+    #     # base_fim = base_inicio + 0x100000
+    #
+    #     coordenadas = []
+    #     padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
+    #     enderecos_detectados = set()
+    #     tamanho_bloco = 32
+    #
+    #     x_compara = self.get_cood_x()
+    #     y_compara = self.get_cood_y()
+    #     raio = 7
+    #
+    #     for endereco in range(base_inicio, base_fim - tamanho_bloco + 1):
+    #         try:
+    #             bloco = self.pm.read_bytes(endereco, tamanho_bloco)
+    #
+    #             for i in range(len(bloco) - len(padrao)):
+    #                 endereco_padrao = endereco + i
+    #
+    #                 if bloco[i:i + len(padrao)] != padrao:
+    #                     continue
+    #                 if i < 8 or endereco_padrao in enderecos_detectados:
+    #                     continue
+    #
+    #                 y_bytes = bloco[i - 8:i - 6]
+    #                 x_bytes = bloco[i - 4:i - 2]
+    #
+    #                 y = struct.unpack("<H", y_bytes)[0]
+    #                 x = struct.unpack("<H", x_bytes)[0]
+    #
+    #                 if y == 0 or x == 0:
+    #                     continue
+    #
+    #                 if abs(x - x_compara) > raio or abs(y - y_compara) > raio:
+    #                     continue  # descarta se estiver fora do raio permitido
+    #
+    #                 print(f"\n[+] Padrão encontrado em {hex(endereco_padrao)}")
+    #                 print(f"    Y = {y} | X = {x}")
+    #                 print(f"    Y bytes @ {hex(endereco_padrao - 8)}: {y_bytes.hex(' ').upper()}")
+    #                 print(f"    X bytes @ {hex(endereco_padrao - 4)}: {x_bytes.hex(' ').upper()}")
+    #
+    #                 coordenadas.append((y, x))
+    #                 enderecos_detectados.add(endereco_padrao)
+    #
+    #         except Exception:
+    #             continue
+    #
+    #     return coordenadas
+
+    def procurar_padrao_coordenadas(self, base_inicio=0x0ED20000, base_fim=0x0ED30000, bloco_tamanho=0x80):
+        encontrados = []
+
+        for endereco in range(base_inicio, base_fim, bloco_tamanho):
+            try:
+                bloco = self.pm.read_bytes(endereco, bloco_tamanho)
+                for offset in range(0, bloco_tamanho - 6):  # mínimo 6 bytes para testar X/Y
+                    try:
+                        y = struct.unpack("<H", bloco[offset:offset + 2])[0]
+                        x = struct.unpack("<H", bloco[offset + 4:offset + 6])[0]
+
+                        # Converte valores para string hexadecimal
+                        hex_y = f"{y:04X}"
+                        hex_x = f"{x:04X}"
+
+                        # Verifica padrão: Y começa com 004* ou 005* e X com 006*
+                        if (hex_y.startswith("004") or hex_y.startswith("005")) and hex_x.startswith("006"):
+                            encontrados.append({
+                                "endereco_base": hex(endereco),
+                                "offset_y": offset,
+                                "addr_y": hex(endereco + offset),
+                                "valor_y": y,
+                                "hex_y": hex_y,
+                                "offset_x": offset + 4,
+                                "addr_x": hex(endereco + offset + 4),
+                                "valor_x": x,
+                                "hex_x": hex_x
+                            })
+                    except:
+                        continue
+            except:
+                continue
+
+        for r in encontrados:
+            print(f"\n[+] Possível player encontrado:")
+            print(f"  Base:       {r['endereco_base']}")
+            print(
+                f"  Y => Offset: {r['offset_y']:02X} | Addr: {r['addr_y']} | Valor: {r['valor_y']} | Hex: {r['hex_y']}")
+            print(
+                f"  X => Offset: {r['offset_x']:02X} | Addr: {r['addr_x']} | Valor: {r['valor_x']} | Hex: {r['hex_x']}")
+
+    def get_cood_x(self):
+        return self.read_value(self.X_POINTER, data_type="int")
+
+    def get_cood_y(self):
+        return self.read_value(self.Y_POINTER, data_type="int")
+
+    def get_hp(self):
+        return self.read_value(self.HP_POINTER, data_type="int")
+
+    def get_hp_max(self):
+        return self.read_value(self.HP_POINTER_MAX, data_type="int")
+
+    def get_sd(self):
+        return self.read_value(self.SD_POINTER, data_type="int")
+
+    def get_sd_max(self):
+        return self.read_value(self.SD_POINTER_MAX, data_type="int")
+
+    def get_zen(self):
+        zen = self.read_value(self.ZEN_POINTER1, data_type="int")
+        return zen if zen is not None else 0
+
+    def get_magia(self):
+        return self.read_value(self.MAGIA_POINTER, data_type="string")
+
+    def get_nome_char(self):
+        return self.read_value(self.NOME_CHAR_POINTER, data_type="string")
+
+    def get_ponto_lvl(self):
+        return self.read_value(self.PONTO_LVL_POINTER, data_type="int")
+
+    def get_reset(self):
+        return self.read_value(self.RESET_POINTER, data_type="int")
+
+    def get_lvl(self):
+        info = self.read_value(self.LVL_POINTER, data_type="word")
+        if info:
+            return info
+        return ''
+
+    def get_mostrar_desc_item(self):
+        return self.read_value(self.MOSTRAR_DESC_POINTER, data_type="int")
+
+    def get_painel_lateral_aberto_item(self):
+        return self.read_value(self.PAINEL_LATERAL_ABERTO_POINTER, data_type="word")
+
+    def get_fps(self):
+        return self.read_value(self.FPS_POINTER, data_type="int")
+
+    def get_item_pick(self):
+        return self.read_value(self.ITEM_PICK_POINTER, data_type="string")
+
+    def get_item_selecionado_inventario(self):
+        return self.read_value(self.ITEM_SELECIONADO_INVENTARIO_POINTER, data_type="int")
+
+    def get_qtd_item_selecionado_inventario(self):
+        qtd = self.read_value(self.QTD_ITEM_SELECIONADO_INVENTARIO_POINTER, data_type="string")
+        if isinstance(qtd, int):
+            return int(qtd)
+        return 0
+
+    # def get_deteccao_inventario(self):
+    #     return self.read_value(self.DETECCAO_INVENTARIO_POINTER, data_type="int")
+
+    def get_player_proximo_da_elf(self):
+        valor1 = self.read_value(self.DETECCAO_ELF_PROX_POINTER, data_type="byte")
+        valor2 = self.read_value(self.DETECCAO_MG_PROX_POINTER, data_type="byte")
+        valor3 = self.read_value(self.DETECCAO_SM_PROX_POINTER, data_type="byte")
+        if valor1 is None:
+            valor1 = 0
+        if valor2 is None:
+            valor2 = 0
+        if valor3 is None:
+            valor3 = 0
+        return valor1 + valor2 + valor3
