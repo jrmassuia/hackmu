@@ -364,163 +364,135 @@ class Pointers:
         for endereco, x, y in resultados:
             print(f"[+] Encontrado em {hex(endereco)} - X: {x}, Y: {y}")
 
-    def procurar_padrao_coordenadas2(self, pointer_base_offset=0x025431A0, pointer_offsets=None):
-
-        # pointer_base_offset = 0x0087F61C DEVIAS
-
-        base_inicio = self.print_endereco_pointer_scan(pointer_base_offset)
-        base_fim = base_inicio + 0x80000
-
-        if pointer_offsets is None:
-            pointer_offsets = [0x780, 0x4, 0x2B0]
-            # pointer_offsets = [0x508, 0x748, 0x2C, 0x164, 0x0, 0x5C, 0xA4]
-
-        # Usa o ponteiro dinâmico como referência de comparação
-        final_pointer = self.get_pointer_dinamico(pointer_base_offset, pointer_offsets)
-
-        if not final_pointer:
-            print("[ERRO] Não foi possível resolver o ponteiro dinâmico para coordenadas.")
-            return []
-
+    def _addr_from_point(self, point_result_offset: int, inner_offset: int) -> int | None:
+        """
+        Resolve endereço a partir de um 'point result':
+          addr = *(CLIENT + point_result_offset) + inner_offset
+        Retorna None se não conseguir ler.
+        """
         try:
-            y_compara = self.pm.read_short(final_pointer)
-            x_compara = self.pm.read_short(final_pointer + 4)
+            base_ptr = self.pm.read_uint(self.CLIENT + point_result_offset)
+            if not base_ptr:
+                return None
+            return base_ptr + inner_offset
         except Exception as e:
-            print(f"[ERRO] Falha ao ler coordenadas do ponteiro: {e}")
+            print(f"[ERRO] _addr_from_point falhou em offset {hex(point_result_offset)}: {e}")
+            return None
+
+    def procurar_padrao_coordenadas2(
+            self,
+            range_inicio_point=0x002E2A94,  # *(CLIENT + range_inicio_point) + range_inicio_offset
+            range_inicio_offset=0x0D9C,
+            range_fim_point=0x00280028,  # *(CLIENT + range_fim_point) + range_fim_offset
+            range_fim_offset=0x050C,
+            bloco_leitura=0x100000  # 1 MB por leitura (rápido)
+    ):
+        """
+        Procura o padrão b'\\x80\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF' APENAS dentro do range:
+          INÍCIO = *(CLIENT + range_inicio_point) + range_inicio_offset
+          FIM    = *(CLIENT + range_fim_point)    + range_fim_offset
+        Para cada match, lê Y (i-8..i-6) e X (i-4..i-2). Retorna [(addr_hex, x, y), ...].
+        """
+        # 1) Resolve início e fim do range a partir dos dois point results
+        try:
+            ptr_ini = self.pm.read_uint(self.CLIENT + range_inicio_point) or 0
+            ptr_fim = self.pm.read_uint(self.CLIENT + range_fim_point) or 0
+        except Exception as e:
+            print(f"[ERRO] Falha ao ler point results do range: {e}")
             return []
 
-        coordenadas = []
+        if ptr_ini == 0 or ptr_fim == 0:
+            print("[ERRO] Point result do range retornou 0 (estrutura não inicializada?).")
+            return []
+
+        base_inicio = ptr_ini + range_inicio_offset
+        base_fim = ptr_fim + range_fim_offset
+        if base_inicio > base_fim:
+            base_inicio, base_fim = base_fim, base_inicio  # garante ordem
+
+        # 2) Varredura simples dentro do range
         padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
-        enderecos_detectados = set()
-        tamanho_bloco = 32
-        raio = 5
+        pad_len = len(padrao)
+        need_before = 8
+        carry_len = need_before + pad_len - 1  # 15 bytes p/ não perder match na borda
 
-        for endereco in range(base_inicio, base_fim - tamanho_bloco + 1):
+        resultados = []
+        vistos = set()
+        addr = base_inicio
+        prev_tail = b""
+
+        while addr < base_fim:
+            tam = min(bloco_leitura, base_fim - addr)
             try:
-                bloco = self.pm.read_bytes(endereco, tamanho_bloco)
-
-                for i in range(len(bloco) - len(padrao)):
-                    endereco_padrao = endereco + i
-
-                    if bloco[i:i + len(padrao)] != padrao:
-                        continue
-                    if i < 8 or endereco_padrao in enderecos_detectados:
-                        continue
-
-                    y_bytes = bloco[i - 8:i - 6]
-                    x_bytes = bloco[i - 4:i - 2]
-
-                    y = struct.unpack("<H", y_bytes)[0]
-                    x = struct.unpack("<H", x_bytes)[0]
-
-                    if y == 0 or x == 0:
-                        continue
-
-                    if abs(x - x_compara) > raio or abs(y - y_compara) > raio:
-                        continue
-
-                    print(f"\n[+] Padrão encontrado em {hex(endereco_padrao)}")
-                    print(f"    Y = {y} | X = {x}")
-                    print(f"    Y bytes @ {hex(endereco_padrao - 8)}: {y_bytes.hex(' ').upper()}")
-                    print(f"    X bytes @ {hex(endereco_padrao - 4)}: {x_bytes.hex(' ').upper()}")
-
-                    coordenadas.append((y, x))
-                    enderecos_detectados.add(endereco_padrao)
-
+                buf = self.pm.read_bytes(addr, tam)
             except Exception:
+                # se falhar a leitura desse pedaço, avança 4KB e segue simples
+                addr += 0x1000
+                prev_tail = b""
                 continue
 
-        return coordenadas
+            scan_base = addr - len(prev_tail)
+            scan_buf = prev_tail + buf
 
-    # def procurar_padrao_coordenadas2(self, base_inicio=0x0E83F000, base_fim=0x0E85F000):
-    #     # base_fim = base_inicio + 0x100000
-    #
-    #     coordenadas = []
-    #     padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
-    #     enderecos_detectados = set()
-    #     tamanho_bloco = 32
-    #
-    #     x_compara = self.get_cood_x()
-    #     y_compara = self.get_cood_y()
-    #     raio = 7
-    #
-    #     for endereco in range(base_inicio, base_fim - tamanho_bloco + 1):
-    #         try:
-    #             bloco = self.pm.read_bytes(endereco, tamanho_bloco)
-    #
-    #             for i in range(len(bloco) - len(padrao)):
-    #                 endereco_padrao = endereco + i
-    #
-    #                 if bloco[i:i + len(padrao)] != padrao:
-    #                     continue
-    #                 if i < 8 or endereco_padrao in enderecos_detectados:
-    #                     continue
-    #
-    #                 y_bytes = bloco[i - 8:i - 6]
-    #                 x_bytes = bloco[i - 4:i - 2]
-    #
-    #                 y = struct.unpack("<H", y_bytes)[0]
-    #                 x = struct.unpack("<H", x_bytes)[0]
-    #
-    #                 if y == 0 or x == 0:
-    #                     continue
-    #
-    #                 if abs(x - x_compara) > raio or abs(y - y_compara) > raio:
-    #                     continue  # descarta se estiver fora do raio permitido
-    #
-    #                 print(f"\n[+] Padrão encontrado em {hex(endereco_padrao)}")
-    #                 print(f"    Y = {y} | X = {x}")
-    #                 print(f"    Y bytes @ {hex(endereco_padrao - 8)}: {y_bytes.hex(' ').upper()}")
-    #                 print(f"    X bytes @ {hex(endereco_padrao - 4)}: {x_bytes.hex(' ').upper()}")
-    #
-    #                 coordenadas.append((y, x))
-    #                 enderecos_detectados.add(endereco_padrao)
-    #
-    #         except Exception:
-    #             continue
-    #
-    #     return coordenadas
+            pos = scan_buf.find(padrao)
+            while pos != -1:
+                if pos >= need_before:
+                    endereco_padrao = scan_base + pos
+                    if endereco_padrao not in vistos:
+                        y_bytes = scan_buf[pos - 8:pos - 6]
+                        x_bytes = scan_buf[pos - 4:pos - 2]
+                        if len(y_bytes) == 2 and len(x_bytes) == 2:
+                            y = int.from_bytes(y_bytes, "little", signed=False)
+                            x = int.from_bytes(x_bytes, "little", signed=False)
+                            if y != 0 and x != 0:
+                                # print(f"[+] Padrão em {hex(endereco_padrao)} | Y={y} X={x}")
+                                resultados.append((hex(endereco_padrao), x, y))
+                                vistos.add(endereco_padrao)
+                pos = scan_buf.find(padrao, pos + 1)
 
-    def procurar_padrao_coordenadas(self, base_inicio=0x0ED20000, base_fim=0x0ED30000, bloco_tamanho=0x80):
-        encontrados = []
+            # mantém cauda para pegar matches que cruzam a fronteira de blocos
+            prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
+            addr += tam
 
-        for endereco in range(base_inicio, base_fim, bloco_tamanho):
-            try:
-                bloco = self.pm.read_bytes(endereco, bloco_tamanho)
-                for offset in range(0, bloco_tamanho - 6):  # mínimo 6 bytes para testar X/Y
-                    try:
-                        y = struct.unpack("<H", bloco[offset:offset + 2])[0]
-                        x = struct.unpack("<H", bloco[offset + 4:offset + 6])[0]
+        mais_proximos = self.ordenar_proximos_ate_10(resultados, incluir_dist=True, limite=10)
+        for addr, x, y, dist in mais_proximos:
+            print(f"{addr} -> X={x} Y={y} | dist={dist}")
 
-                        # Converte valores para string hexadecimal
-                        hex_y = f"{y:04X}"
-                        hex_x = f"{x:04X}"
+    def ordenar_proximos_ate_10(
+            self,
+            resultados: list[tuple[str, int, int]],
+            limite: int | None = None,
+            incluir_dist: bool = False
+    ) -> list:
+        """
+        Mantém SOMENTE resultados dentro de |dx|<=10 e |dy|<=10 em relação às suas coords
+        e ordena por proximidade (distância Manhattan).
+        resultados: [(addr_hex, x, y), ...]
+        limite: retorna só os N mais próximos (opcional).
+        incluir_dist: se True, retorna (addr, x, y, dist).
+        """
+        x0 = self.get_cood_x()
+        y0 = self.get_cood_y()
+        if x0 is None or y0 is None:
+            print("[WARN] Coordenadas atuais indisponíveis.")
+            return []
 
-                        # Verifica padrão: Y começa com 004* ou 005* e X com 006*
-                        if (hex_y.startswith("004") or hex_y.startswith("005")) and hex_x.startswith("006"):
-                            encontrados.append({
-                                "endereco_base": hex(endereco),
-                                "offset_y": offset,
-                                "addr_y": hex(endereco + offset),
-                                "valor_y": y,
-                                "hex_y": hex_y,
-                                "offset_x": offset + 4,
-                                "addr_x": hex(endereco + offset + 4),
-                                "valor_x": x,
-                                "hex_x": hex_x
-                            })
-                    except:
-                        continue
-            except:
-                continue
+        proximos = []
+        for addr, x, y in resultados:
+            dx = x - x0
+            dy = y - y0
+            # filtro 'caixa' de 10 por eixo (consistente com seu uso de raio no código)
+            if abs(dx) <= 10 and abs(dy) <= 10:
+                dist = abs(dx) + abs(dy)  # Manhattan
+                proximos.append((addr, x, y, dist))
 
-        for r in encontrados:
-            print(f"\n[+] Possível player encontrado:")
-            print(f"  Base:       {r['endereco_base']}")
-            print(
-                f"  Y => Offset: {r['offset_y']:02X} | Addr: {r['addr_y']} | Valor: {r['valor_y']} | Hex: {r['hex_y']}")
-            print(
-                f"  X => Offset: {r['offset_x']:02X} | Addr: {r['addr_x']} | Valor: {r['valor_x']} | Hex: {r['hex_x']}")
+        # ordena por distância (e, em empate, por endereço para estabilidade)
+        proximos.sort(key=lambda t: (t[3], int(t[0], 16)))
+
+        if limite is not None:
+            proximos = proximos[:limite]
+
+        return proximos if incluir_dist else [(a, x, y) for (a, x, y, _d) in proximos]
 
     def get_cood_x(self):
         return self.read_value(self.X_POINTER, data_type="int")

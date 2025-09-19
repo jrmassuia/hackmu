@@ -12,6 +12,7 @@ import pydivert
 import win32con
 import win32gui
 
+import teste6
 from services.foco_mutex_service import FocoMutexService
 
 kernel32 = ctypes.windll.kernel32
@@ -136,14 +137,19 @@ def main():
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle)
-    pointer.teste_pointer_necessarios()
+    coords = pointer.procurar_padrao_coordenadas2(
+        range_inicio_point=0x002E2A94,  # INÍCIO
+        range_inicio_offset=0x0D9C,
+        range_fim_point=0x00280028,  # FIM
+        range_fim_offset=0x050C,
+    )
 
-
-
-
-
-
-
+    # pointer.teste_pointer_necessarios()
+    # scanner = teste6.ProcurarPlayer(handle)
+    # players = scanner.procurar_players_por_offset(0x025B0C48, janela=0x20000)  # ±128 KB
+    # players2 = scanner.procurar_players_no_range(0x0F13F000, 0x0F141000, bloco_leitura=0x100000, step=1)
+    # for addr, x, y in players2:
+    #     print(addr, x, y)
 
 
 def send(hwnd: int, command: str):
@@ -180,6 +186,7 @@ def obter_titulo_do_filho(handle):
     except:
         return ""
 
+
 def listar_e_inspecionar_filhos(handle_pai):
     filhos = []
 
@@ -193,7 +200,6 @@ def listar_e_inspecionar_filhos(handle_pai):
     enum_proc = ENUM_CHILD_WINDOWS(enum_callback)
     ctypes.windll.user32.EnumChildWindows(handle_pai, enum_proc, 0)
     return filhos
-
 
 
 def obter_filhos_do_handle(handle_pai):
