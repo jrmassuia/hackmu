@@ -7,12 +7,12 @@ from utils.teclado_util import Teclado_util
 
 
 class AlterarCharSalaService:
-    def __init__(self, handle, senha, conexao_arduino=None):
+    def __init__(self, handle, senha, arduino):
         self.handle = handle
         self.senha = senha
-        self.conexao_arduino = conexao_arduino
-        self.up_util = Up_util(self.handle, conexao_arduino=conexao_arduino)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.arduino = arduino
+        self.up_util = Up_util(self.handle, conexao_arduino=arduino)
+        self.teclado_util = Teclado_util(self.handle, arduino)
 
     def selecionar_sala(self, sala=None):
         self.teclado_util.tap_esc()
@@ -45,8 +45,6 @@ class AlterarCharSalaService:
                     time.sleep(4)
             time.sleep(2)
 
-        # Digitar senha e confirmar
-        # Teclado_util(self.handle, self.conexao_arduino).
-        # self.teclado_util.enviar_texto_senha(self.handle, self.senha)
+        self.teclado_util.digitar_senha(self.senha)
         mouse_util.clicar_na_imagem_ou_coordenada(self.handle, "./static/img/btnoksenha.png", None)
         self.up_util.selecionar_char_no_launcher()

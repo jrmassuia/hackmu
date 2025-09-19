@@ -1,4 +1,5 @@
 import datetime
+import os
 import time
 
 import discord
@@ -9,7 +10,11 @@ import io
 
 class DiscordBotController:
     def __init__(self, classe, json_manager=None):
-        self.token = None
+        self.token = os.getenv("DISCORD_BOT_TOKEN")
+
+        if not self.token:
+            raise RuntimeError("Variável DISCORD_BOT_TOKEN não encontrada no ambiente ou no .env")
+
         self.json_manager = json_manager
         self.classe = classe
         self.tempo_ultimo_comando = None

@@ -38,7 +38,7 @@ def main():
     teclado = Teclado_util(handle, arduino)
     for nome in nomes:
         mouse_util.left_clique(handle, 510, 520)  # clica no escrever
-        teclado.enviar_texto_email(nome.replace(" ", ""), titulo, corpo)
+        teclado.digitar_texto_email(nome.replace(" ", ""), titulo, corpo)
         mouse_util.left_clique(handle, 170, 370)  # clica no botao enviar
         time.sleep(.2)
         achou = BuscarItemUtil(handle).buscar_item_simples('botaook.png')

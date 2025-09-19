@@ -77,11 +77,11 @@ class PickKanturuUseCase:
 
     def _definir_spot_up(self):
         if 'PC1' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 12, ''], ['[2/3]', 15, ''], ['[3/3]', 3, '']]
+            spots_por_tela = [['[1/3]', 12, ''], ['[2/3]', 10, ''], ['[3/3]', 7, '9876Sonso']]
         elif 'PC2' in socket.gethostname():
             spots_por_tela = [['[1/3]', 3, ''], ['[2/3]', 8, ''], ['[3/3]', 9, '']]
         else:
-            spots_por_tela = [['[1/3]', 4, ''], ['[2/3]', 5, ''], ['[3/3]', 6, '']]
+            spots_por_tela = [['[1/3]', 4, 'MGPK2025PK'], ['[2/3]', 5, 'bbpYuM3Z'], ['[3/3]', 6, 'estouroth24']]
 
         for texto_tela, spot, senha in spots_por_tela:
             if texto_tela in self.tela:
@@ -104,8 +104,8 @@ class PickKanturuUseCase:
 
         if self.arduino.conexao_arduino is None:
             GuardaGemstoneService(self.handle, self.mover_spot_util, self.up_util).guardar_gemstone_no_bau()
+            self.subir_k3 = False
 
-        self.subir_k3 = False
         if self._deve_subir_para_k3():
             self._subir_para_k3()
             return
@@ -162,7 +162,7 @@ class PickKanturuUseCase:
         self.mortes = [m for m in self.mortes if agora - m < timedelta(minutes=60)]
 
     def _aplicar_tempo_de_espera(self):
-        if len(self.mortes) > 3:
+        if len(self.mortes) >= 3:
             self.subir_k3 = True
             self.mortes = []
             total_wait_time = 10
@@ -190,7 +190,7 @@ class PickKanturuUseCase:
         print("Tempo de espera finalizado. Retornando para o local de farm. " + self.tela)
 
     def _andar_ate_k3(self):
-        movimentacao_k3 = MovimentacaoVotaK3ParaK2Service(self.handle, self.mover_spot_util, self.senha)
+        movimentacao_k3 = MovimentacaoVotaK3ParaK2Service(self.handle, self.mover_spot_util, self.arduino, self.senha)
         movimentacao_k3.mover_para_k3()
         self.iniciou_up = movimentacao_k3.iniciou_up
 

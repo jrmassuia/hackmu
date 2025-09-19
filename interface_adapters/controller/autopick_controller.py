@@ -87,8 +87,14 @@ class AutopickController:
             self.iniciou_autopick = True
 
         safe_util.sair_da_safe_k3(self.mover_spot_util)
+        if '[1/3]' in self.tela:
+            self.mover_spot_util.movimentar_kanturu_3((167, 94),
+                                                      max_tempo=180,
+                                                      limpar_spot_se_necessario=True,
+                                                      movimentacao_proxima=True,
+                                                      verficar_se_movimentou=True)
 
-        if '[2/3]' in self.tela:
+        elif '[2/3]' in self.tela:
             self.mover_spot_util.movimentar_kanturu_3((108, 143),
                                                       max_tempo=180,
                                                       limpar_spot_se_necessario=True,

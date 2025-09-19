@@ -56,35 +56,17 @@ class PosicionamentoSpotService:
         if not movimentou:
             return False
         elif verificar_spot_livre:
-            return self._spot_livre(tempo=10)
+            return self._spot_livre()
         else:
             return True
 
     def _spot_livre(self, tempo=10):
-        # conta = 0
-        # while True:
-        #     achou = BuscarItemUtil(self.handle).buscar_item_spot()  # buscar_item_util.buscar_up(self.handle)
-        #     if achou:
-        #         return False
-        #
-        #     conta = conta + 1
-        #     time.sleep(1)
-        #
-        #     if conta == tempo:
-        #         mouse_util.moverCentro(self.handle)
-        #         print('SPOT LIVRE')
-        #         return True
-
         start_time = time.time()
         while time.time() - start_time < tempo:
             achou = BuscarItemUtil(self.handle).buscar_item_spot()
             if achou:
                 return False
-
-        # mouse_util.moverCentro(self.handle)
-        print('SPOT LIVRE')
         return True
-
 
     def movimentar_mapa(self):
         if self.mapa == PathFinder.MAPA_KANTURU_1_E_2:

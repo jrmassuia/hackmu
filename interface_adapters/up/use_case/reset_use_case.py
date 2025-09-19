@@ -96,9 +96,9 @@ class ResetUseCase:
             self.teclado_util.escrever_texto("/v 1000")
             self.teclado_util.escrever_texto("/e 32474")
         elif self.char_nome == 'Layna_':
-            self.teclado_util.escrever_texto("/f 3478")
-            self.teclado_util.escrever_texto("/a 18000")
-            self.teclado_util.escrever_texto("/v 4980")
+            self.teclado_util.escrever_texto("/f 2478")
+            self.teclado_util.escrever_texto("/a 20000")
+            self.teclado_util.escrever_texto("/v 3000")
             self.teclado_util.escrever_texto("/e 32485")
         elif self.char_nome == 'ReiDav1':
             self.teclado_util.escrever_texto("/f 500")

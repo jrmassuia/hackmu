@@ -111,6 +111,11 @@ class Up_util:
                         add = "/v"
                     else:
                         add = "/e"
+                elif classe == 'EF':
+                    if self.pointer.get_reset() >= 200:
+                        add = "/v"
+                    else:
+                        add = "/a"
                 else:
                     add = "/a"
 

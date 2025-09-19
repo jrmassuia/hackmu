@@ -93,12 +93,65 @@ void pressReleaseAscii(char ascii, uint16_t downMs = 80, uint16_t gapMs = 200) {
   delay(gapMs);
 }
 
-void typeText(const String &txt) {         // texto literal (chat)
+void sendAltCode(uint16_t code) {
+  // Converte o número para string decimal
+  char buf[6]; // suporta até 65535
+  itoa(code, buf, 10);
+
+  // Segura ALT e digita no Numpad
+  Keyboard.press(KEY_LEFT_ALT);
+  delay(5);
+
+  for (int i = 0; buf[i]; ++i) {
+    uint8_t kc = 0;
+    switch (buf[i]) {
+      case '0': kc = KEY_NUM_0; break;
+      case '1': kc = KEY_NUM_1; break;
+      case '2': kc = KEY_NUM_2; break;
+      case '3': kc = KEY_NUM_3; break;
+      case '4': kc = KEY_NUM_4; break;
+      case '5': kc = KEY_NUM_5; break;
+      case '6': kc = KEY_NUM_6; break;
+      case '7': kc = KEY_NUM_7; break;
+      case '8': kc = KEY_NUM_8; break;
+      case '9': kc = KEY_NUM_9; break;
+    }
+    if (kc) {
+      Keyboard.press(kc);
+      delay(5);
+      Keyboard.release(kc);
+      delay(5);
+    }
+  }
+
+  Keyboard.release(KEY_LEFT_ALT);
+  delay(5);
+}
+
+// Digita um caractere com correções de layout/jogo
+void typeCharSafe(char ch) {
+  // Sempre usar o slash do keypad (evita virar ';' no jogo)
+  if (ch == '/') {
+    Keyboard.write(KEY_SLASH_FIX);
+    return;
+  }
+  // Força ":" via ALT+58 (corrige ':' -> 'Ç' no ABNT2/jogo)
+  if (ch == ':') {
+    sendAltCode(58);
+    return;
+  }
+  // Demais caracteres seguem via ASCII padrão
+  Keyboard.write((uint8_t)ch);
+}
+
+// Texto literal (chat), usando o mapeamento seguro
+void typeText(const String &txt) {
   for (size_t i = 0; i < txt.length(); ++i) {
-    Keyboard.write((uint8_t)txt[i]);
+    typeCharSafe(txt[i]);
     delay(5);
   }
 }
+
 
 // Envia "/" pelo código 220 e depois o texto; opcionalmente ENTER no fim
 void sendSlashCommand(const String &rest, bool sendEnter = true) {

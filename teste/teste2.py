@@ -1,4 +1,5 @@
 import ctypes
+import os
 import time
 from ctypes import wintypes
 from ctypes.wintypes import HWND, WPARAM, LPARAM
@@ -6,6 +7,8 @@ import ctypes
 import time
 from typing import Iterable
 
+import psutil
+import pydivert
 import win32con
 import win32gui
 
@@ -82,6 +85,38 @@ def _buscar_spots():
     ]
 
 
+def obter_portas_do_processo(nome_exe):
+    portas = []
+    for conn in psutil.net_connections(kind='inet'):
+        try:
+            proc = psutil.Process(conn.pid)
+            if proc.name().lower() == nome_exe.lower() and conn.laddr and conn.laddr.port:
+                portas.append(conn.laddr.port)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return list(set(portas))  # remove duplicadas
+
+
+def delay_por_processo(nome_exe="mucabrasil.exe", delay=3):
+    portas = obter_portas_do_processo(nome_exe)
+    if not portas:
+        print(f"Nenhuma porta encontrada para {nome_exe}")
+        return
+
+    filtro = " or ".join([f"tcp.SrcPort == {p} or tcp.DstPort == {p}" for p in portas])
+    print(f"Aplicando delay em {nome_exe} portas {portas}...")
+
+    with pydivert.WinDivert(filtro) as w:
+        cont = 0
+        for pacote in w:
+            if cont == 2:
+                time.sleep(delay)
+                exit()
+            cont = cont + 1
+            w.send(pacote)
+            # print(f"Pacote {pacote} atrasado {delay}s")
+
+
 def main():
     print("Selecione a tela do Mu:\n")
     print("1 - [1/3] MUCABRASIL")
@@ -101,7 +136,7 @@ def main():
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle)
-    pointer.imprimir_todos_tipos_do_endereco_memoria()
+    pointer.teste_pointer_necessarios()
 
 
 

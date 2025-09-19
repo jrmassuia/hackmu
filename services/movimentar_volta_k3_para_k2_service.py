@@ -5,9 +5,10 @@ from utils import mouse_util, safe_util
 
 
 class MovimentacaoVotaK3ParaK2Service:
-    def __init__(self, handle, mover_spot_util, senha):
+    def __init__(self, handle, mover_spot_util, arduino, senha):
         self.handle = handle
         self.mover_spot_util = mover_spot_util
+        self.arduino = arduino
         self.senha = senha
         self.iniciou_up = False
 
@@ -59,6 +60,6 @@ class MovimentacaoVotaK3ParaK2Service:
                 break
 
     def _selicionar_sala(self, sala=None):
-        alterar_sala = AlterarCharSalaService(self.handle, self.senha)
+        alterar_sala = AlterarCharSalaService(self.handle, self.senha, self.arduino)
         alterar_sala.selecionar_sala(sala)
         self.iniciou_up = True

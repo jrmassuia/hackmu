@@ -155,6 +155,9 @@ def usar_potes(numero_de_potes, limites, pointers, teclado):
     delay_tecla = 0.02
     delay_entre_tecla = 0.023
 
+    if pointers.get_magia() in ['Poison', 'Ice', 'Lighting']:
+        return
+
     for _ in range(numero_de_potes):
         if (pointers.get_hp() != pointers.get_hp_max()) or (pointers.get_sd() != pointers.get_sd_max()):
             teclado._toque_arduino("Q", delay=delay_tecla)  # Pota COMPLEX

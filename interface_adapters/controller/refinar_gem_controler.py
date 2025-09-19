@@ -3,7 +3,6 @@ import time
 
 from utils import mouse_util, buscar_item_util, screenshot_util, acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
-from utils.mover_spot_util import MoverSpotUtil
 from utils.teclado_util import Teclado_util
 
 
@@ -31,7 +30,7 @@ class RefinarGemstoneController:
         while True:
             if not self._preparar_combinar():
                 acao_menu_util.pressionar_painel_inventario(self.handle, self.conexao_arduino)
-                self.teclado_util.escrever_texto('/move noria')
+                # self.teclado_util.escrever_texto('/move noria')
                 exit()
 
     def _preparar_combinar(self):
@@ -43,8 +42,8 @@ class RefinarGemstoneController:
         return self._mover_gemstone_para_cm()
 
     def _clicar_na_elpis(self):
-        # self._mover_click(450, 250) # 75, 177
-        self._mover_click(480, 240)  # 75 176
+        self._mover_click(450, 250) # 75, 177
+        # self._mover_click(480, 240)  # 75 176
         # self._mover_click(490, 200)  # 77 174
 
     def _clicar_na_opcao_refinar_gemstone(self):
@@ -96,7 +95,7 @@ class RefinarGemstoneController:
         self.pos_y_ultima_joh = 0
         self.pos_x_ultima_joh = 0
         self.qtd_falha = self.qtd_falha + 1
-        while conta <= 1:
+        while conta <= 2:
             time.sleep(.2)
             screenshot_cm = screenshot_util.capture_window(self.handle)
             image_positions = buscar_item_util.buscar_posicoes_item_epecifico(

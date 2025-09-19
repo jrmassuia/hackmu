@@ -141,13 +141,19 @@ class Teclado_util:
     def _pausa(self, segundos: float) -> None:
         time.sleep(segundos)
 
-    def enviar_texto_email(self, textoPara, textoTitulo, textoCorpo):
+    def digitar_texto_email(self, textoPara, textoTitulo, textoCorpo):
         janelas = self._listar_janelas_filhas()
         if len(janelas) < 3:
             return
         self._enviar_texto_por_handle(janelas[-3], textoPara)  # Para
         self._enviar_texto_por_handle(janelas[-2], textoTitulo)  # Título
         self._enviar_texto_por_handle(janelas[-1], textoCorpo)  # Corpo
+
+    def digitar_senha(self, senha):
+        janelas = self._listar_janelas_filhas()
+        if len(janelas) < 2:
+            return
+        self._enviar_texto_por_handle(janelas[-3], senha)
 
     def _listar_janelas_filhas(self):
         janelas: list[int] = []

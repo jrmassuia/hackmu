@@ -52,8 +52,11 @@ class UpController:
         self.pode_upar_kalima6 = True
         self.pode_upar_kalima7 = True
 
-        if self.pointer.get_nome_char() == 'Layna_' or self.pointer.get_nome_char() == 'DL_DoMall':
+        if self.pointer.get_nome_char() == 'Layna_':
             self.up_em_land_liberado = True
+            self.acc_free = False
+        elif self.pointer.get_nome_char() == 'DL_DoMall':
+            self.up_em_land_liberado = False
             self.acc_free = False
         else:
             self.up_em_land_liberado = False
