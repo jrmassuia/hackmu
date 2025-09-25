@@ -42,8 +42,8 @@ class Up_util:
                     image_position = self.verifica_se_personagem_esta_na_tela(folder_path, filename)
                     if image_position:
                         x, y = image_position
-                        mouse_util.left_clique(self.handle, x, y + 150)
-                        mouse_util.left_clique(self.handle, x, y + 150)
+                        mouse_util.left_clique(self.handle, x, y + 155)
+                        mouse_util.left_clique(self.handle, x, y + 155)
                         time.sleep(1)
                         self.clicar_na_imagem_ou_fallback('./static/img/btnconnect.png', None)
                         time.sleep(5)
