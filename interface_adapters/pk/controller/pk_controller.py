@@ -6,6 +6,7 @@ import testeautopk
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.up.up_util.up_util import Up_util
 from services.alterar_char_sala_service import AlterarCharSalaService
+from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import screenshot_util, mouse_util, spot_util, safe_util, buscar_item_util
 from utils.buscar_item_util import BuscarItemUtil
@@ -26,6 +27,7 @@ class PKController:
         self.teclado_util = Teclado_util(self.handle, arduino)
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
+        self.buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.coord_mouse_atual = None
         self.coord_spot_atual = None
 
@@ -33,9 +35,10 @@ class PKController:
             senha = 'thiago123'
         elif self.pointer.get_nome_char() == 'ReiDav1':
             senha = 'romualdo12'
+        elif self.pointer.get_nome_char() == 'LAZLU':
+            senha = 'bebe133171'
 
         self.alternar_sala = AlterarCharSalaService(self.handle, senha, arduino)
-
 
     def execute(self):
         while True:
@@ -83,6 +86,7 @@ class PKController:
     def limpar_pk(self):
         self.mover_para_sala2()
         self._desativar_pk()
+        self.up_util.ativar_desc_item_spot()
         self.mover_para_spot_vazio()
         tempo_leitura_pk = 0
         inicio = 30
@@ -166,12 +170,12 @@ class PKController:
                                                      movimentacao_proxima=True,
                                                      limpar_spot_se_necessario=True)
 
-                resultados = testeautopk.listar_nomes_e_coords_por_padrao(self.pointer.pm)
+                resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
 
                 if len(resultados) == 0:
                     continue
 
-                char_proximos = testeautopk.ordenar_proximos(self.pointer, resultados, limite=20)
+                char_proximos = self.buscar_personagem.ordenar_proximos(resultados, limite=20)
 
                 for i, d in enumerate(char_proximos, 100):
                     nome = d.get("nome", "")
