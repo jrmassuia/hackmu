@@ -101,7 +101,22 @@ class Teclado_util:
         else:
             print("Falha ao enviar tecla após múltiplas tentativas.")
 
-    def escrever_texto(self, text):
+    def combo_tecla(self,  *keys: str):
+        tentativas = TENTATIVAS_PADRAO
+        for tentativa in range(tentativas):
+            with self.foco_mutex.focar_mutex():
+                try:
+                    if self.arduino.conexao_arduino:
+                        self.focus_window()
+                        self._combo_arduino(*keys)
+                    break
+                except Exception as e:
+                    print(f"[Tentativa {tentativa + 1}] Erro ao enviar tecla: {e}")
+                    self._pausa(0.5)
+        else:
+            print("Falha ao enviar tecla após múltiplas tentativas.")
+
+    def escrever_texto(self, text, enviar_por_cx_texto=True):
         if self.arduino.conexao_arduino:
             tentativas = TENTATIVAS_PADRAO
             for tentativa in range(tentativas):
@@ -118,11 +133,13 @@ class Teclado_util:
                             comandos = [str(text)]
 
                         for cmd in comandos:
-                            self._toque_arduino('ENTER')
-                            self._pausa(0.025)
+                            if enviar_por_cx_texto:
+                                self._toque_arduino('ENTER')
+                                self._pausa(0.025)
                             self._digitar_texto_arduino(cmd)
-                            self._toque_arduino('ENTER')
-                            self._pausa(0.025)
+                            if enviar_por_cx_texto:
+                                self._toque_arduino('ENTER')
+                                self._pausa(0.025)
                         break
                     except Exception as e:
                         print(f"[Tentativa {tentativa + 1}] Erro ao enviar texto: {e}")
@@ -133,6 +150,10 @@ class Teclado_util:
     def _toque_arduino(self, tecla: str, delay=0.025) -> None:
         if self.arduino.conexao_arduino:
             self.arduino.tap(tecla, delay=delay)
+
+    def _combo_arduino(self,  *keys: str) -> None:
+        if self.arduino.conexao_arduino:
+            self.arduino.combo(*keys)
 
     def _digitar_texto_arduino(self, texto: str) -> None:
         if self.arduino.conexao_arduino:
@@ -153,7 +174,7 @@ class Teclado_util:
         janelas = self._listar_janelas_filhas()
         if len(janelas) < 2:
             return
-        self._enviar_texto_por_handle(janelas[-3], senha)
+        self._enviar_texto_por_handle(janelas[-2], senha)
 
     def _listar_janelas_filhas(self):
         janelas: list[int] = []

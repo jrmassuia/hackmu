@@ -77,7 +77,7 @@ class PickKanturuUseCase:
 
     def _definir_spot_up(self):
         if 'PC1' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 12, ''], ['[2/3]', 10, ''], ['[3/3]', 7, '9876Sonso']]
+            spots_por_tela = [['[1/3]', 19, '9876Sonso'], ['[2/3]', 15, ''], ['[3/3]', 10, '9876Sonso']]
         elif 'PC2' in socket.gethostname():
             spots_por_tela = [['[1/3]', 3, ''], ['[2/3]', 8, ''], ['[3/3]', 9, '']]
         else:
@@ -104,7 +104,8 @@ class PickKanturuUseCase:
 
         if self.arduino.conexao_arduino is None:
             GuardaGemstoneService(self.handle, self.mover_spot_util, self.up_util).guardar_gemstone_no_bau()
-            self.subir_k3 = False
+
+        self.subir_k3 = False
 
         if self._deve_subir_para_k3():
             self._subir_para_k3()

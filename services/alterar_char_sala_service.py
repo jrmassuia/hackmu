@@ -26,6 +26,8 @@ class AlterarCharSalaService:
 
         if sala == 7:
             acoes_troca_sala.append(["./static/img/sala7.png", (420, 371)])
+        elif sala == 2:
+            acoes_troca_sala.append(["./static/img/sala2.png", (401, 249)])
         else:
             salas = [
                 (401, 249),  # 2

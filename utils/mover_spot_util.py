@@ -14,16 +14,23 @@ class MoverSpotUtil:
         self.handle = handle
         self.sessao = Sessao(handle=handle)
         self.pointer = Pointers(handle)
+        self.pathfinder = None
 
-    def movimentar_para(self, coords, mapa, max_tempo=60, verficar_se_movimentou=False, limpar_spot_se_necessario=False,
-                        movimentacao_proxima=False):
+    def movimentar_para(self, coords, mapa,
+                        max_tempo=60,
+                        verficar_se_movimentou=False,
+                        limpar_spot_se_necessario=False,
+                        movimentacao_proxima=False,
+                        posicionar_mouse_coordenada=False):
+        self.pathfinder = PathFinder(mapa)
         return self._movimentar(
             [coords],
             mapa,
             max_tempo=max_tempo,
             verficar_se_movimentou=verficar_se_movimentou,
             limpar_spot_se_necessario=limpar_spot_se_necessario,
-            movimentacao_proxima=movimentacao_proxima
+            movimentacao_proxima=movimentacao_proxima,
+            posicionar_mouse_coordenada=posicionar_mouse_coordenada
         )
 
     # Métodos para cada mapa
@@ -72,14 +79,18 @@ class MoverSpotUtil:
     def movimentar_land(self, coords, **kwargs):
         return self.movimentar_para(coords, PathFinder.MAPA_LAND, **kwargs)
 
-    def _movimentar(self, destino, mapa, max_tempo=60, verficar_se_movimentou=False,
-                    limpar_spot_se_necessario=False, movimentacao_proxima=False):
+    def _movimentar(self, destino, mapa,
+                    max_tempo=60,
+                    verficar_se_movimentou=False,
+                    limpar_spot_se_necessario=False,
+                    movimentacao_proxima=False,
+                    posicionar_mouse_coordenada=False):
         try:
-            pathfinder = PathFinder(mapa)
+
             destino_y, destino_x = destino[0]
 
-            y_atual = self.pointer.get_cood_y()
-            x_atual = self.pointer.get_cood_x()
+            # y_atual = self.pointer.get_cood_y()
+            # x_atual = self.pointer.get_cood_x()
 
             tempo_inicio = time.time()
             x_ant, y_ant, hora_inicial = None, None, None
@@ -95,10 +106,13 @@ class MoverSpotUtil:
                         mouse_util.desativar_click_esquerdo(self.handle)
                         return False
 
-                    if (y_atual, x_atual) == (destino_y, destino_x):
+                    y_atual = self.pointer.get_cood_y()
+                    x_atual = self.pointer.get_cood_x()
+
+                    if x_atual == destino_x and y_atual == destino_y:
                         return True
 
-                    caminho = pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
+                    caminho = self.pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
                     if not caminho:
                         continue
 
@@ -108,18 +122,18 @@ class MoverSpotUtil:
 
                     py, px, cx, cy = prox_posicao
 
-                    executou_movimentacao_aproximada = self._executar_movimento(caminho, py, px, cx, cy,
-                                                                                movimentacao_proxima)
-                    if executou_movimentacao_aproximada:
-                        return executou_movimentacao_aproximada
+                    executou_movimentacao_aproximada = self._executar_movimento(caminho, cx, cy,
+                                                                                movimentacao_proxima,
+                                                                                posicionar_mouse_coordenada)
+
+                    if executou_movimentacao_aproximada or (
+                            self.pointer.get_cood_x() == destino_x and self.pointer.get_cood_y() == destino_y):
+                        return True
 
                     if limpar_spot_se_necessario:
                         x_ant, y_ant, hora_inicial = self._verificar_limpeza_spot(
-                            x_atual, y_atual, x_ant, y_ant, hora_inicial
+                            self.pointer.get_cood_x(), self.pointer.get_cood_y(), x_ant, y_ant, hora_inicial
                         )
-
-                    y_atual = self.pointer.get_cood_y()
-                    x_atual = self.pointer.get_cood_x()
 
         except Exception as e:
             print("Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " + mapa + f" : {e}")
@@ -184,9 +198,44 @@ class MoverSpotUtil:
 
         return None
 
-    def _executar_movimento(self, caminho, py, px, cx, cy, movimentacao_proxima):
+    def _executar_movimento(self, caminho, cx, cy, movimentacao_proxima, posicionar_mouse_coordenada):
+
         esta_proximo = len(caminho) <= 4
         clique_rapido = not movimentacao_proxima and len(caminho) <= 5
+
+        if posicionar_mouse_coordenada and esta_proximo:
+            mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
+
+            destino_y = caminho[len(caminho) - 1][0]
+            destino_x = caminho[len(caminho) - 1][1]
+
+            y_anterior = self.pointer.get_cood_y()
+            x_anterior = self.pointer.get_cood_x()
+
+            while True:
+
+                time.sleep(.25)
+
+                if y_anterior == self.pointer.get_cood_y() and x_anterior == self.pointer.get_cood_x():
+                    break
+                else:
+                    y_anterior = self.pointer.get_cood_y()
+                    x_anterior = self.pointer.get_cood_x()
+                    print('PROCURANDO COORD CORRETA!')
+
+            y_atual = self.pointer.get_cood_y()
+            x_atual = self.pointer.get_cood_x()
+
+            try:
+                caminho = self.pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
+                prox_posicao = self._obter_proxima_posicao(caminho, y_atual, x_atual)
+                py, px, cx, cy = prox_posicao
+                mouse_util.mover(self.handle, cx, cy)
+            except:
+                print('Nao achou posicionamento do mouse!')
+                return False
+
+            return True
 
         if movimentacao_proxima and esta_proximo:
             mouse_util.left_clique(self.handle, 400, 250)

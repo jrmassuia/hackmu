@@ -113,14 +113,12 @@ class UpLandUseCase:
             self.coord_spot_atual = poscionar.get_coord_spot()
             self.teclado_util.escrever_texto("/autopick on")
 
-            if self.pointer.get_nome_char() == 'Layna_':
-                self.teclado_util.escrever_texto("/autodc 23:00 RAFAEL FELIX 400")
-            elif self.pointer.get_nome_char() == 'DL_DoMall':
+            if self.pointer.get_nome_char() == 'DL_DoMall':
                 self.teclado_util.escrever_texto("/autodc 23:00 ROMUALDO JUNIOR 400")
             elif self.pointer.get_nome_char() == 'ReiDav1':
                 self.teclado_util.escrever_texto("/autodc 23:00 Vinny Rocha TH 400")
             else:
-                self.teclado_util.escrever_texto("/autodc 23:00 Romualdo TH 400")
+                self.teclado_util.escrever_texto("/autodc 23:00 Romualdo JUNIOR 400")
 
             self.up_liberado = True
         else:

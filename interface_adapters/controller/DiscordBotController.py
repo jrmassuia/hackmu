@@ -1,15 +1,55 @@
+import asyncio
 import datetime
+import io
 import os
+import sys
 import time
+from pathlib import Path
 
 import discord
 from discord.ext import commands
-import asyncio
-import io
+from dotenv import load_dotenv, find_dotenv
+
+
+def load_env_project_root(debug=False):
+    """
+    Procura o .env na raiz do projeto (subindo a partir da CWD).
+    Fallback: sobe a partir da pasta do arquivo atual.
+    No modo PyInstaller (.exe), carrega ao lado do executável.
+    """
+    dotenv_path = None
+
+    if getattr(sys, "frozen", False):  # rodando como .exe
+        candidate = Path(sys.executable).parent / ".env"
+        if candidate.exists():
+            dotenv_path = str(candidate)
+    else:
+        # 1) Tenta a partir da CWD (onde você roda `python ...`)
+        dotenv_path = find_dotenv(filename=".env", usecwd=True) or None
+
+        # 2) Se não achou, sobe a partir da pasta deste arquivo
+        if not dotenv_path:
+            base = Path(__file__).resolve().parent
+            for p in [base, *base.parents]:
+                cand = p / ".env"
+                if cand.exists():
+                    dotenv_path = str(cand)
+                    break
+
+    if dotenv_path:
+        load_dotenv(dotenv_path=dotenv_path)
+        if debug:
+            print("Carregado .env em:", Path(dotenv_path))
+    else:
+        # último recurso: deixa o load_dotenv procurar sozinho
+        load_dotenv()
+        if debug:
+            print("Nenhum .env específico encontrado; usando load_dotenv() padrão.")
 
 
 class DiscordBotController:
     def __init__(self, classe, json_manager=None):
+        load_env_project_root(debug=True)
         self.token = os.getenv("DISCORD_BOT_TOKEN")
 
         if not self.token:
@@ -114,8 +154,6 @@ class DiscordBotController:
         async for message in channel.history(limit=10):
             if not message.pinned and message.author == self.bot.user:
                 await message.delete()
-
-    import datetime
 
     async def limpar_mensagens_antigas(self, channel_id):
         await self.bot.wait_until_ready()

@@ -3,6 +3,7 @@ import time
 import win32gui
 
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
+from interface_adapters.pk.use_case.pk_aida1_use_case import PkAida1UseCase
 from interface_adapters.up.up_util.up_util import Up_util
 from interface_adapters.up.use_case import (
     reset_use_case,
@@ -41,6 +42,7 @@ class UpController:
         self.acc_free = None
 
     def execute(self):
+
         self.casos_uso = self._inicializar_use_cases()
         self.eh_char_noob = self.pointer.get_reset() <= 30
         self._enviar_comandos_iniciais()
@@ -53,14 +55,17 @@ class UpController:
         self.pode_upar_kalima7 = True
 
         if self.pointer.get_nome_char() == 'Layna_':
-            self.up_em_land_liberado = True
+            self.up_em_land_liberado = False
             self.acc_free = False
         elif self.pointer.get_nome_char() == 'DL_DoMall':
-            self.up_em_land_liberado = False
+            self.up_em_land_liberado = True
             self.acc_free = False
         else:
             self.up_em_land_liberado = False
             self.acc_free = True
+            #
+            PkAida1UseCase(self.handle, self.conexao_arduino).execute()
+
 
         self._set_lvl_reset()
 
@@ -136,7 +141,7 @@ class UpController:
 
     def _rotina_kalima6(self):
         self.pode_upar_kalima6 = self._executar_kalima6()
-        if not self.pode_upar_kalima6:
+        if not self.pode_upar_kalima6 and self.casos_uso['kalima6'].up_liberado:
             self.casos_uso['aida'].ja_moveu_para_aida = False
 
     def _rotina_kalima7(self):

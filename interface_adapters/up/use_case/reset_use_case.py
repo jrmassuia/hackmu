@@ -86,8 +86,8 @@ class ResetUseCase:
     def _destribuir_pontos(self):
 
         if self.char_nome == 'DL_DoMall':
-            self.teclado_util.escrever_texto("/f 11974")
-            self.teclado_util.escrever_texto("/a 14000")
+            self.teclado_util.escrever_texto("/f 16974")
+            self.teclado_util.escrever_texto("/a 11980")
             self.teclado_util.escrever_texto("/v 5000")
             self.teclado_util.escrever_texto("/e 32485")
         elif self.char_nome == 'TOROUVC':

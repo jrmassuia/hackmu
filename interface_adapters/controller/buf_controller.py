@@ -253,7 +253,7 @@ class BufController:
     def selecionar_party_se_for_bk(self):
         if self.classe == BufController.CLASSE_BK:
             while True:
-                acao_menu_util.pressionar_painel_comando(self.handle, self.cone)
+                acao_menu_util.pressionar_painel_comando(self.handle, self.conexao_arduino)
                 time.sleep(.5)
 
                 screenshot_cm = screenshot_util.capture_window(self.handle)

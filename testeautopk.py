@@ -1,11 +1,9 @@
-import pymem
-import win32gui
 import ctypes
 from ctypes import wintypes
-from utils import mouse_util
-from utils.mover_spot_util import MoverSpotUtil
+
+import win32gui
+
 from utils.pointer_util import Pointers
-import struct
 
 # ==== Constantes WinAPI (mantenha no topo do arquivo) ====
 PAGE_GUARD = 0x100
@@ -205,11 +203,22 @@ def achar_range_private_prefix_e32(pm,
         return bool(protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE))
 
     def _low32(addr: int) -> int:
-        return addr & 0xFFFFFFFF
+        """Normaliza para valor de 32 bits (unsigned)."""
+        return int(addr) & 0xFFFFFFFF
 
-    def _is_e_low32(addr: int) -> bool:
-        low = _low32(addr)
-        return (low & 0xFF000000) == 0x0E000000  # 0x0Exxxxxx
+    def _is_e_low32(addr) -> bool:
+        """
+        Retorna True se o byte mais significativo do low32 for 0x0E ou 0x0F.
+        Aceita `addr` como int ou string hex (ex: "0x0E123456").
+        """
+        try:
+            low = _low32(addr)
+        except Exception:
+            return False
+
+        # extrai o byte mais alto (MSB) do valor low32
+        msb = (low >> 24) & 0xFF
+        return msb in (0x0E, 0x0F)
 
     carry_len = max(0, len(padrao) - 1)
 
@@ -266,9 +275,9 @@ def achar_range_private_prefix_e32(pm,
         if hits_e_count > 0:
             base_inicio = max(first_hit_e - margem, 0)
             base_fim = last_hit_e + margem
-            print(f"[PRIVATE_E32] region={hex(region_start)}..{hex(region_end)} "
-                  f"prot={_protect_str(mbi.Protect)} hits_e={hits_e_count}")
-            print(f"[RANGE_E32] base_inicio={hex(base_inicio)} base_fim={hex(base_fim)}")
+            # print(f"[PRIVATE_E32] region={hex(region_start)}..{hex(region_end)} "
+            #       f"prot={_protect_str(mbi.Protect)} hits_e={hits_e_count}")
+            # print(f"[RANGE_E32] base_inicio={hex(base_inicio)} base_fim={hex(base_fim)}")
             return base_inicio, base_fim
 
     print("[ERRO] Nenhuma região PRIVATE (0x0Exxxxxx) contendo o padrão foi encontrada.")
@@ -373,15 +382,148 @@ def listar_nomes_e_coords_por_padrao(pm,
                 "addr_nome": hex(nome_addr) if nome is not None else None,
             })
 
-            if nome:
-                print(f"[OK] {nome}  X={x} Y={y}  (nome @ {hex(nome_addr)}, padrão @ {hex(addr_padrao)})")
-            else:
-                print(f"[OK] <sem-nome>  X={x} Y={y}  (padrão @ {hex(addr_padrao)})")
+            # if nome:
+            #     print(f"[OK] {nome}  X={x} Y={y}  (nome @ {hex(nome_addr)}, padrão @ {hex(addr_padrao)})")
+            # else:
+            #     print(f"[OK] <sem-nome>  X={x} Y={y}  (padrão @ {hex(addr_padrao)})")
 
         prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
         addr += tam
 
     return resultados
+
+
+from typing import Any, List
+
+def ordenar_proximos(
+    pointer,
+    resultados: list,
+    limite: int | None = None,
+    incluir_dist: bool = True
+) -> List[dict]:
+    """
+    Filtra e ordena resultados próximos (|dx|<=10 e |dy|<=10) em relação às coords do self.
+    Aceita `resultados` em dois formatos:
+      - dicts: {"nome":..., "x": int, "y": int, "addr_padrao": "0x...", "addr_nome": "0x..."}
+      - tuplas/listas: (addr_hex_or_int, x, y)
+
+    Retorna lista de dicionários com pelo menos as chaves:
+      - "addr": str   (endereço escolhido, preferindo addr_padrao -> addr_nome -> tuple addr)
+      - "x": int
+      - "y": int
+      - "dist": int   (apenas se incluir_dist == True)
+    Quando disponíveis, também inclui "nome", "addr_padrao", "addr_nome".
+    """
+    x0 = pointer.get_cood_x()
+    y0 = pointer.get_cood_y()
+    if x0 is None or y0 is None:
+        print("[WARN] Coordenadas atuais indisponíveis.")
+        return []
+
+    proximos = []
+
+    for item in resultados:
+        # extrai campos de forma robusta
+        try:
+            if isinstance(item, dict):
+                x = item.get("x")
+                y = item.get("y")
+                nome = item.get("nome")
+                addr_padrao = item.get("addr_padrao")
+                addr_nome = item.get("addr_nome")
+                # prefer addr_padrao, depois addr_nome, depois qualquer chave 'addr'
+                addr_candidate = addr_padrao or addr_nome or item.get("addr") or item.get("address")
+                # se nada, tenta ver se existe 'addr_hex' ou 'address_hex'
+                if addr_candidate is None:
+                    addr_candidate = item.get("addr_hex")
+                addr_raw = addr_candidate
+            else:
+                # tuple/list: (addr, x, y)
+                addr_raw = item[0]
+                x = item[1]
+                y = item[2]
+                nome = None
+                addr_padrao = None
+                addr_nome = None
+
+            # normalize coords
+            if x is None or y is None:
+                # pula entradas sem coords válidas
+                continue
+            x = int(x)
+            y = int(y)
+        except Exception as e:
+            print(f"[WARN] item ignorado (formato inválido): {item} -> {e}")
+            continue
+
+        dx = x - x0
+        dy = y - y0
+        if abs(dx) <= 10 and abs(dy) <= 10:
+            dist = abs(dx) + abs(dy)  # Manhattan
+
+            # normaliza addr para string de saída
+            addr_str = None
+            if addr_raw is None:
+                addr_str = None
+            else:
+                # se for inteiro -> hex string; se for str, mantém
+                try:
+                    if isinstance(addr_raw, int):
+                        addr_str = hex(addr_raw)
+                    else:
+                        addr_str = str(addr_raw)
+                except Exception:
+                    addr_str = str(addr_raw)
+
+            # calcula valor numérico para ordenação por endereço (estabilidade)
+            sort_addr_val = 0
+            if isinstance(addr_str, str):
+                try:
+                    s = addr_str.strip()
+                    if s.lower().startswith("0x"):
+                        sort_addr_val = int(s, 16)
+                    else:
+                        sort_addr_val = int(s)
+                except Exception:
+                    sort_addr_val = abs(hash(addr_str)) & 0x7FFFFFFF
+
+            proximos.append({
+                "addr": addr_str,
+                "x": x,
+                "y": y,
+                "dist": dist,
+                "nome": nome,
+                "addr_padrao": addr_padrao,
+                "addr_nome": addr_nome,
+                "_sort_addr_val": sort_addr_val
+            })
+
+    # ordena por (dist, endereco_normalizado)
+    proximos.sort(key=lambda d: (d["dist"], d["_sort_addr_val"]))
+
+    # aplica limite
+    if limite is not None:
+        proximos = proximos[:limite]
+
+    # prepara saída final removendo campo auxiliar _sort_addr_val
+    resultado_final = []
+    for d in proximos:
+        out = {
+            # "addr": d["addr"],
+            "x": d["x"],
+            "y": d["y"],
+        }
+        # if incluir_dist:
+        #     out["dist"] = d["dist"]
+        if d.get("nome") is not None:
+            out["nome"] = d["nome"]
+        # if d.get("addr_padrao") is not None:
+        #     out["addr_padrao"] = d["addr_padrao"]
+        # if d.get("addr_nome") is not None:
+        #     out["addr_nome"] = d["addr_nome"]
+        resultado_final.append(out)
+
+    return resultado_final
 
 
 def main():
@@ -404,7 +546,8 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle)
     # hits = scan_padrao_sem_filtro(pointer.pm)
-    itens = listar_nomes_e_coords_por_padrao(pointer.pm)
+    resultados = listar_nomes_e_coords_por_padrao(pointer.pm)
+    ordenar_proximos(pointer, resultados, limite=5)
 
 
 def find_window_handle_by_partial_title(partial_title):

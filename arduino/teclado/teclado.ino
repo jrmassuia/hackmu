@@ -74,6 +74,14 @@ String line;
 #define KEY_NUM_0       234 // '\352' Keypad 0 (Insert)
 #define KEY_NUM_DOT     235 // '\353' Keypad . (Delete)
 
+#define KEY_LEFT_CTRL	  128	
+#define KEY_LEFT_SHIFT	129	
+#define KEY_LEFT_ALT		130	
+#define KEY_LEFT_GUI		131	
+#define KEY_RIGHT_CTRL	132	
+#define KEY_RIGHT_SHIFT	133	
+#define KEY_RIGHT_ALT		134	
+#define KEY_RIGHT_GUI		135	
 
 // Barra "/" corrigida (evita virar ';' no jogo)
 #define KEY_SLASH_FIX 220
@@ -382,50 +390,118 @@ void handleUp(const String &tokIn) {
 
 // ---------- COMBO ----------
 void handleCombo(const String &seqIn) {
-  String seq = seqIn; seq.trim(); seq.toUpperCase();
+  String seq = seqIn;
+  seq.trim();
+  seq.toUpperCase();
 
-  const int MAXK = 8;
+  const int MAXK = 12;
   String parts[MAXK];
-  int n=0;
+  int n = 0;
 
-  int start=0;
+  // split por '+'
+  int start = 0;
   while (start < (int)seq.length() && n < MAXK) {
     int plus = seq.indexOf('+', start);
     if (plus < 0) plus = seq.length();
-    parts[n++] = seq.substring(start, plus);
+    String tok = seq.substring(start, plus);
+    tok.trim();
+    if (tok.length() > 0) parts[n++] = tok;
     start = plus + 1;
   }
 
-  uint8_t pressedMods[MAXK]; int pm=0;
-  uint8_t pressedCodes[MAXK]; int pc=0;
+  // --- ajustes de timing (personalize se quiser) ---
+  const int PRESS_GAP_MS = 60;       // delay entre um press(...) e o próximo press(...)
+  const int POST_PRESS_DELAY_MS = 40; // espera após terminar todos os press antes de começar releases
+  const int RELEASE_GAP_MS = 30;     // delay entre um release(...) e o próximo release(...)
 
-  // press
-  for (int i=0; i<n; ++i) {
-    String tok = parts[i]; tok.trim();
+  uint8_t pressedMods[MAXK]; int pm = 0;
+  uint8_t pressedCodes[MAXK]; int pc = 0;
 
-    uint8_t mod=0;
-    if (modifierFromToken(tok, mod)) { Keyboard.press(mod); pressedMods[pm++]=mod; continue; }
+  // press: pressiona cada token, com delay entre cada press
+  for (int i = 0; i < n; ++i) {
+    String tok = parts[i];
+    tok.trim();
 
-    uint8_t kc=0;
-    if (specialFromToken(tok, kc)) { Keyboard.press(kc); pressedCodes[pc++]=kc; continue; }
-
-    if (numpadFromToken(tok, kc)) { Keyboard.press(kc); pressedCodes[pc++]=kc; continue; }
-
-    if (tok.length()==1 && tok[0]>='0' && tok[0]<='9') {
-      if (mapDigitDefine(tok[0], kc)) { Keyboard.press(kc); pressedCodes[pc++]=kc; continue; }
+    uint8_t mod = 0;
+    if (modifierFromToken(tok, mod)) {
+      Keyboard.press(mod);
+      pressedMods[pm++] = mod;
+      delay(PRESS_GAP_MS);
+      continue;
     }
-    if (tok.length()==1 && tok[0]>='A' && tok[0]<='Z') {
-      if (mapLetterDefine(tok[0], kc)) { Keyboard.press(kc); pressedCodes[pc++]=kc; continue; }
+
+    uint8_t kc = 0;
+    if (specialFromToken(tok, kc)) {
+      Keyboard.press(kc);
+      pressedCodes[pc++] = kc;
+      delay(PRESS_GAP_MS);
+      continue;
     }
 
-    char ch=0;
-    if (asciiPunctFromToken(tok, ch)) { Keyboard.press((uint8_t)ch); pressedCodes[pc++]=(uint8_t)ch; }
+    if (numpadFromToken(tok, kc)) {
+      Keyboard.press(kc);
+      pressedCodes[pc++] = kc;
+      delay(PRESS_GAP_MS);
+      continue;
+    }
+
+    if (tok.length() == 1 && tok[0] >= '0' && tok[0] <= '9') {
+      if (mapDigitDefine(tok[0], kc)) {
+        Keyboard.press(kc);
+        pressedCodes[pc++] = kc;
+        delay(PRESS_GAP_MS);
+        continue;
+      }
+    }
+
+    if (tok.length() == 1 && tok[0] >= 'A' && tok[0] <= 'Z') {
+      if (mapLetterDefine(tok[0], kc)) {
+        // Nota: você pode optar por usar Keyboard.write() para letras,
+        // mas aqui mantenho press/release consistente com seu padrão.
+        Keyboard.press(kc);
+        pressedCodes[pc++] = kc;
+        delay(PRESS_GAP_MS);
+        continue;
+      }
+    }
+
+    char ch = 0;
+    if (asciiPunctFromToken(tok, ch)) {
+      Keyboard.press((uint8_t)ch);
+      pressedCodes[pc++] = (uint8_t)ch;
+      delay(PRESS_GAP_MS);
+      continue;
+    }
+
+    // token não reconhecido -> log (opcional)
+    Serial.print("COMBO: token nao mapeado: ");
+    Serial.println(tok);
+    // pequena espera antes de seguir
+    delay(PRESS_GAP_MS);
   }
-  delay(35);
-  // release reverse
-  for (int i=pc-1; i>=0; --i) Keyboard.release(pressedCodes[i]);
-  for (int i=pm-1; i>=0; --i) Keyboard.release(pressedMods[i]);
+
+  // espera após presses para garantir que o host veja o estado
+  delay(POST_PRESS_DELAY_MS);
+
+  // release: libera códigos (reverse order) com delay entre cada release
+  for (int i = pc - 1; i >= 0; --i) {
+    Keyboard.release(pressedCodes[i]);
+    delay(RELEASE_GAP_MS);
+  }
+
+  // release: libera modifiers (reverse order) com delay entre cada release
+  for (int i = pm - 1; i >= 0; --i) {
+    Keyboard.release(pressedMods[i]);
+    delay(RELEASE_GAP_MS);
+  }
+
+  // fallback: se só havia modifiers, garante que nada fica preso
+  if (pc == 0 && pm > 0) {
+    delay(10);
+    Keyboard.releaseAll();
+  }
 }
+
 
 // ---------- parser serial ----------
 void processLine(String cmd) {
