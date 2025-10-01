@@ -46,7 +46,8 @@ class MenuGUI:
             ('ref_gem', 'Ref. Gem'),
             ('ref_peq', 'Ref. Peq'),
             ('upar', 'AutoUp'),
-            ('buf', 'Buf')
+            ('buf', 'Buf'),
+            ('pk', 'Pklizar')
         ]
 
         for idx, (tela_nome, _) in enumerate(telas):
@@ -96,7 +97,8 @@ class MenuGUI:
             'ref_gem': tela_vars['ref_gem'].get(),
             'ref_peq': tela_vars['ref_peq'].get(),
             'upar': tela_vars['upar'].get(),
-            'buf': tela_vars['buf'].get()
+            'buf': tela_vars['buf'].get(),
+            'pk': tela_vars['pk'].get()
         }
 
     def run(self):

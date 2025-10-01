@@ -255,6 +255,9 @@ def buscar_todos_spots_aida(ignorar_spot_pk=False):
     coordenadas = []
     coordenadas.extend(buscar_spots_aida_1(ignorar_spot_pk=ignorar_spot_pk))
     coordenadas.extend(buscar_spots_aida_2())
+    coordenadas.extend(buscar_spots_aida_corredor())
+    coordenadas.extend(buscar_spots_aida_final())
+    coordenadas.extend(buscar_spots_aida_volta_final())
     return coordenadas
 
 
@@ -398,12 +401,16 @@ def buscar_spots_aida_2():
             [['SM', 'MG'], [(89, 152)], (398, 240)],  # 13
             [['DL'], [(88, 150)], (586, 170)],
             [['EF'], [(89, 147)], (507, 193)]
-        ],
-        [
-            [['SM', 'MG'], [(89, 117)], (398, 240)],  # 14
-            [['DL'], [(89, 121)], (229, 396)],
-            [['EF'], [(89, 125)], (141, 420)]
-        ],
+        ]
+
+    ]
+
+def buscar_spots_aida_corredor():
+    return [[
+        [['SM', 'MG'], [(89, 117)], (398, 240)],  # 14
+        [['DL'], [(89, 121)], (229, 396)],
+        [['EF'], [(89, 125)], (141, 420)]
+    ],
         [
             [['SM', 'MG'], [(89, 100)], (398, 240)],  # 15
             [['DL'], [(89, 102)], (255, 361)],
@@ -418,7 +425,11 @@ def buscar_spots_aida_2():
             [['SM', 'MG', 'BK'], [(87, 64)], (398, 240)],  # 17
             [['DL'], [(87, 68)], (227, 383)],
             [['EF'], [(90, 58)], (475, 194)]
-        ],
+        ]]
+
+
+def buscar_spots_aida_final():
+    return [
         [
             [['SM', 'MG', 'BK'], [(118, 96)], (398, 240)],  # 18
             [['DL'], [(118, 93)], (507, 206)]
@@ -434,7 +445,12 @@ def buscar_spots_aida_2():
         [
             [['SM', 'MG'], [(146, 89)], (398, 240)],  # 21
             [['DL'], [(143, 86)], (598, 262)]
-        ],
+        ]
+    ]
+
+
+def buscar_spots_aida_volta_final():
+    return [
         [
             [['SM', 'MG'], [(134, 138)], (398, 240)],  # 22
             [['DL'], [(135, 141)], (234, 359)],
@@ -454,7 +470,8 @@ def buscar_spots_aida_2():
             [['SM', 'MG'], [(163, 165)], (398, 240)],  # 25
             [['DL'], [(168, 164)], (247, 177)],
             [['EF'], [(171, 167)], (348, 245)]
-        ]]
+        ]
+    ]
 
 
 def buscar_spots_kalima():

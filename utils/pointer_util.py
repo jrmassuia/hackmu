@@ -51,6 +51,8 @@ class Pointers:
             self.PK_ATIVO_POINTER = self.get_pointer(self.CLIENT + 0x00141288, offsets=[0x0])
             #
             self.PAINEL_LATERAL_ABERTO_POINTER = self.get_pointer(self.CLIENT + 0x00295554, offsets=[0xA0])
+            #
+            self.SAL_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001816AC, offsets=[0x104])
 
             # pointer_base = self.CLIENT + 0x0352D864
             # if pointer_base:
@@ -147,6 +149,7 @@ class Pointers:
         print('PK ATIVO:' + str(self.get_pk_ativo()))
         print('MOSTRA DESC ITEM:' + str(self.get_mostrar_desc_item()))
         print('PAINEL LATERAL ABERTO:' + str(self.get_painel_lateral_aberto_item()))
+        print('SALA ATUAL:' + str(self.get_sala_atual()))
 
     def get_cood_x(self):
         return self.read_value(self.X_POINTER, data_type="int")
@@ -197,8 +200,8 @@ class Pointers:
     def get_painel_lateral_aberto_item(self):
         return self.read_value(self.PAINEL_LATERAL_ABERTO_POINTER, data_type="word")
 
-    def get_fps(self):
-        return self.read_value(self.FPS_POINTER, data_type="int")
+    def get_sala_atual(self):
+        return self.read_value(self.SAL_ATUAL_POINTER, data_type="int")
 
     def get_item_pick(self):
         return self.read_value(self.ITEM_PICK_POINTER, data_type="string")

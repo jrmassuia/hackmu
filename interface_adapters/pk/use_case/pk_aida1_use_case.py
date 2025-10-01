@@ -1,9 +1,10 @@
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.pk.controller.pk_controller import PKController
+from interface_adapters.pk.use_case.pk_base import PkBase
 from utils.mover_spot_util import MoverSpotUtil
 
 
-class PkAida1UseCase:
+class PkAida1UseCase():
 
     def __init__(self, handle, arduino):
         self.handle = handle

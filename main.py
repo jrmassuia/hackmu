@@ -12,6 +12,7 @@ from interface_adapters.controller.sd_media_controler import SdMediaController
 from interface_adapters.controller.sd_small_controller import SdSmallController
 from interface_adapters.helpers.session_manager import *
 from interface_adapters.helpers.session_manager_new import *
+from interface_adapters.pk.controller.pk_controller import PKController
 from interface_adapters.up.controller.up_controller import UpController
 from interface_adapters.up.use_case.pick_kanturu_use_case import PickKanturuUseCase
 from menu2 import MenuGUI
@@ -71,7 +72,7 @@ class MainApp:
     def _verifica_classe_personagem(self, handle):
         classes_por_nome = {
             'MG': ['TOROUVC', 'Vampiro', 'Energumeno'],
-            'DL': ['DL_DoMall', 'Narukami', 'BlacK_WinG', 'Omale_DL', 'ReiDav1'],
+            'DL': ['DL_DoMall', 'Narukami', 'BlacK_WinG', 'Omale_DL', 'ReiDav1','LAZLU','_Offensive'],
             'SM': ['SisteMatyc', 'INFECTRIX', 'BLEKALT_SM', 'CaFeTaoO'],
             'EF': ['Layna_', '_Striper_', 'omale_ME'],
             'BK': ['PitterPark', 'Omale_BK', 'BLEKALTINO']
@@ -157,6 +158,8 @@ class MainApp:
             obj = LimpaPkController(handle)
         elif tipoHack == MenuFields.PICKKANTURU:
             obj = PickKanturuUseCase(handle, self.conexao_arduino)
+        elif tipoHack == MenuFields.PKLIZAR:
+            obj = PKController(handle, self.conexao_arduino)
 
         thread = threading.Thread(target=obj.execute)
         self.threads_ativas.append((obj, thread))  # Armazena o objeto e a thread
@@ -199,6 +202,8 @@ class MainApp:
                 self._executar_limpa_pk(handle)
             elif sessao.ler_menu(MenuFields.PICKKANTURU) == 1:
                 self._executar_pick_kanturu(handle)
+            elif sessao.ler_menu(MenuFields.PKLIZAR) == 1:
+                self._executar_pklizar(handle)
             else:
                 self._executar_autopick(handle)
 
@@ -242,6 +247,12 @@ class MainApp:
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
         self.rodar_em_thread(handle, MenuFields.UPAR)
+        time.sleep(2)
+
+    def _executar_pklizar(self, handle):
+        print('Inciando telas:')
+        print('--' + win32gui.GetWindowText(handle))
+        self.rodar_em_thread(handle, MenuFields.PKLIZAR)
         time.sleep(2)
 
     def _executar_macro(self):

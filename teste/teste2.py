@@ -139,9 +139,12 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    # pointer = Pointers(handle).imprimir_todos_tipos_do_endereco_memoria()
+    pointer = Pointers(handle).teste_pointer_necessarios()
 
-    regiao_img = screenshot_util.capture_region(handle, 350, 270, 50, 50)
+    # buscar_personagem = BuscarPersoangemProximoService(pointer)
+    # resultados = buscar_personagem.listar_nomes_e_coords_por_padrao()
+    # print(resultados)
+
 
     # personagem_proximo_service = BuscarPersoangemProximoService(pointer)
     #

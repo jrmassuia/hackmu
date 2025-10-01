@@ -89,9 +89,6 @@ class MoverSpotUtil:
 
             destino_y, destino_x = destino[0]
 
-            # y_atual = self.pointer.get_cood_y()
-            # x_atual = self.pointer.get_cood_x()
-
             tempo_inicio = time.time()
             x_ant, y_ant, hora_inicial = None, None, None
 
@@ -103,7 +100,7 @@ class MoverSpotUtil:
                         return True
 
                     if verficar_se_movimentou and self._checar_safe_zone(mapa):
-                        mouse_util.desativar_click_esquerdo(self.handle)
+                        mouse_util.left_clique(self.handle, 400, 250)
                         return False
 
                     y_atual = self.pointer.get_cood_y()
@@ -204,38 +201,7 @@ class MoverSpotUtil:
         clique_rapido = not movimentacao_proxima and len(caminho) <= 5
 
         if posicionar_mouse_coordenada and esta_proximo:
-            mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
-
-            destino_y = caminho[len(caminho) - 1][0]
-            destino_x = caminho[len(caminho) - 1][1]
-
-            y_anterior = self.pointer.get_cood_y()
-            x_anterior = self.pointer.get_cood_x()
-
-            while True:
-
-                time.sleep(.25)
-
-                if y_anterior == self.pointer.get_cood_y() and x_anterior == self.pointer.get_cood_x():
-                    break
-                else:
-                    y_anterior = self.pointer.get_cood_y()
-                    x_anterior = self.pointer.get_cood_x()
-                    print('PROCURANDO COORD CORRETA!')
-
-            y_atual = self.pointer.get_cood_y()
-            x_atual = self.pointer.get_cood_x()
-
-            try:
-                caminho = self.pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
-                prox_posicao = self._obter_proxima_posicao(caminho, y_atual, x_atual)
-                py, px, cx, cy = prox_posicao
-                mouse_util.mover(self.handle, cx, cy)
-            except:
-                print('Nao achou posicionamento do mouse!')
-                return False
-
-            return True
+            return self._executar_movimento_e_posicionar_mouse(caminho, cx, cy)
 
         if movimentacao_proxima and esta_proximo:
             mouse_util.left_clique(self.handle, 400, 250)
@@ -249,6 +215,40 @@ class MoverSpotUtil:
             mouse_util.ativar_click_esquerdo(self.handle)
 
         return False
+
+    def _executar_movimento_e_posicionar_mouse(self, caminho, cx, cy):
+        mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
+
+        destino_y = caminho[len(caminho) - 1][0]
+        destino_x = caminho[len(caminho) - 1][1]
+
+        y_anterior = self.pointer.get_cood_y()
+        x_anterior = self.pointer.get_cood_x()
+
+        while True:
+
+            time.sleep(.25)
+
+            if y_anterior == self.pointer.get_cood_y() and x_anterior == self.pointer.get_cood_x():
+                break
+            else:
+                y_anterior = self.pointer.get_cood_y()
+                x_anterior = self.pointer.get_cood_x()
+                print('PROCURANDO COORD CORRETA!')
+
+        y_atual = self.pointer.get_cood_y()
+        x_atual = self.pointer.get_cood_x()
+
+        try:
+            caminho = self.pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
+            prox_posicao = self._obter_proxima_posicao(caminho, y_atual, x_atual)
+            py, px, cx, cy = prox_posicao
+            mouse_util.mover(self.handle, cx, cy)
+        except:
+            print('Nao achou posicionamento do mouse!')
+            return False
+
+        return True
 
     def matriz_posicoes(self):
 

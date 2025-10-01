@@ -3,7 +3,6 @@ import time
 import win32gui
 
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
-from interface_adapters.pk.use_case.pk_aida1_use_case import PkAida1UseCase
 from interface_adapters.up.up_util.up_util import Up_util
 from interface_adapters.up.use_case import (
     reset_use_case,
@@ -63,9 +62,6 @@ class UpController:
         else:
             self.up_em_land_liberado = False
             self.acc_free = True
-            #
-            PkAida1UseCase(self.handle, self.conexao_arduino).execute()
-
 
         self._set_lvl_reset()
 

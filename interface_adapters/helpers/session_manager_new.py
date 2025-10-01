@@ -41,6 +41,7 @@ class MenuFields(Enum):
     REF_GEM = "ref_gem"
     REF_PEQ = "ref_peq"
     BUF = "buf"
+    PKLIZAR = "pk"
 
 
 class GenericoFields(Enum):
