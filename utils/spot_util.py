@@ -254,56 +254,59 @@ def buscar_spots_icarus(qtd_resets=400):
 def buscar_todos_spots_aida(ignorar_spot_pk=False):
     coordenadas = []
     coordenadas.extend(buscar_spots_aida_1(ignorar_spot_pk=ignorar_spot_pk))
-    coordenadas.extend(buscar_spots_aida_2())
+    coordenadas.extend(buscar_spots_aida_2(ignorar_spot_pk=ignorar_spot_pk))
     coordenadas.extend(buscar_spots_aida_corredor())
     coordenadas.extend(buscar_spots_aida_final())
-    coordenadas.extend(buscar_spots_aida_volta_final())
+    coordenadas.extend(buscar_spots_aida_volta_final(ignorar_spot_pk=ignorar_spot_pk))
     return coordenadas
 
 
 def buscar_spots_aida_1(ignorar_spot_pk=False):
     coordenadas = []
     coordenadas.extend([
+
         [
-            [['SM', 'MG', 'BK'], [(112, 16)], (398, 240)],  # 0
-            [['DL'], [(113, 13)], (477, 131)],
-            [['EF'], [(114, 9)], (449, 220)]
+            [['SM', 'MG'], [(190, 19)], (398, 240)],  # 0
+            [['DL'], [(188, 18)], (561, 370)],
+            [['EF'], [(198, 17)], (356, 233)]
         ],
         [
-            [['SM', 'MG', 'BK'], [(142, 16)], (398, 240)],  # 1
+            [['SM', 'MG'], [(176, 16)], (398, 240)],  # 1
+            [['DL'], [(171, 16)], (573, 412)],
+            [['EF'], [(182, 14)], (274, 157)]
+        ],
+        [
+            [['SM', 'MG', 'BK'], [(142, 16)], (398, 240)],  # 2
             [['DL'], [(139, 16)], (520, 367)],
             [['EF'], [(152, 15)], (274, 158)]
         ],
         [
-            [['SM', 'MG'], [(176, 16)], (398, 240)],  # 2
-            [['DL'], [(171, 16)], (573, 412)],
-            [['EF'], [(182, 14)], (274, 157)]
-        ]])
+            [['SM', 'MG', 'BK'], [(112, 16)], (398, 240)],  # 3
+            [['DL'], [(113, 13)], (477, 131)],
+            [['EF'], [(114, 9)], (449, 220)]
+        ]
+    ])
 
     coordenadas.extend([
 
         [
-            [['SM', 'MG'], [(152, 38)], (398, 240)]  # 3
+            [['SM', 'MG'], [(152, 38)], (398, 240)]  # 4
         ],
 
         [
-            [['SM', 'MG'], [(165, 59)], (398, 240)]  # 4
+            [['SM', 'MG'], [(165, 59)], (398, 240)]  # 5
         ],
 
         [
-            [['SM', 'MG'], [(167, 45)], (398, 240)]  # 5
+            [['SM', 'MG'], [(167, 45)], (398, 240)]  # 6
         ],
 
         [
-            [['SM', 'MG'], [(213, 33)], (398, 240)],  # 6
+            [['SM', 'MG'], [(213, 33)], (398, 240)],  # 7
             [['DL'], [(215, 32)], (238, 161)],
             [['EF'], [(219, 34)], (236, 219)]
         ],
-        [
-            [['SM', 'MG'], [(190, 19)], (398, 240)],  # 7
-            [['DL'], [(188, 18)], (561, 370)],
-            [['EF'], [(198, 17)], (356, 233)]  # ok
-        ]
+
     ])
 
     if not ignorar_spot_pk:
@@ -312,7 +315,8 @@ def buscar_spots_aida_1(ignorar_spot_pk=False):
                 [['SM', 'MG'], [(225, 12)], (398, 240)],  # 8
                 [['DL'], [(228, 12)], (218, 184)],
                 [['EF'], [(231, 13)], (263, 210)]
-            ]])
+            ]
+        ])
 
     if not ignorar_spot_pk:
         coordenadas.extend([
@@ -330,18 +334,25 @@ def buscar_spots_aida_1(ignorar_spot_pk=False):
                 [['SM', 'MG', 'BK'], [(230, 131)], (398, 240)],  # 11
                 [['DL'], [(233, 128)], (373, 120)],
                 [['EF'], [(235, 124)], (405, 162)]
-            ]])
+            ]
+        ])
 
     return coordenadas
 
 
-def buscar_spots_aida_2():
-    return [
-        [
-            [['SM', 'MG'], [(204, 171)], (398, 240)],  # 1
-            [['DL'], [(207, 171)], (206, 189)],
-            [['EF'], [(213, 170)], (279, 223)]
-        ],
+def buscar_spots_aida_2(ignorar_spot_pk=False):
+    coordenadas = []
+
+    if not ignorar_spot_pk:
+        coordenadas.extend([
+            [
+                [['SM', 'MG'], [(204, 171)], (398, 240)],  # 1
+                [['DL'], [(207, 171)], (206, 189)],
+                [['EF'], [(213, 170)], (279, 223)]
+            ]
+        ])
+
+    coordenadas.extend([
         [
             [['SM', 'MG', 'BK'], [(208, 204)], (398, 240)],  # 2
             [['DL'], [(210, 202)], (428, 139)],
@@ -403,7 +414,10 @@ def buscar_spots_aida_2():
             [['EF'], [(89, 147)], (507, 193)]
         ]
 
-    ]
+    ])
+
+    return coordenadas
+
 
 def buscar_spots_aida_corredor():
     return [[
@@ -449,29 +463,37 @@ def buscar_spots_aida_final():
     ]
 
 
-def buscar_spots_aida_volta_final():
-    return [
-        [
+def buscar_spots_aida_volta_final(ignorar_spot_pk=False):
+    coordenadas = []
+
+    if not ignorar_spot_pk:
+        coordenadas.extend([[
             [['SM', 'MG'], [(134, 138)], (398, 240)],  # 22
             [['DL'], [(135, 141)], (234, 359)],
             [['EF'], [(196, 131)], (461, 197)]
-        ],
+        ]])
+
+    coordenadas.extend([
         [
-            [['SM', 'MG'], [(158, 117)], (398, 240)],  # 23
-            [['DL'], [(163, 117)], (222, 160)],
-            [['EF'], [(167, 115)], (280, 174)]
-        ],
-        [
-            [['SM', 'MG'], [(169, 147)], (398, 240)],  # 24
-            [['DL'], [(170, 144)], (500, 165)],
-            [['EF'], [(171, 139)], (500, 181)]
-        ],
-        [
-            [['SM', 'MG'], [(163, 165)], (398, 240)],  # 25
-            [['DL'], [(168, 164)], (247, 177)],
-            [['EF'], [(171, 167)], (348, 245)]
+            [
+                [['SM', 'MG'], [(158, 117)], (398, 240)],  # 23
+                [['DL'], [(163, 117)], (222, 160)],
+                [['EF'], [(167, 115)], (280, 174)]
+            ],
+            [
+                [['SM', 'MG'], [(169, 147)], (398, 240)],  # 24
+                [['DL'], [(170, 144)], (500, 165)],
+                [['EF'], [(171, 139)], (500, 181)]
+            ],
+            [
+                [['SM', 'MG'], [(163, 165)], (398, 240)],  # 25
+                [['DL'], [(168, 164)], (247, 177)],
+                [['EF'], [(171, 167)], (348, 245)]
+            ]
         ]
-    ]
+    ])
+
+    return coordenadas
 
 
 def buscar_spots_kalima():

@@ -46,6 +46,9 @@ class PkBase:
         elif self.pointer.get_nome_char() == '_Offensive':
             senha = 'kuChx98f'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_FINAL
+        elif self.pointer.get_nome_char() == 'DL_JirayA':
+            senha = '134779'
+            self.tipo_pk = PkBase.PKLIZAR_AIDA_2
         else:
             senha = ''
 
@@ -128,6 +131,7 @@ class PkBase:
             self.alternar_sala.selecionar_sala(2)
 
     def mover_para_spot_vazio(self):
+        self.teclado_util.selecionar_skill_1()
         self._sair_da_safe()
         spots = spot_util.buscar_spots_aida_2()
         poscionar = PosicionamentoSpotService(
@@ -170,6 +174,8 @@ class PkBase:
             self.pklizar_aida_corredor()
         elif self.tipo_pk == PkBase.PKLIZAR_AIDA_FINAL:
             self.pklizar_aida_final()
+        else:
+            self.pklizar_aida1()
 
     def pklizar_aida1(self):
         spots = spot_util.buscar_spots_aida_1(ignorar_spot_pk=True)
@@ -190,7 +196,8 @@ class PkBase:
         return spots_extras
 
     def pklizar_aida2(self):
-        spots = spot_util.buscar_spots_aida_2()
+        spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
+        spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
         self._executar_pk(spots)
 
     def pklizar_aida_corredor(self):

@@ -94,12 +94,13 @@ class BuscarPersoangemProximoService:
                                        padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
                                        bloco_leitura=0x40000,  # 256 KB
                                        margem=0x800,  # 2 KB nas pontas
-                                       exigir_rw=True):  # só PRIVATE com RW/ERW
+                                       exigir_rw=True,  # só PRIVATE com RW/ERW
+                                       msb: int = 0x0E):  # <<< NOVO: prefixo a testar (um por vez)
         """
-        Procura a PRIMEIRA região MEM_PRIVATE cujo low32 do endereço-base esteja em 0x0E000000..0x0EFFFFFF
-        e que contenha 'padrao'. Dentro dessa região:
-          base_inicio = primeiro hit com low32 em 0x0Exxxxxx
-          base_fim    = último  hit com low32 em 0x0Exxxxxx
+        Procura a PRIMEIRA região MEM_PRIVATE cujo low32 do endereço-base tenha MSB == `msb`
+        (ex.: 0x0E, 0x0F, 0x0A) e que contenha `padrao`. Dentro dessa região:
+          base_inicio = primeiro hit com low32 iniciando pelo MSB especificado
+          base_fim    = último  hit com low32 iniciando pelo MSB especificado
         Retorna (base_inicio, base_fim). Encerra após a 1ª região válida.
         """
         PAGE_READWRITE = 0x04
@@ -115,19 +116,16 @@ class BuscarPersoangemProximoService:
             """Normaliza para valor de 32 bits (unsigned)."""
             return int(addr) & 0xFFFFFFFF
 
-        def _is_e_low32(addr) -> bool:
+        def _has_msb(addr, wanted_msb: int) -> bool:
             """
-            Retorna True se o byte mais significativo do low32 for 0x0E ou 0x0F.
+            Retorna True se o byte mais significativo do low32 for igual a `wanted_msb`.
             Aceita `addr` como int ou string hex (ex: "0x0E123456").
             """
             try:
                 low = _low32(addr)
             except Exception:
                 return False
-
-            # extrai o byte mais alto (MSB) do valor low32
-            msb = (low >> 24) & 0xFF
-            return msb in (0x0E, 0x0F)
+            return ((low >> 24) & 0xFF) == wanted_msb
 
         carry_len = max(0, len(padrao) - 1)
 
@@ -138,16 +136,16 @@ class BuscarPersoangemProximoService:
                 continue
             if exigir_rw and not _is_rw(mbi.Protect):
                 continue
-            if not _is_e_low32(region_start):
-                continue  # só regiões cujo low32 começa com 0x0E…
+            if not _has_msb(region_start, msb):
+                continue  # só regiões cujo low32 começa com o MSB pedido
 
             region_end = region_start + size
             addr = region_start
             prev_tail = b""
 
-            first_hit_e = None
-            last_hit_e = None
-            hits_e_count = 0
+            first_hit = None
+            last_hit = None
+            hits_count = 0
 
             while addr < region_end:
                 tam = min(bloco_leitura, region_end - addr)
@@ -169,27 +167,24 @@ class BuscarPersoangemProximoService:
                     i = pos + 1
                     hit = scan_base + pos
 
-                    # aceita apenas hits cujo low32 também é 0x0Exxxxxx
-                    if not _is_e_low32(hit):
+                    # aceita apenas hits cujo low32 também tem MSB == `msb`
+                    if not _has_msb(hit, msb):
                         continue
 
-                    if first_hit_e is None:
-                        first_hit_e = hit
-                    last_hit_e = hit
-                    hits_e_count += 1
+                    if first_hit is None:
+                        first_hit = hit
+                    last_hit = hit
+                    hits_count += 1
 
                 prev_tail = scan_buf[-carry_len:] if carry_len and len(scan_buf) >= carry_len else b""
                 addr += tam
 
-            if hits_e_count > 0:
-                base_inicio = max(first_hit_e - margem, 0)
-                base_fim = last_hit_e + margem
-                # print(f"[PRIVATE_E32] region={hex(region_start)}..{hex(region_end)} "
-                #       f"prot={_protect_str(mbi.Protect)} hits_e={hits_e_count}")
-                # print(f"[RANGE_E32] base_inicio={hex(base_inicio)} base_fim={hex(base_fim)}")
+            if hits_count > 0:
+                base_inicio = max(first_hit - margem, 0)
+                base_fim = last_hit + margem
                 return base_inicio, base_fim
 
-        print("[ERRO] Nenhuma região PRIVATE (0x0Exxxxxx) contendo o padrão foi encontrada.")
+        # nada com esse MSB
         return None, None
 
     def listar_nomes_e_coords_por_padrao(self,
@@ -197,108 +192,121 @@ class BuscarPersoangemProximoService:
                                          bloco_leitura=0x40000,
                                          name_delta=0x74,
                                          name_max=16,
-                                         xy_max=4096):
+                                         xy_max=4096,
+                                         msb_order=(0x0E, 0x0F, 0x0A)):  # <<< NOVO: ordem de tentativas
         """
-        Usa a PRIMEIRA região PRIVATE cujo low32 começa com 0x0E… e que contém o padrão.
-        Dentro desse range, lê: Y=@(padrão-8), X=@(padrão-4) e nome=@(padrão-name_delta).
+        Tenta, na ordem dada por `msb_order`, encontrar a PRIMEIRA região PRIVATE cujo low32 começa
+        com o MSB escolhido e que contenha `padrao`. Para o primeiro MSB que produzir resultados,
+        retorna a lista. Se não achar nada em nenhum MSB, retorna [].
         """
-        base_inicio, base_fim = self.achar_range_private_prefix_e32(padrao=padrao, bloco_leitura=bloco_leitura,
-                                                                    margem=0x800,
-                                                                    exigir_rw=True
-                                                                    )
-        if not base_inicio or not base_fim or base_inicio >= base_fim:
-            print("[ERRO] Range inválido para varredura.")
-            return []
 
-        need_before = 8
-        carry_len = need_before + len(padrao) - 1
+        def _scan_range(base_inicio: int, base_fim: int):
+            need_before = 8
+            carry_len = need_before + len(padrao) - 1
 
-        resultados, vistos = [], set()
-        addr, prev_tail = base_inicio, b""
+            resultados, vistos = [], set()
+            addr, prev_tail = base_inicio, b""
 
-        while addr < base_fim:
-            tam = min(bloco_leitura, base_fim - addr)
-            try:
-                buf = self.pointer.pm.read_bytes(addr, tam)
-            except Exception:
-                addr += 0x1000
-                prev_tail = b""
-                continue
-
-            scan_base = addr - len(prev_tail)
-            scan_buf = prev_tail + buf
-
-            i = 0
-            while True:
-                pos = scan_buf.find(padrao, i)
-                if pos == -1:
-                    break
-                i = pos + 1
-                if pos < need_before:
+            while addr < base_fim:
+                tam = min(bloco_leitura, base_fim - addr)
+                try:
+                    buf = self.pointer.pm.read_bytes(addr, tam)
+                except Exception:
+                    addr += 0x1000
+                    prev_tail = b""
                     continue
 
-                addr_padrao = scan_base + pos
+                scan_base = addr - len(prev_tail)
+                scan_buf = prev_tail + buf
 
-                # coords
-                try:
-                    y = self.pointer.pm.read_ushort(addr_padrao - 8)
-                    x = self.pointer.pm.read_ushort(addr_padrao - 4)
-                    if not (0 < x < xy_max and 0 < y < xy_max):
+                i = 0
+                while True:
+                    pos = scan_buf.find(padrao, i)
+                    if pos == -1:
+                        break
+                    i = pos + 1
+                    if pos < need_before:
                         continue
-                except Exception:
-                    continue
 
-                # nome
-                nome_addr = addr_padrao - name_delta
-                nome = None
-                try:
-                    raw = self.pointer.pm.read_bytes(nome_addr, name_max)
-                    end = raw.find(b"\x00");
-                    end = len(raw) if end == -1 else end
-                    cand = bytes(b for b in raw[:end] if 32 <= b <= 126).strip()
-                    if 3 <= len(cand) <= name_max:
-                        nome = cand.decode("ascii", errors="ignore")
-                except Exception:
-                    pass
+                    addr_padrao = scan_base + pos
 
-                if not nome:
+                    # coords
                     try:
-                        pre_ini = max(base_inicio, nome_addr)
-                        pre_len = min(64, addr_padrao - pre_ini)
-                        if pre_len > 0:
-                            pre = self.pointer.pm.read_bytes(pre_ini, pre_len)
-                            j = len(pre) - 1
-                            while j >= 0 and pre[j] == 0: j -= 1
-                            end = j
-                            while j >= 0 and 32 <= pre[j] <= 126: j -= 1
-                            cand = pre[j + 1:end + 1].strip()
-                            if 3 <= len(cand) <= name_max:
-                                nome = cand.decode("ascii", errors="ignore")
+                        y = self.pointer.pm.read_ushort(addr_padrao - 8)
+                        x = self.pointer.pm.read_ushort(addr_padrao - 4)
+                        if not (0 < x < xy_max and 0 < y < xy_max):
+                            continue
+                    except Exception:
+                        continue
+
+                    # nome
+                    nome_addr = addr_padrao - name_delta
+                    nome = None
+                    try:
+                        raw = self.pointer.pm.read_bytes(nome_addr, name_max)
+                        end = raw.find(b"\x00")
+                        end = len(raw) if end == -1 else end
+                        cand = bytes(b for b in raw[:end] if 32 <= b <= 126).strip()
+                        if 3 <= len(cand) <= name_max:
+                            nome = cand.decode("ascii", errors="ignore")
                     except Exception:
                         pass
 
-                key = (addr_padrao, x, y)
-                if key in vistos:
-                    continue
-                vistos.add(key)
+                    if not nome:
+                        try:
+                            pre_ini = max(base_inicio, nome_addr)
+                            pre_len = min(64, addr_padrao - pre_ini)
+                            if pre_len > 0:
+                                pre = self.pointer.pm.read_bytes(pre_ini, pre_len)
+                                j = len(pre) - 1
+                                while j >= 0 and pre[j] == 0: j -= 1
+                                end = j
+                                while j >= 0 and 32 <= pre[j] <= 126: j -= 1
+                                cand = pre[j + 1:end + 1].strip()
+                                if 3 <= len(cand) <= name_max:
+                                    nome = cand.decode("ascii", errors="ignore")
+                        except Exception:
+                            pass
 
-                resultados.append({
-                    "nome": nome,
-                    "x": x,
-                    "y": y,
-                    "addr_padrao": hex(addr_padrao),
-                    "addr_nome": hex(nome_addr) if nome is not None else None,
-                })
+                    key = (addr_padrao, x, y)
+                    if key in vistos:
+                        continue
+                    vistos.add(key)
 
-                # if nome:
-                #     print(f"[OK] {nome}  X={x} Y={y}  (nome @ {hex(nome_addr)}, padrão @ {hex(addr_padrao)})")
-                # else:
-                #     print(f"[OK] <sem-nome>  X={x} Y={y}  (padrão @ {hex(addr_padrao)})")
+                    resultados.append({
+                        "nome": nome,
+                        "x": x,
+                        "y": y,
+                        "addr_padrao": hex(addr_padrao),
+                        "addr_nome": hex(nome_addr) if nome is not None else None,
+                    })
 
-            prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
-            addr += tam
+                prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
+                addr += tam
 
-        return resultados
+            return resultados
+
+        # tenta cada MSB até obter resultados não vazios
+        for msb in msb_order:
+            base_inicio, base_fim = self.achar_range_private_prefix_e32(
+                padrao=padrao,
+                bloco_leitura=bloco_leitura,
+                margem=0x800,
+                exigir_rw=True,
+                msb=msb,  # <<< tenta UM MSB específico por vez
+            )
+            if not base_inicio or not base_fim or base_inicio >= base_fim:
+                continue  # tenta o próximo MSB
+
+            resultados = _scan_range(base_inicio, base_fim)
+            if resultados:
+                # opcional: logar qual MSB deu certo
+                # print(f"[INFO] resultados encontrados com MSB=0x{msb:02X}")
+                return resultados
+
+        # nada encontrado para nenhum MSB
+        # print("[ERRO] Nenhum resultado encontrado para MSBs:", ", ".join(f"0x{m:02X}" for m in msb_order))
+        return []
 
     from typing import List
 
