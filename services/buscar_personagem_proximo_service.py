@@ -90,12 +90,12 @@ class BuscarPersoangemProximoService:
             addr = next_addr
 
     # -------- coloque estes dois MÉTODOS dentro da sua classe Pointers --------
-    def achar_range_private_prefix_e32(self,
-                                       padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
-                                       bloco_leitura=0x40000,  # 256 KB
-                                       margem=0x800,  # 2 KB nas pontas
-                                       exigir_rw=True,  # só PRIVATE com RW/ERW
-                                       msb: int = 0x0E):  # <<< NOVO: prefixo a testar (um por vez)
+    def achar_range_private_prefix(self,
+                                   padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
+                                   bloco_leitura=0x40000,  # 256 KB
+                                   margem=0x800,  # 2 KB nas pontas
+                                   exigir_rw=True,  # só PRIVATE com RW/ERW
+                                   msb: int = 0x0E):  # <<< NOVO: prefixo a testar (um por vez)
         """
         Procura a PRIMEIRA região MEM_PRIVATE cujo low32 do endereço-base tenha MSB == `msb`
         (ex.: 0x0E, 0x0F, 0x0A) e que contenha `padrao`. Dentro dessa região:
@@ -288,7 +288,7 @@ class BuscarPersoangemProximoService:
 
         # tenta cada MSB até obter resultados não vazios
         for msb in msb_order:
-            base_inicio, base_fim = self.achar_range_private_prefix_e32(
+            base_inicio, base_fim = self.achar_range_private_prefix(
                 padrao=padrao,
                 bloco_leitura=bloco_leitura,
                 margem=0x800,

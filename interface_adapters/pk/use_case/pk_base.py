@@ -91,21 +91,27 @@ class PkBase:
         Mantém exatamente a mesma lógica de seleção de senha/tipo_pk baseada no nome do char,
         apenas encapsulada para organização.
         """
+        #AIDA 1
         if self.pointer.get_nome_char() == 'AlfaVictor':
             senha = 'thiago123'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_1
         elif self.pointer.get_nome_char() == 'ReiDav1':
             senha = 'romualdo12'
-            self.tipo_pk = PkBase.PKLIZAR_AIDA_2
+            self.tipo_pk = PkBase.PKLIZAR_AIDA_1
+
+        #AIDA 2
         elif self.pointer.get_nome_char() == 'LAZLU':
             senha = 'bebe133171'
-            self.tipo_pk = PkBase.PKLIZAR_AIDA_1
-        elif self.pointer.get_nome_char() == '_Offensive':
-            senha = 'kuChx98f'
-            self.tipo_pk = PkBase.PKLIZAR_AIDA_FINAL
+            self.tipo_pk = PkBase.PKLIZAR_AIDA_2
         elif self.pointer.get_nome_char() == 'DL_JirayA':
             senha = '134779'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_2
+
+        #AIDA FINAL
+        elif self.pointer.get_nome_char() == '_Offensive':
+            senha = 'kuChx98f'
+            self.tipo_pk = PkBase.PKLIZAR_AIDA_FINAL
+
         else:
             senha = ''
         return senha

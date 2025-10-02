@@ -3,6 +3,7 @@ import time
 
 from interface_adapters.up.up_util.up_util import Up_util
 from utils import mouse_util
+from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
@@ -12,6 +13,7 @@ class AlterarCharSalaService:
         self.senha = senha
         self.arduino = arduino
         self.up_util = Up_util(self.handle, conexao_arduino=arduino)
+        self.pointer = Pointers(self.handle)
         self.teclado_util = Teclado_util(self.handle, arduino)
 
     def selecionar_sala(self, sala=None):
@@ -50,3 +52,7 @@ class AlterarCharSalaService:
         self.teclado_util.digitar_senha(self.senha)
         mouse_util.clicar_na_imagem_ou_coordenada(self.handle, "./static/img/btnoksenha.png", None)
         self.up_util.selecionar_char_no_launcher()
+
+        if sala is not None and sala != self.pointer.get_sala_atual():
+            print('Tentado  selecionar novamente a sala!')
+            self.selecionar_sala(sala)
