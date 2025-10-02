@@ -141,6 +141,8 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle).teste_pointer_necessarios()
 
+    MoverSpotUtil(handle).movimentar_aida((134, 138))
+
     # buscar_personagem = BuscarPersoangemProximoService(pointer)
     # resultados = buscar_personagem.listar_nomes_e_coords_por_padrao()
     # print(resultados)

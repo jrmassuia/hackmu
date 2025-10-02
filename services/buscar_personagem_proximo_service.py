@@ -193,7 +193,7 @@ class BuscarPersoangemProximoService:
                                          name_delta=0x74,
                                          name_max=16,
                                          xy_max=4096,
-                                         msb_order=(0x0E, 0x0F, 0x0A)):  # <<< NOVO: ordem de tentativas
+                                         msb_order=(0x0E, 0x0F, 0x0A, 0x0B)):  # <<< NOVO: ordem de tentativas
         """
         Tenta, na ordem dada por `msb_order`, encontrar a PRIMEIRA região PRIVATE cujo low32 começa
         com o MSB escolhido e que contenha `padrao`. Para o primeiro MSB que produzir resultados,
