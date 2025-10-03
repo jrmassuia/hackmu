@@ -141,11 +141,11 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle)
 
-    # MoverSpotUtil(handle).movimentar_aida((134, 138))
+    MoverSpotUtil(handle).movimentar_aida((130, 19))
 
     # buscar_personagem = BuscarPersoangemProximoService(pointer)
-    resultados = BuscarPersoangemProximoService(pointer).listar_nomes_e_coords_por_padrao()
-    print(resultados)
+    # resultados = BuscarPersoangemProximoService(pointer).listar_nomes_e_coords_por_padrao()
+    # print(resultados)
 
 
     # personagem_proximo_service = BuscarPersoangemProximoService(pointer)

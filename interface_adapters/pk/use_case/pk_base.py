@@ -106,6 +106,10 @@ class PkBase:
         elif self.pointer.get_nome_char() == 'DL_JirayA':
             senha = '134779'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_2
+        elif self.pointer.get_nome_char() == 'Omale_DL':
+            senha = 'gtkn6iVy'
+            self.tipo_pk = PkBase.PKLIZAR_AIDA_2
+
 
         # AIDA CORREDOR
         elif self.pointer.get_nome_char() == 'SM_Troyer':
@@ -116,6 +120,7 @@ class PkBase:
         elif self.pointer.get_nome_char() == '_Offensive':
             senha = 'kuChx98f'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_FINAL
+
 
         else:
             senha = ''
@@ -157,6 +162,14 @@ class PkBase:
         spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
         spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
         self._executar_pk(spots)
+
+        if self._pk_pode_continuar():
+            spots = spot_util.buscar_spots_aida_corredor()
+            self._executar_pk(spots)
+
+        if self._pk_pode_continuar():
+            spots = spot_util.buscar_spots_aida_final()
+            self._executar_pk(spots)
 
     def pklizar_aida_corredor(self):
         spots = spot_util.buscar_spots_aida_corredor()
@@ -404,7 +417,7 @@ class PkBase:
     def _sair_da_safe(self):
         if safe_util.aida(self.handle):
             self._desbugar_goblin()
-            self.mover_spot_util.movimentar_aida((112, 16), max_tempo=10, movimentacao_proxima=True)
+            self.mover_spot_util.movimentar_aida((140, 14), max_tempo=10, movimentacao_proxima=True)
 
     def _desbugar_goblin(self):
         btn_fechar = self.buscar_imagem.buscar_item_simples('./static/img/fechar_painel.png')

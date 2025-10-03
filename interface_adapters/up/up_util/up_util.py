@@ -63,7 +63,7 @@ class Up_util:
         screenshot = screenshot_util.capture_window(self.handle)
         image_position = BuscarItemUtil(self.handle).buscar_imagem_na_janela(screenshot,
                                                                              template_image_path,
-                                                                             precisao=.70)
+                                                                             precisao=.80)
         return image_position
 
     def clicar_na_imagem_ou_fallback(self, imagem_path, fallback_position, timeout=60):
