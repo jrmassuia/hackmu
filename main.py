@@ -72,7 +72,7 @@ class MainApp:
     def _verifica_classe_personagem(self, handle):
         classes_por_nome = {
             'MG': ['TOROUVC', 'Vampiro', 'Energumeno'],
-            'DL': ['DL_DoMall', 'Narukami', 'BlacK_WinG', 'Omale_DL', 'ReiDav1','LAZLU','_Offensive'],
+            'DL': ['DL_DoMall', 'Narukami', 'BlacK_WinG', 'Omale_DL', 'ReiDav1', 'LAZLU', '_Offensive', 'DL_JirayA'],
             'SM': ['SisteMatyc', 'INFECTRIX', 'BLEKALT_SM', 'CaFeTaoO'],
             'EF': ['Layna_', '_Striper_', 'omale_ME'],
             'BK': ['PitterPark', 'Omale_BK', 'BLEKALTINO']

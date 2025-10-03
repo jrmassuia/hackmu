@@ -57,7 +57,7 @@ class UpController:
             self.up_em_land_liberado = False
             self.acc_free = False
         elif self.pointer.get_nome_char() == 'DL_DoMall':
-            self.up_em_land_liberado = True
+            self.up_em_land_liberado = False
             self.acc_free = False
         else:
             self.up_em_land_liberado = False

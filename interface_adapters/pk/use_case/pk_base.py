@@ -91,7 +91,7 @@ class PkBase:
         Mantém exatamente a mesma lógica de seleção de senha/tipo_pk baseada no nome do char,
         apenas encapsulada para organização.
         """
-        #AIDA 1
+        # AIDA 1
         if self.pointer.get_nome_char() == 'AlfaVictor':
             senha = 'thiago123'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_1
@@ -99,7 +99,7 @@ class PkBase:
             senha = 'romualdo12'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_1
 
-        #AIDA 2
+        # AIDA 2
         elif self.pointer.get_nome_char() == 'LAZLU':
             senha = 'bebe133171'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_2
@@ -107,7 +107,12 @@ class PkBase:
             senha = '134779'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_2
 
-        #AIDA FINAL
+        # AIDA CORREDOR
+        elif self.pointer.get_nome_char() == 'SM_Troyer':
+            senha = 'igsouza90'
+            self.tipo_pk = PkBase.PKLIZAR_AIDA_CORREDOR
+
+        # AIDA FINAL
         elif self.pointer.get_nome_char() == '_Offensive':
             senha = 'kuChx98f'
             self.tipo_pk = PkBase.PKLIZAR_AIDA_FINAL
@@ -199,8 +204,12 @@ class PkBase:
             return True  # mesmo early return dos métodos anteriores
 
         mouse_util.mover(self.handle, 1, 1)  # tira o mouse da tela
-        self.teclado_util.escrever_texto("/info")
-        time.sleep(1)
+        while True:
+            self.teclado_util.escrever_texto("/info")
+            time.sleep(1)
+            achou_btn = self.buscar_imagem.buscar_item_simples(self.IMG_OKINFO)
+            if achou_btn:
+                break
 
         achou = self._eh_pk(imagem_pk)
         self._mover_e_clicar_na_opcao(self.IMG_OKINFO)
@@ -210,7 +219,7 @@ class PkBase:
         return self._consultar_info_e_verificar(self.IMG_PK0)
 
     def _pk_pode_continuar(self):
-        return self._consultar_info_e_verificar(self.IMG_PK1)
+        return self._consultar_info_e_verificar(self.IMG_PK1) or self._consultar_info_e_verificar(self.IMG_PK0)
 
     def _eh_pk(self, image):
         screenshot = screenshot_util.capture_region(self.handle, 350, 270, 80, 25)
@@ -329,6 +338,7 @@ class PkBase:
                 )
 
                 if not movimentou:
+                    print('1 - Esta em ainda enqto procurava player')
                     return
 
                 resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
@@ -349,9 +359,6 @@ class PkBase:
                     ]:
                         continue
 
-                    if safe_util.aida(self.handle):
-                        return
-
                     posicionou = self.mover_spot_util.movimentar_aida(
                         (y, x),
                         verficar_se_movimentou=True,
@@ -364,6 +371,10 @@ class PkBase:
                         time.sleep(1)
 
                         while True:
+                            if safe_util.aida(self.handle):
+                                print('3 - Esta em ainda enqto procurava player')
+                                return
+
                             if self._pode_pklizar():
                                 print('ACHOU SUICIDE')
                                 if self.pointer.get_nome_char() == 'Narukami':
@@ -373,6 +384,7 @@ class PkBase:
                                     self._ativar_pk()
                                     mouse_util.ativar_click_direito(self.handle)
                                     self.teclado_util._toque_arduino("Q")
+                                    time.sleep(.25)
                             else:
                                 print('NAO ACHOU SUICIDE')
                                 self._desativar_pk()
@@ -392,7 +404,7 @@ class PkBase:
     def _sair_da_safe(self):
         if safe_util.aida(self.handle):
             self._desbugar_goblin()
-            self.mover_spot_util.movimentar_aida((100, 10), max_tempo=10, movimentacao_proxima=True)
+            self.mover_spot_util.movimentar_aida((112, 16), max_tempo=10, movimentacao_proxima=True)
 
     def _desbugar_goblin(self):
         btn_fechar = self.buscar_imagem.buscar_item_simples('./static/img/fechar_painel.png')
@@ -403,10 +415,9 @@ class PkBase:
             mouse_util.left_clique(self.handle, 38, 369)
 
     def _ativar_skil(self):
-        if self.classe == 'DL':
-            self.teclado_util.selecionar_skill_3()
-            mouse_util.clickDireito(self.handle)
-            self.teclado_util.selecionar_skill_1()
+        self.teclado_util.selecionar_skill_3()
+        mouse_util.clickDireito(self.handle)
+        self.teclado_util.selecionar_skill_1()
 
     def _ativar_pk(self):
         if self.pointer.get_pk_ativo() == 0:

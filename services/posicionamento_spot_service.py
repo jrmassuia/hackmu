@@ -44,6 +44,9 @@ class PosicionamentoSpotService:
                     self.coord_spot_atual = coordenada  # UTILIZA PARA PEGAR A COORDENADA CENTRAL DE CADA SPOT PARA CHEGAR MAIS PROXIMO
                 if self.classe in classes:
                     conseguiu_posicionar = self._mover_para_spot(verificar_spot_livre=verificar_spot_livre)
+                    if self.mover_spot_util.esta_na_safe:
+                        print('Voltou pra safe enquanto movimentava!')
+                        return False
                     if conseguiu_posicionar:
                         self.coord_spot_atual = coordenada  # APOS ACHAR A COORDENADA ATUALIZA PARA A COORDENADA CORRETA DO CHAR
                         self._configurar_spot(coordenada_mouse)

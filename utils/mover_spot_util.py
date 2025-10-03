@@ -15,6 +15,7 @@ class MoverSpotUtil:
         self.sessao = Sessao(handle=handle)
         self.pointer = Pointers(handle)
         self.pathfinder = None
+        self.esta_na_safe = False
 
     def movimentar_para(self, coords, mapa,
                         max_tempo=60,
@@ -91,6 +92,7 @@ class MoverSpotUtil:
 
             tempo_inicio = time.time()
             x_ant, y_ant, hora_inicial = None, None, None
+            self.esta_na_safe = False
 
             for _ in range(2):
                 while True:
@@ -100,7 +102,8 @@ class MoverSpotUtil:
                         return True
 
                     if verficar_se_movimentou and self._checar_safe_zone(mapa):
-                        mouse_util.left_clique(self.handle, 400, 250)
+                        self.esta_na_safe = True
+                        mouse_util.desativar_click_esquerdo(self.handle)
                         return False
 
                     y_atual = self.pointer.get_cood_y()

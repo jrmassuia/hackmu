@@ -1,4 +1,5 @@
 import ctypes
+import threading
 from ctypes import wintypes
 
 # ==== Constantes WinAPI (mantenha no topo do arquivo) ====
@@ -39,6 +40,8 @@ class BuscarPersoangemProximoService:
 
     def __init__(self, pointer):
         self.pointer = pointer
+        self._range_cache: dict[tuple, tuple[int | None, int | None]] = {}
+        self._range_cache_lock = threading.Lock()
 
     def _is_readable(self, protect: int) -> bool:
         if protect & PAGE_GUARD:
@@ -89,23 +92,66 @@ class BuscarPersoangemProximoService:
                 break
             addr = next_addr
 
-    # -------- coloque estes dois MÉTODOS dentro da sua classe Pointers --------
-    def achar_range_private_prefix(self,
-                                   padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
-                                   bloco_leitura=0x40000,  # 256 KB
-                                   margem=0x800,  # 2 KB nas pontas
-                                   exigir_rw=True,  # só PRIVATE com RW/ERW
-                                   msb: int = 0x0E):  # <<< NOVO: prefixo a testar (um por vez)
+    def achar_range_private_prefix_cached(self,
+                                          *,
+                                          padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
+                                          bloco_leitura=0x40000,
+                                          margem=0x800,
+                                          exigir_rw=True,
+                                          msb: int = 0x0E,
+                                          require_region_msb: bool = True,
+                                          use_msb_band_hint: bool = True,
+                                          force_refresh: bool = False) -> tuple[int | None, int | None]:
         """
-        Procura a PRIMEIRA região MEM_PRIVATE cujo low32 do endereço-base tenha MSB == `msb`
-        (ex.: 0x0E, 0x0F, 0x0A) e que contenha `padrao`. Dentro dessa região:
-          base_inicio = primeiro hit com low32 iniciando pelo MSB especificado
-          base_fim    = último  hit com low32 iniciando pelo MSB especificado
-        Retorna (base_inicio, base_fim). Encerra após a 1ª região válida.
+        Versão cacheada de achar_range_private_prefix_e32.
+        A chave do cache inclui PID, MSB, padrão e demais flags que afetam o resultado.
+        """
+        pid = getattr(self.pointer.pm, "process_id", None)
+        key = (pid, msb, padrao, exigir_rw, bloco_leitura, margem, require_region_msb, use_msb_band_hint)
+
+        if not force_refresh:
+            with self._range_cache_lock:
+                hit = self._range_cache.get(key)
+                if hit:
+                    return hit
+
+        base_inicio, base_fim = self.achar_range_private_prefix_e32(
+            padrao=padrao,
+            bloco_leitura=bloco_leitura,
+            margem=margem,
+            exigir_rw=exigir_rw,
+            msb=msb,
+            require_region_msb=require_region_msb,
+            use_msb_band_hint=use_msb_band_hint
+        )
+
+        with self._range_cache_lock:
+            self._range_cache[key] = (base_inicio, base_fim)
+
+        return base_inicio, base_fim
+
+    def limpar_cache_ranges(self):
+        """Se quiser invalidar manualmente (troca de mapa, loading, etc.)."""
+        with self._range_cache_lock:
+            self._range_cache.clear()
+
+    # ---------------------- SUA FUNÇÃO (com melhorias) ----------------------
+    def achar_range_private_prefix_e32(self,
+                                       padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
+                                       bloco_leitura=0x40000,  # 256 KB
+                                       margem=0x800,  # 2 KB nas pontas
+                                       exigir_rw=True,
+                                       msb: int = 0x0E,
+                                       require_region_msb: bool = True,
+                                       use_msb_band_hint: bool = True):
+        """
+        (mesmo corpo que te passei antes, com filtros flexíveis)
         """
         PAGE_READWRITE = 0x04
         PAGE_EXECUTE_READWRITE = 0x40
         PAGE_GUARD = 0x100
+        MEM_COMMIT = 0x1000
+        MEM_PRIVATE = 0x20000
 
         def _is_rw(protect):
             if protect & PAGE_GUARD:
@@ -113,19 +159,27 @@ class BuscarPersoangemProximoService:
             return bool(protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE))
 
         def _low32(addr: int) -> int:
-            """Normaliza para valor de 32 bits (unsigned)."""
             return int(addr) & 0xFFFFFFFF
 
         def _has_msb(addr, wanted_msb: int) -> bool:
-            """
-            Retorna True se o byte mais significativo do low32 for igual a `wanted_msb`.
-            Aceita `addr` como int ou string hex (ex: "0x0E123456").
-            """
             try:
                 low = _low32(addr)
             except Exception:
                 return False
             return ((low >> 24) & 0xFF) == wanted_msb
+
+        def _region_intersects_msb_band(region_start: int, size: int, wanted_msb: int) -> bool:
+            if size <= 0:
+                return False
+            region_end = region_start + size - 1
+            band_lo = (wanted_msb & 0xFF) << 24
+            band_hi = ((wanted_msb + 1) & 0xFF) << 24
+            probes = (region_start, region_start + (size // 2), region_end)
+            for p in probes:
+                l32 = _low32(p)
+                if band_lo <= l32 < band_hi:
+                    return True
+            return False
 
         carry_len = max(0, len(padrao) - 1)
 
@@ -136,8 +190,12 @@ class BuscarPersoangemProximoService:
                 continue
             if exigir_rw and not _is_rw(mbi.Protect):
                 continue
-            if not _has_msb(region_start, msb):
-                continue  # só regiões cujo low32 começa com o MSB pedido
+
+            if require_region_msb and not _has_msb(region_start, msb):
+                continue
+            if not require_region_msb and use_msb_band_hint:
+                if not _region_intersects_msb_band(region_start, size, msb):
+                    continue
 
             region_end = region_start + size
             addr = region_start
@@ -167,7 +225,6 @@ class BuscarPersoangemProximoService:
                     i = pos + 1
                     hit = scan_base + pos
 
-                    # aceita apenas hits cujo low32 também tem MSB == `msb`
                     if not _has_msb(hit, msb):
                         continue
 
@@ -184,8 +241,49 @@ class BuscarPersoangemProximoService:
                 base_fim = last_hit + margem
                 return base_inicio, base_fim
 
-        # nada com esse MSB
         return None, None
+
+    def _build_msb_order(self, charset: str = "0-9A-Z",
+                         start_hints: tuple[int, ...] = ()) -> tuple[int, ...]:
+        """
+        Gera uma ordem de MSBs.
+        - "0-9A-Z": 0..9 e A..Z  => 0..9 e 10..35 (0x00..0x23)
+          (A=10, B=11, ..., Z=35)
+        Você pode adaptar/estender se quiser outros intervalos.
+        start_hints: MSBs para priorizar no início (mantém ordem e remove duplicatas).
+        """
+        order = []
+
+        # 0-9
+        if "0-9" in charset:
+            order.extend(range(0x00, 0x0A))  # 0..9
+
+        # A-Z  (A=10 .. Z=35)
+        if "A-Z" in charset:
+            order.extend(range(0x0A, 0x24))  # 10..35 -> 0x0A..0x23
+
+        # aplica hints no começo e remove duplicatas mantendo ordem estável
+        if start_hints:
+            hinted = list(start_hints) + [x for x in order if x not in start_hints]
+            # normaliza para 0..255 (só por segurança)
+            hinted = [x & 0xFF for x in hinted]
+            seen = set()
+            dedup = []
+            for x in hinted:
+                if x not in seen:
+                    seen.add(x)
+                    dedup.append(x)
+            return tuple(dedup)
+
+        # sem hints
+        seen = set()
+        dedup = []
+        for x in order:
+            x &= 0xFF
+            if x not in seen:
+                seen.add(x)
+                dedup.append(x)
+        return tuple(dedup)
 
     def listar_nomes_e_coords_por_padrao(self,
                                          padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
@@ -193,17 +291,15 @@ class BuscarPersoangemProximoService:
                                          name_delta=0x74,
                                          name_max=16,
                                          xy_max=4096,
-                                         msb_order=(0x0E, 0x0F, 0x0A, 0x0B)):  # <<< NOVO: ordem de tentativas
+                                         start_hints=(0x0E, 0x0F, 0x0A, 0x08, 0x0B),
+                                         force_refresh=False):
         """
-        Tenta, na ordem dada por `msb_order`, encontrar a PRIMEIRA região PRIVATE cujo low32 começa
-        com o MSB escolhido e que contenha `padrao`. Para o primeiro MSB que produzir resultados,
-        retorna a lista. Se não achar nada em nenhum MSB, retorna [].
+        Usa cache dos ranges. Se quiser ignorar cache em casos especiais, passe force_refresh=True.
         """
 
         def _scan_range(base_inicio: int, base_fim: int):
             need_before = 8
             carry_len = need_before + len(padrao) - 1
-
             resultados, vistos = [], set()
             addr, prev_tail = base_inicio, b""
 
@@ -229,8 +325,6 @@ class BuscarPersoangemProximoService:
                         continue
 
                     addr_padrao = scan_base + pos
-
-                    # coords
                     try:
                         y = self.pointer.pm.read_ushort(addr_padrao - 8)
                         x = self.pointer.pm.read_ushort(addr_padrao - 4)
@@ -239,7 +333,6 @@ class BuscarPersoangemProximoService:
                     except Exception:
                         continue
 
-                    # nome
                     nome_addr = addr_padrao - name_delta
                     nome = None
                     try:
@@ -281,31 +374,49 @@ class BuscarPersoangemProximoService:
                         "addr_nome": hex(nome_addr) if nome is not None else None,
                     })
 
-                prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
+                prev_tail = scan_buf[-(need_before + len(padrao) - 1):] if len(scan_buf) >= (
+                        need_before + len(padrao) - 1) else scan_buf
                 addr += tam
 
             return resultados
 
-        # tenta cada MSB até obter resultados não vazios
+        msb_order = self._build_msb_order("0-9A-Z", start_hints=start_hints)
+
         for msb in msb_order:
-            base_inicio, base_fim = self.achar_range_private_prefix(
-                padrao=padrao,
-                bloco_leitura=bloco_leitura,
-                margem=0x800,
-                exigir_rw=True,
-                msb=msb,  # <<< tenta UM MSB específico por vez
+            # 1) rápido/estrito (cacheado)
+            base_inicio, base_fim = self.achar_range_private_prefix_cached(
+                padrao=padrao, bloco_leitura=bloco_leitura, margem=0x800,
+                exigir_rw=True, msb=msb, require_region_msb=True, use_msb_band_hint=True,
+                force_refresh=force_refresh
             )
-            if not base_inicio or not base_fim or base_inicio >= base_fim:
-                continue  # tenta o próximo MSB
+            if base_inicio and base_fim and base_inicio < base_fim:
+                res = _scan_range(base_inicio, base_fim)
+                if res:
+                    return res
 
-            resultados = _scan_range(base_inicio, base_fim)
-            if resultados:
-                # opcional: logar qual MSB deu certo
-                # print(f"[INFO] resultados encontrados com MSB=0x{msb:02X}")
-                return resultados
+            # 2) relaxado (cacheado)
+            base_inicio, base_fim = self.achar_range_private_prefix_cached(
+                padrao=padrao, bloco_leitura=bloco_leitura, margem=0x1000,
+                exigir_rw=True, msb=msb, require_region_msb=False, use_msb_band_hint=True,
+                force_refresh=force_refresh
+            )
+            if base_inicio and base_fim and base_inicio < base_fim:
+                res = _scan_range(base_inicio, base_fim)
+                if res:
+                    return res
 
-        # nada encontrado para nenhum MSB
-        # print("[ERRO] Nenhum resultado encontrado para MSBs:", ", ".join(f"0x{m:02X}" for m in msb_order))
+            # 3) teimoso (cacheado)
+            base_inicio, base_fim = self.achar_range_private_prefix_cached(
+                padrao=padrao, bloco_leitura=max(bloco_leitura, 0x80000),
+                margem=0x2000, exigir_rw=True, msb=msb,
+                require_region_msb=False, use_msb_band_hint=False,
+                force_refresh=force_refresh
+            )
+            if base_inicio and base_fim and base_inicio < base_fim:
+                res = _scan_range(base_inicio, base_fim)
+                if res:
+                    return res
+
         return []
 
     from typing import List
