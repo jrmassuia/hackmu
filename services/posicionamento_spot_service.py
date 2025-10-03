@@ -1,6 +1,7 @@
 import time
 
 from interface_adapters.up.up_util.up_util import Up_util
+from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from utils import mouse_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.rota_util import PathFinder
@@ -16,6 +17,7 @@ class PosicionamentoSpotService:
         self.spots = spots
         self.mapa = mapa
         self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
+        self.buscar_personagem = BuscarPersoangemProximoService(self.pointer)
 
         self.coord_spot_atual = None
         self.coord_mouse_atual = None
@@ -64,6 +66,13 @@ class PosicionamentoSpotService:
             return True
 
     def _spot_livre(self, tempo=10):
+
+        resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
+        if resultados:
+            char_proximos = self.buscar_personagem.ordenar_proximos(resultados, limite=20)
+            if len(char_proximos) == 0:
+                return True
+
         start_time = time.time()
         while time.time() - start_time < tempo:
             achou = BuscarItemUtil(self.handle).buscar_item_spot()

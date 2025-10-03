@@ -37,11 +37,70 @@ VirtualQueryEx.restype = ctypes.c_size_t
 
 
 class BuscarPersoangemProximoService:
+    MOBS_IGNORAR = {
+        # TARKAN
+        'Mutant', 'Bloody Wolf', 'Iron Wheel', 'Cursed King', 'Tantalos', 'Hero Mutant', 'Beam Knight',
+        'Death Beam Knigh',
+        # ICARUS
+        'Alquamos', 'Queen Rainier', 'Drakan', 'Alpha Crust', 'Phantom Knight', 'Great Drakan', 'Metal Balrog',
+        'Omega Wing', 'Phoenix of Darkn',
+        # AIDA
+        'Death Tree', 'Forest Orc', 'Death Rider', 'Guard Archer', 'Blue Golem', 'Hell Maine', 'Witch Queen',
+        # KALIMA
+        'Hero Mutant', 'Lizard Warrior', 'Rogue Centurion', 'Death Angel', 'Sea Worm', 'Necron', 'Death Centurion',
+        'Schriker', 'Blood Soldier', 'Aegis'
+    }
 
     def __init__(self, pointer):
         self.pointer = pointer
         self._range_cache: dict[tuple, tuple[int | None, int | None]] = {}
         self._range_cache_lock = threading.Lock()
+
+        # --- IGNORE: conjuntos exatos (str e bytes) ---
+        # Obs.: os nomes do jogo são ASCII/ANSI; usamos encode('ascii', 'ignore') para ter a versão bytes.
+        self._ignore_str: set[str] = set(self.MOBS_IGNORAR)
+        self._ignore_bytes: set[bytes] = {s.encode('ascii', errors='ignore') for s in self._ignore_str}
+
+        # Adiciona seu próprio nome (se existir) às duas estruturas
+        try:
+            myname = self.pointer.get_nome_char()
+            if myname:
+                if isinstance(myname, bytes):
+                    myname_b = myname.split(b'\x00', 1)[0]  # corta em null se vier
+                    myname_s = myname_b.decode('ascii', errors='ignore')
+                else:
+                    myname_s = str(myname)
+                    myname_b = myname_s.encode('ascii', errors='ignore')
+
+                # match EXATO
+                self._ignore_str.add(myname_s)
+                self._ignore_bytes.add(myname_b)
+        except Exception:
+            pass
+
+    def add_mob_ignorar(self, nome) -> bool:
+        """
+        Adiciona um nome ao conjunto de ignorados (case-insensitive).
+        Retorna True se adicionou, False se já existia ou nome inválido.
+        Aceita str ou bytes.
+        """
+        if not nome:
+            return False
+        if isinstance(nome, bytes):
+            # tenta decodificar; ajuste o encoding se necessário no seu client
+            nome = nome.decode('utf-8', errors='ignore')
+
+        nome_clean = nome.strip()
+        if not nome_clean:
+            return False
+
+        key = nome_clean.casefold()
+        with self._mobs_lock:
+            if key in self._mobs_ignorar_norm:
+                return False
+            self._mobs_ignorar_raw.add(nome_clean)
+            self._mobs_ignorar_norm.add(key)
+            return True
 
     def _is_readable(self, protect: int) -> bool:
         if protect & PAGE_GUARD:
@@ -292,10 +351,21 @@ class BuscarPersoangemProximoService:
                                          name_max=16,
                                          xy_max=4096,
                                          start_hints=(0x0E, 0x0F, 0x0A, 0x08, 0x0B),
-                                         force_refresh=False):
-        """
-        Usa cache dos ranges. Se quiser ignorar cache em casos especiais, passe force_refresh=True.
-        """
+                                         force_refresh=False,
+                                         mobs_ignorar=None):
+
+        # Se quiser mesclar com uma lista extra vinda por parâmetro (EXATA):
+        if mobs_ignorar:
+            # adiciona SEM normalização => comparação exata
+            for s in mobs_ignorar:
+                if isinstance(s, bytes):
+                    s_b = s.split(b'\x00', 1)[0]
+                    s_s = s_b.decode('ascii', errors='ignore')
+                else:
+                    s_s = str(s)
+                    s_b = s_s.encode('ascii', errors='ignore')
+                self._ignore_str.add(s_s)
+                self._ignore_bytes.add(s_b)
 
         def _scan_range(base_inicio: int, base_fim: int):
             need_before = 8
@@ -325,6 +395,8 @@ class BuscarPersoangemProximoService:
                         continue
 
                     addr_padrao = scan_base + pos
+
+                    # coords
                     try:
                         y = self.pointer.pm.read_ushort(addr_padrao - 8)
                         x = self.pointer.pm.read_ushort(addr_padrao - 4)
@@ -333,19 +405,36 @@ class BuscarPersoangemProximoService:
                     except Exception:
                         continue
 
+                    # nome (fast-path: verificar IGNORE em BYTES antes de decodificar)
                     nome_addr = addr_padrao - name_delta
                     nome = None
                     try:
                         raw = self.pointer.pm.read_bytes(nome_addr, name_max)
-                        end = raw.find(b"\x00")
-                        end = len(raw) if end == -1 else end
-                        cand = bytes(b for b in raw[:end] if 32 <= b <= 126).strip()
-                        if 3 <= len(cand) <= name_max:
-                            nome = cand.decode("ascii", errors="ignore")
+                        end0 = raw.find(b"\x00")
+                        if end0 != -1:
+                            raw0 = raw[:end0]
+                        else:
+                            raw0 = raw
+
+                        # FAST IGNORE (bytes exatos)
+                        if raw0 in self._ignore_bytes:
+                            continue  # ignora sem decodificar
+
+                        # Se não ignorou pelos bytes, faz limpeza ASCII básica e decodifica
+                        # (mantém a lógica original para montar 'nome' do resultado)
+                        cand_bytes = bytes(b for b in raw0 if 32 <= b <= 126).strip()
+                        if 3 <= len(cand_bytes) <= name_max:
+                            nome = cand_bytes.decode("ascii", errors="ignore")
+
+                            # IGNORE exato em string (redundante na maioria, mas mantém consistência)
+                            if nome in self._ignore_str:
+                                continue
+
                     except Exception:
                         pass
 
                     if not nome:
+                        # fallback (pode ser caro; só roda se não ignoramos via bytes/str)
                         try:
                             pre_ini = max(base_inicio, nome_addr)
                             pre_len = min(64, addr_padrao - pre_ini)
@@ -357,7 +446,12 @@ class BuscarPersoangemProximoService:
                                 while j >= 0 and 32 <= pre[j] <= 126: j -= 1
                                 cand = pre[j + 1:end + 1].strip()
                                 if 3 <= len(cand) <= name_max:
+                                    # checa ignore exato ANTES de decodificar
+                                    if cand in self._ignore_bytes:
+                                        continue
                                     nome = cand.decode("ascii", errors="ignore")
+                                    if nome in self._ignore_str:
+                                        continue
                         except Exception:
                             pass
 
@@ -374,16 +468,15 @@ class BuscarPersoangemProximoService:
                         "addr_nome": hex(nome_addr) if nome is not None else None,
                     })
 
-                prev_tail = scan_buf[-(need_before + len(padrao) - 1):] if len(scan_buf) >= (
-                        need_before + len(padrao) - 1) else scan_buf
+                prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
                 addr += tam
 
             return resultados
 
-        msb_order = self._build_msb_order("0-9A-Z", start_hints=start_hints)
+        # resto do método (ordem MSB + cache) permanece igual ao que você já tem
+        msb_order = self._build_msb_order(charset="0-9A-Z", start_hints=start_hints)
 
         for msb in msb_order:
-            # 1) rápido/estrito (cacheado)
             base_inicio, base_fim = self.achar_range_private_prefix_cached(
                 padrao=padrao, bloco_leitura=bloco_leitura, margem=0x800,
                 exigir_rw=True, msb=msb, require_region_msb=True, use_msb_band_hint=True,
@@ -394,7 +487,6 @@ class BuscarPersoangemProximoService:
                 if res:
                     return res
 
-            # 2) relaxado (cacheado)
             base_inicio, base_fim = self.achar_range_private_prefix_cached(
                 padrao=padrao, bloco_leitura=bloco_leitura, margem=0x1000,
                 exigir_rw=True, msb=msb, require_region_msb=False, use_msb_band_hint=True,
@@ -405,7 +497,6 @@ class BuscarPersoangemProximoService:
                 if res:
                     return res
 
-            # 3) teimoso (cacheado)
             base_inicio, base_fim = self.achar_range_private_prefix_cached(
                 padrao=padrao, bloco_leitura=max(bloco_leitura, 0x80000),
                 margem=0x2000, exigir_rw=True, msb=msb,
