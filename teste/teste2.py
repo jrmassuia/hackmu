@@ -139,15 +139,17 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointer = Pointers(handle)
+    pointer = Pointers(handle).teste_pointer_necessarios()
 
-    # MoverSpotUtil(handle).movimentar_aida((130, 19))
-    print(BuscarPersoangemProximoService(pointer).listar_nomes_e_coords_por_padrao())
+    # MoverSpotUtil(handle).movimentar((78, 106),
+    #                                  max_tempo=10,
+    #                                  # verficar_se_movimentou=True,
+    #                                  limpar_spot_se_necessario=True)
+    # print(BuscarPersoangemProximoService(pointer).listar_nomes_e_coords_por_padrao())
 
     # buscar_personagem = BuscarPersoangemProximoService(pointer)
     # resultados = BuscarPersoangemProximoService(pointer).listar_nomes_e_coords_por_padrao()
     # print(resultados)
-
 
     # personagem_proximo_service = BuscarPersoangemProximoService(pointer)
     #
