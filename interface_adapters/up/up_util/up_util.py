@@ -127,13 +127,13 @@ class Up_util:
             tempo_inicial_ativar_skill = time.time()
             if classe == 'EF':
                 self.teclado_util.selecionar_skill_2()
-                mouse_util.right_clique(self.handle, 400, 255, delay=.5)
+                mouse_util.clickDireito(self.handle)
                 self.teclado_util.selecionar_skill_3()
-                mouse_util.right_clique(self.handle, 400, 255, delay=.5)
+                mouse_util.clickDireito(self.handle)
                 self.teclado_util.selecionar_skill_1()
             elif classe == 'DL':
                 self.teclado_util.selecionar_skill_2()
-                mouse_util.right_clique(self.handle, 400, 255, delay=.5)
+                mouse_util.clickDireito(self.handle)
                 self.teclado_util.selecionar_skill_1()
         return tempo_inicial_ativar_skill
 
