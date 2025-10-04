@@ -14,7 +14,7 @@ class UpAtlansUseCase:
         self.handle = handle
         self.sessao = Sessao(handle=handle)
         self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
-        self.movimentar = MoverSpotUtil(self.handle)
+        self.mover_spot_util = MoverSpotUtil(self.handle)
         self.pointer = Pointers(self.handle)
         self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
         self.teclado_util = Teclado_util(self.handle, conexao_arduino)
@@ -39,19 +39,19 @@ class UpAtlansUseCase:
             self._posicionar_spot_baixo()
 
     def _posicionar_spot_cima(self):
-        self.movimentar.movimentar_atlans((27, 166), verficar_se_movimentou=True, movimentacao_proxima=True)
+        self.mover_spot_util.movimentar_atlans((27, 166), verficar_se_movimentou=True, movimentacao_proxima=True)
         mouse_util.moverCentro(self.handle)
         time.sleep(15)  # PARA NAO FICAR SE MOVIMENTANDO TODA HORA
 
     def _posicionar_spot_baixo(self):
         if self.classe == 'DL':
-            self.movimentar.movimentar_atlans((109, 177), verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar_atlans((109, 177), verficar_se_movimentou=True)
             mouse_util.mover(self.handle, 440, 300)
         elif self.classe == 'EF':
-            self.movimentar.movimentar_atlans((107, 177), verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar_atlans((107, 177), verficar_se_movimentou=True)
             mouse_util.mover(self.handle, 440, 300)
         elif self.classe == 'BK':
-            self.movimentar.movimentar_atlans((113, 176), verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar_atlans((113, 176), verficar_se_movimentou=True)
             mouse_util.moverCentro(self.handle)
 
     def _mover_atlans(self):
