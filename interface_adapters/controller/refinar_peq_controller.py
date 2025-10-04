@@ -24,7 +24,7 @@ def send_text(handle_np, text):
 class RefinarPequenaController:
     def __init__(self, handle, conexao_arduino):
         self.handle = handle
-        self.movimentar = MoverSpotUtil(self.handle)
+        self.mover_spot_util = MoverSpotUtil(self.handle)
         self.pointer = Pointers(self.handle)
         self.teclado_util = Teclado_util(self.handle, conexao_arduino)
 
@@ -88,8 +88,8 @@ class RefinarPequenaController:
         acao_menu_util.clicar_inventario(self.handle)
 
     def _mover_para_aida(self):
-        self.movimentar.movimentar_noria((161, 77))
-        self.movimentar.movimentar_noria((222, 44))
+        self.mover_spot_util.movimentar_noria((161, 77))
+        self.mover_spot_util.movimentar_noria((222, 44))
         self._mover_coordenada(222, 36)  # move para portal
         mouse_util.left_clique(self.handle, 125, 441)
         time.sleep(3)
@@ -97,9 +97,9 @@ class RefinarPequenaController:
     def _mover_coordenada(self, y, x, mapa='noria'):
         while True:
             if mapa == 'noria':
-                self.movimentar.movimentar_noria((y, x), max_tempo=160)
+                self.mover_spot_util.movimentar_noria((y, x), max_tempo=160)
             else:
-                self.movimentar.movimentar_aida((y, x), max_tempo=160)
+                self.mover_spot_util.movimentar_noria((y, x), max_tempo=160)
             time.sleep(.5)
             if x == self.pointer.get_cood_x() and y == self.pointer.get_cood_y():
                 time.sleep(.5)
