@@ -163,6 +163,7 @@ class PkBase(ABC):
         """
         self.mover_para_sala2()
         self._desativar_pk()
+        self.teclado_util.escrever_texto('/re off')
         self.up_util.ativar_desc_item_spot()
         self.mover_para_spot_vazio()
 
@@ -177,7 +178,7 @@ class PkBase(ABC):
 
             if self.morreu():
                 print('Esperando na safe...')
-                time.sleep(120)
+                time.sleep(300)
                 self.mover_para_spot_vazio()
 
             # a cada 180s, checa se limpou PK
