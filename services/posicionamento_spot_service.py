@@ -67,11 +67,11 @@ class PosicionamentoSpotService:
 
     def _spot_livre(self, tempo=10):
 
-        resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
-        if resultados:
-            char_proximos = self.buscar_personagem.ordenar_proximos(resultados, limite=20)
-            if len(char_proximos) == 0:
-                return True
+        # resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
+        # if resultados:
+        #     char_proximos = self.buscar_personagem.ordenar_proximos(resultados, limite=20)
+        #     if len(char_proximos) == 0:
+        #         return True
 
         start_time = time.time()
         while time.time() - start_time < tempo:
