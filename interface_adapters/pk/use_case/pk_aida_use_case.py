@@ -38,6 +38,9 @@ class PkAidaUseCase(PkBase):
         elif nome == 'SM_Troyer':
             senha = 'igsouza90'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
+        elif nome == 'INFECTRIX':
+            senha = '9876Sonso'
+            self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
 
         # AIDA FINAL
         elif nome == '_Offensive':
@@ -49,6 +52,7 @@ class PkAidaUseCase(PkBase):
     # ---------- Entrada do fluxo ----------
     def iniciar_pk(self):
         self.mover_para_sala7()
+        self.teclado_util.escrever_texto('/re off')
         self._sair_da_safe()
         self._ativar_skill()
 
