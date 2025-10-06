@@ -17,12 +17,45 @@ class MoverSpotUtil:
         self.pathfinder = None
         self.esta_na_safe = False
 
-    def movimentar_para(self, coords, mapa,
-                        max_tempo=60,
-                        verficar_se_movimentou=False,
-                        limpar_spot_se_necessario=False,
-                        movimentacao_proxima=False,
-                        posicionar_mouse_coordenada=False):
+    def movimentar(self, coords, **kwargs):
+        pathfinder = ''
+        if self.pointer.get_mapa_atual() in 'Stadium':
+            pathfinder = PathFinder.MAPA_STADIUM
+        elif self.pointer.get_mapa_atual() in 'Lorencia':
+            pathfinder = PathFinder.MAPA_LORENCIA
+        elif self.pointer.get_mapa_atual() in 'Noria':
+            pathfinder = PathFinder.MAPA_NORIA
+        elif self.pointer.get_mapa_atual() in 'Devias':
+            pathfinder = PathFinder.MAPA_DEVIAS
+        elif self.pointer.get_mapa_atual() in 'Dungeon':
+            pathfinder = PathFinder.MAPA_DUNGEON
+        elif self.pointer.get_mapa_atual() in 'Atlans':
+            pathfinder = PathFinder.MAPA_ATLANS
+        elif self.pointer.get_mapa_atual() in 'LostTower':
+            pathfinder = PathFinder.MAPA_LOSTTOWER
+        elif self.pointer.get_mapa_atual() in 'Tarkan':
+            pathfinder = PathFinder.MAPA_TARKAN
+        elif self.pointer.get_mapa_atual() in 'Loren':
+            pathfinder = PathFinder.MAPA_LOREN
+        elif self.pointer.get_mapa_atual() in 'Aida':
+            pathfinder = PathFinder.MAPA_AIDA
+        elif self.pointer.get_mapa_atual() in 'Kanturu3':
+            pathfinder = PathFinder.MAPA_KANTURU_3
+        elif self.pointer.get_mapa_atual() in 'Kanturu' or self.pointer.get_mapa_atual() in 'Kanturu2':
+            pathfinder = PathFinder.MAPA_KANTURU_1_E_2
+        elif self.pointer.get_mapa_atual() in 'Land':
+            pathfinder = PathFinder.MAPA_LAND
+        elif self.pointer.get_mapa_atual() in 'Crywolf':
+            pathfinder = ''
+
+        return self._movimentar_para(coords, pathfinder, **kwargs)
+
+    def _movimentar_para(self, coords, mapa,
+                         max_tempo=60,
+                         verficar_se_movimentou=False,
+                         limpar_spot_se_necessario=False,
+                         movimentacao_proxima=False,
+                         posicionar_mouse_coordenada=False):
         self.pathfinder = PathFinder(mapa)
         return self._movimentar(
             [coords],
@@ -36,56 +69,57 @@ class MoverSpotUtil:
 
     # Métodos para cada mapa
     def movimentar_lorencia(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_LORENCIA, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_LORENCIA, **kwargs)
 
     def movimentar_noria(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_NORIA, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_NORIA, **kwargs)
 
     def movimentar_devias(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_DEVIAS, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_DEVIAS, **kwargs)
 
     def movimentar_dungeon(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_DUNGEON, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_DUNGEON, **kwargs)
 
     def movimentar_atlans(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_ATLANS, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_ATLANS, **kwargs)
 
     def movimentar_losttower(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_LOSTTOWER, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_LOSTTOWER, **kwargs)
 
     def movimentar_stadium(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_STADIUM, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_STADIUM, **kwargs)
 
     def movimentar_icarus(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_ICARUS, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_ICARUS, **kwargs)
 
     def movimentar_kalima(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_KALIMA, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_KALIMA, **kwargs)
 
     def movimentar_tarkan(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_TARKAN, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_TARKAN, **kwargs)
 
     def movimentar_aida(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_AIDA, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_AIDA, **kwargs)
 
     def movimentar_kanturu_1_2(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_KANTURU_1_E_2, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_KANTURU_1_E_2, **kwargs)
 
     def movimentar_kanturu_3(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_KANTURU_3, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_KANTURU_3, **kwargs)
 
     def movimentar_loren(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_LOREN, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_LOREN, **kwargs)
 
     def movimentar_land(self, coords, **kwargs):
-        return self.movimentar_para(coords, PathFinder.MAPA_LAND, **kwargs)
+        return self._movimentar_para(coords, PathFinder.MAPA_LAND, **kwargs)
 
-    def _movimentar(self, destino, mapa,
-                    max_tempo=60,
-                    verficar_se_movimentou=False,
-                    limpar_spot_se_necessario=False,
-                    movimentacao_proxima=False,
-                    posicionar_mouse_coordenada=False):
+    def \
+            _movimentar(self, destino, mapa,
+                        max_tempo=60,
+                        verficar_se_movimentou=False,
+                        limpar_spot_se_necessario=False,
+                        movimentacao_proxima=False,
+                        posicionar_mouse_coordenada=False):
         try:
 
             destino_y, destino_x = destino[0]
@@ -139,6 +173,8 @@ class MoverSpotUtil:
             print("Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " + mapa + f" : {e}")
 
     def _checar_safe_zone(self, mapa):
+        if self.pointer.get_hp() == 0:
+            return True
         if mapa == PathFinder.MAPA_KANTURU_1_E_2:
             return safe_util.k1(self.handle)
         if mapa == PathFinder.MAPA_AIDA or mapa == PathFinder.MAPA_KALIMA:
@@ -172,7 +208,8 @@ class MoverSpotUtil:
             (404, 458),  # baixo
             (667, 242)  # direita
         ]
-        for _ in range(4):
+
+        for _ in range(random.randint(1, 4)):
             x, y = random.choice(coordenadas)
             mouse_util.left_clique(self.handle, x, y)
 
@@ -228,16 +265,19 @@ class MoverSpotUtil:
         y_anterior = self.pointer.get_cood_y()
         x_anterior = self.pointer.get_cood_x()
 
-        while True:
-
-            time.sleep(.25)
-
+        start_time = time.time()
+        chegou = False
+        while time.time() - start_time <= 1:  # REGRA PARA DAR O TEMPO DE CHEGAR NA COORDENADA APOS O CLIQUE
             if y_anterior == self.pointer.get_cood_y() and x_anterior == self.pointer.get_cood_x():
+                chegou = True
                 break
             else:
                 y_anterior = self.pointer.get_cood_y()
                 x_anterior = self.pointer.get_cood_x()
                 print('PROCURANDO COORD CORRETA!')
+
+        if chegou is False:
+            return False
 
         y_atual = self.pointer.get_cood_y()
         x_atual = self.pointer.get_cood_x()

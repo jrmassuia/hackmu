@@ -38,13 +38,16 @@ class PkAidaUseCase(PkBase):
         elif nome == 'SM_Troyer':
             senha = 'igsouza90'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
-        elif nome == 'INFECTRIX':
-            senha = '9876Sonso'
+        elif nome == 'SisteMatyc':
+            senha = 'carenae811'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
 
         # AIDA FINAL
         elif nome == '_Offensive':
             senha = 'kuChx98f'
+            self.tipo_pk = self.PKLIZAR_AIDA_FINAL
+        elif nome == 'INFECTRIX':
+            senha = '9876Sonso'
             self.tipo_pk = self.PKLIZAR_AIDA_FINAL
 
         return senha
@@ -81,9 +84,12 @@ class PkAidaUseCase(PkBase):
             spots = spot_util.buscar_spots_aida_corredor()
             self._executar_pk(spots)
 
+        if self._pk_pode_continuar():
+            spots = self.buscar_spot_aida2()
+            self._executar_pk(spots)
+
     def pklizar_aida2(self):
-        spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
-        spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
+        spots = self.buscar_spot_aida2()
         self._executar_pk(spots)
 
         if self._pk_pode_continuar():
@@ -92,6 +98,10 @@ class PkAidaUseCase(PkBase):
 
         if self._pk_pode_continuar():
             spots = spot_util.buscar_spots_aida_final()
+            self._executar_pk(spots)
+
+        if self._pk_pode_continuar():
+            spots = self.buscar_spot_extra_aida1()
             self._executar_pk(spots)
 
     def pklizar_aida_corredor(self):
@@ -106,6 +116,14 @@ class PkAidaUseCase(PkBase):
             spots = spot_util.buscar_spots_aida_1(ignorar_spot_pk=True)
             self._executar_pk(spots)
 
+        if self._pk_pode_continuar():
+            spots = self.buscar_spot_aida2()
+            self._executar_pk(spots)
+
+        if self._pk_pode_continuar():
+            spots = spot_util.buscar_spots_aida_final()
+            self._executar_pk(spots)
+
     def pklizar_aida_final(self):
         spots = spot_util.buscar_spots_aida_final()
         self._executar_pk(spots)
@@ -118,6 +136,10 @@ class PkAidaUseCase(PkBase):
             spots_extras = self.buscar_spot_extra_aida1()
             self._executar_pk(spots_extras)
 
+        if self._pk_pode_continuar():
+            spots = self.buscar_spot_aida2()
+            self._executar_pk(spots)
+
     def buscar_spot_extra_aida1(self):
         spots = spot_util.buscar_spots_aida_1()
         start = max(0, len(spots) - 3)
@@ -125,6 +147,11 @@ class PkAidaUseCase(PkBase):
         for indice_spot in range(start, len(spots)):
             spots_extras.append(spots[indice_spot])
         return spots_extras
+
+    def buscar_spot_aida2(self):
+        spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
+        spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
+        return spots
 
     # ---------- Implementações específicas de Aida ----------
     def _sair_da_safe(self):

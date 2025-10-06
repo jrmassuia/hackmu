@@ -1,5 +1,6 @@
 import ctypes
 import os
+import random
 import time
 from ctypes import wintypes
 from ctypes.wintypes import HWND, WPARAM, LPARAM
@@ -139,12 +140,23 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointer = Pointers(handle).teste_pointer_necessarios()
+    # pointer = Pointers(handle).teste_pointer_necessarios()
 
-    # MoverSpotUtil(handle).movimentar((78, 106),
-    #                                  max_tempo=10,
-    #                                  # verficar_se_movimentou=True,
-    #                                  limpar_spot_se_necessario=True)
+    coordenadas = [
+        (392, 53),  # cima
+        (144, 252),  # esquerda
+        (404, 458),  # baixo
+        (667, 242)  # direita
+    ]
+
+    spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
+    spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
+    print(spots)
+
+    MoverSpotUtil(handle).movimentar_aida((158, 117),
+                                     max_tempo=10,
+                                     # verficar_se_movimentou=True,
+                                     limpar_spot_se_necessario=True)
     # print(BuscarPersoangemProximoService(pointer).listar_nomes_e_coords_por_padrao())
 
     # buscar_personagem = BuscarPersoangemProximoService(pointer)

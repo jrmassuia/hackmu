@@ -52,7 +52,9 @@ class Pointers:
             #
             self.PAINEL_LATERAL_ABERTO_POINTER = self.get_pointer(self.CLIENT + 0x00295554, offsets=[0xA0])
             #
-            self.SAL_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001816AC, offsets=[0x104])
+            self.SALA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001816AC, offsets=[0x104])
+            #
+            # self.MAPA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x004FC954, offsets=[0x98, 0])
 
             # pointer_base = self.CLIENT + 0x0352D864
             # if pointer_base:
@@ -150,6 +152,7 @@ class Pointers:
         print('MOSTRA DESC ITEM:' + str(self.get_mostrar_desc_item()))
         print('PAINEL LATERAL ABERTO:' + str(self.get_painel_lateral_aberto_item()))
         print('SALA ATUAL:' + str(self.get_sala_atual()))
+        print('MAPA ATUAL:' + str(self.get_mapa_atual()))
 
     def get_cood_x(self):
         return self.read_value(self.X_POINTER, data_type="int")
@@ -201,7 +204,13 @@ class Pointers:
         return self.read_value(self.PAINEL_LATERAL_ABERTO_POINTER, data_type="word")
 
     def get_sala_atual(self):
-        return self.read_value(self.SAL_ATUAL_POINTER, data_type="int")
+        return self.read_value(self.SALA_ATUAL_POINTER, data_type="int")
+
+    def get_mapa_atual(self):
+        mapa = self.read_value(self.MAPA_ATUAL_POINTER, data_type="string")
+        if mapa:
+            mapa = mapa.replace('p ', '')
+        return mapa
 
     def get_item_pick(self):
         return self.read_value(self.ITEM_PICK_POINTER, data_type="string")
@@ -214,9 +223,6 @@ class Pointers:
         if isinstance(qtd, int):
             return int(qtd)
         return 0
-
-    # def get_deteccao_inventario(self):
-    #     return self.read_value(self.DETECCAO_INVENTARIO_POINTER, data_type="int")
 
     def imprimir_todos_tipos_do_endereco_memoria(self, endereco_raiz=None, tamanho=0x0B00):
         """
@@ -286,50 +292,6 @@ class Pointers:
         except Exception:
             print("Erro ao decodificar como ASCII string.")
 
-    def procurar_players(self) -> list[tuple[str, int, int]]:
-        """Varre toda a memória e busca padrões de coordenadas X/Y (X em offset 0x06, Y em offset 0x04)."""
-        base_inicio = 0x0E9C0000
-        base_fim = 0x0E9D0000
-        bloco_tamanho = 0x80
-        encontrados = []
-
-        for endereco in range(base_inicio, base_fim, bloco_tamanho):
-            try:
-                bloco = self.pm.read_bytes(endereco, bloco_tamanho)
-
-                for i in range(0, bloco_tamanho - 6):
-                    # Lê possíveis valores nos offsets i+0x04 (Y) e i+0x06 (X)
-                    try:
-                        y = struct.unpack("<H", bloco[i + 0x04:i + 0x06])[0]
-                        x = struct.unpack("<H", bloco[i + 0x06:i + 0x08])[0]
-                        if 0 < x < 255 and 0 < y < 255:
-                            encontrados.append((hex(endereco + i), x, y))
-                    except:
-                        continue
-
-            except Exception as e:
-                # Pode logar se quiser: print(f"[ERRO] {hex(endereco)}: {e}")
-                continue
-
-        for addr, x, y in encontrados:
-            print(f"Player encontrado em {addr} - X: {x}, Y: {y}")
-
-    def ler_offsets(self, tamanho: int = 0x80):
-        endereco = 0x0E9CD9DC
-        print(f"Lendo {tamanho} bytes a partir do endereço {hex(endereco)}...\n")
-        try:
-            dados = self.pm.read_bytes(endereco, tamanho)
-
-            for offset in range(0, tamanho - 1, 2):
-                try:
-                    valor = struct.unpack("<H", dados[offset:offset + 2])[0]
-                    print(
-                        f"Offset {offset:02X} | Addr {hex(endereco + offset)} | Valor (int): {valor:<5} | Hex: {valor:04X}")
-                except:
-                    print(f"Offset {offset:02X} | Erro na leitura")
-        except Exception as e:
-            print(f"Erro ao ler memória: {e}")
-
     def print_padrao_memoria(self, endereco=0x0E9CDE90, tamanho=32):
         try:
             bloco = self.pm.read_bytes(endereco, tamanho)
@@ -394,394 +356,3 @@ class Pointers:
         except Exception as e:
             print(f"[ERRO] Falha ao resolver ponteiro: {e}")
             return None
-
-    def buscar_nome_e_xy_na_memoria(self, nome_procurado, base_inicio, base_fim):
-        """
-        Busca por um nome específico na memória do processo e lê as coordenadas X e Y logo após o nome.
-
-        :param pm: Instância do pymem.Pymem já conectada ao processo.
-        :param nome_procurado: Nome (string) que será buscado na memória.
-        :param base_inicio: Endereço de memória inicial para varredura.
-        :param base_fim: Endereço de memória final para varredura.
-        :return: Lista de tuplas (endereco_encontrado, x, y)
-        """
-        nome_bytes = nome_procurado.encode("utf-8")
-        try:
-            memoria = self.pm.read_bytes(base_inicio, base_fim - base_inicio)
-        except Exception as e:
-            print(f"[!] Erro ao ler memória: {e}")
-            return []
-
-        resultados = []
-
-        i = 0
-        while i < len(memoria) - len(nome_bytes) - 4:
-            if memoria[i:i + len(nome_bytes)] == nome_bytes:
-                offset = i + len(nome_bytes)
-                x = struct.unpack_from('<H', memoria, offset)[0]
-                y = struct.unpack_from('<H', memoria, offset + 2)[0]
-                endereco = base_inicio + i
-                resultados.append((endereco, x, y))
-            i += 1
-
-        for endereco, x, y in resultados:
-            print(f"[+] Encontrado em {hex(endereco)} - X: {x}, Y: {y}")
-
-    def _addr_from_point(self, point_result_offset: int, inner_offset: int) -> int | None:
-        """
-        Resolve endereço a partir de um 'point result':
-          addr = *(CLIENT + point_result_offset) + inner_offset
-        Retorna None se não conseguir ler.
-        """
-        try:
-            base_ptr = self.pm.read_uint(self.CLIENT + point_result_offset)
-            if not base_ptr:
-                return None
-            return base_ptr + inner_offset
-        except Exception as e:
-            print(f"[ERRO] _addr_from_point falhou em offset {hex(point_result_offset)}: {e}")
-            return None
-
-    def procurar_padrao_coordenadas2(
-            self,
-            range_inicio_point=0x002E2A94,  # *(CLIENT + range_inicio_point) + range_inicio_offset
-            range_inicio_offset=0x0D9C,
-            range_fim_point=0x00280028,  # *(CLIENT + range_fim_point) + range_fim_offset
-            range_fim_offset=0x050C,
-            bloco_leitura=0x100000  # 1 MB por leitura (rápido)
-    ):
-        """
-        Procura o padrão b'\\x80\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF' APENAS dentro do range:
-          INÍCIO = *(CLIENT + range_inicio_point) + range_inicio_offset
-          FIM    = *(CLIENT + range_fim_point)    + range_fim_offset
-        Para cada match, lê Y (i-8..i-6) e X (i-4..i-2). Retorna [(addr_hex, x, y), ...].
-        """
-        # 1) Resolve início e fim do range a partir dos dois point results
-        try:
-            ptr_ini = self.pm.read_uint(self.CLIENT + range_inicio_point) or 0
-            ptr_fim = self.pm.read_uint(self.CLIENT + range_fim_point) or 0
-        except Exception as e:
-            print(f"[ERRO] Falha ao ler point results do range: {e}")
-            return []
-
-        if ptr_ini == 0 or ptr_fim == 0:
-            print("[ERRO] Point result do range retornou 0 (estrutura não inicializada?).")
-            return []
-
-        base_inicio = ptr_ini + range_inicio_offset
-        base_fim = ptr_fim + range_fim_offset
-        if base_inicio > base_fim:
-            base_inicio, base_fim = base_fim, base_inicio  # garante ordem
-
-        # 2) Varredura simples dentro do range
-        padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
-        pad_len = len(padrao)
-        need_before = 8
-        carry_len = need_before + pad_len - 1  # 15 bytes p/ não perder match na borda
-
-        resultados = []
-        vistos = set()
-        addr = base_inicio
-        prev_tail = b""
-
-        while addr < base_fim:
-            tam = min(bloco_leitura, base_fim - addr)
-            try:
-                buf = self.pm.read_bytes(addr, tam)
-            except Exception:
-                # se falhar a leitura desse pedaço, avança 4KB e segue simples
-                addr += 0x1000
-                prev_tail = b""
-                continue
-
-            scan_base = addr - len(prev_tail)
-            scan_buf = prev_tail + buf
-
-            pos = scan_buf.find(padrao)
-            while pos != -1:
-                if pos >= need_before:
-                    endereco_padrao = scan_base + pos
-                    if endereco_padrao not in vistos:
-                        y_bytes = scan_buf[pos - 8:pos - 6]
-                        x_bytes = scan_buf[pos - 4:pos - 2]
-                        if len(y_bytes) == 2 and len(x_bytes) == 2:
-                            y = int.from_bytes(y_bytes, "little", signed=False)
-                            x = int.from_bytes(x_bytes, "little", signed=False)
-                            if y != 0 and x != 0:
-                                print(f"[+] Padrão em {hex(endereco_padrao)} | Y={y} X={x}")
-                                resultados.append((hex(endereco_padrao), x, y))
-                                vistos.add(endereco_padrao)
-                pos = scan_buf.find(padrao, pos + 1)
-
-            # mantém cauda para pegar matches que cruzam a fronteira de blocos
-            prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
-            addr += tam
-
-        mais_proximos = self.ordenar_proximos_ate_10(resultados, incluir_dist=True, limite=10)
-
-        return mais_proximos
-
-    def ordenar_proximos_ate_10(
-            self,
-            resultados: list[tuple[str, int, int]],
-            limite: int | None = None,
-            incluir_dist: bool = False
-    ) -> list:
-        """
-        Mantém SOMENTE resultados dentro de |dx|<=10 e |dy|<=10 em relação às suas coords
-        e ordena por proximidade (distância Manhattan).
-        resultados: [(addr_hex, x, y), ...]
-        limite: retorna só os N mais próximos (opcional).
-        incluir_dist: se True, retorna (addr, x, y, dist).
-        """
-        x0 = self.get_cood_x()
-        y0 = self.get_cood_y()
-        if x0 is None or y0 is None:
-            print("[WARN] Coordenadas atuais indisponíveis.")
-            return []
-
-        proximos = []
-        for addr, x, y in resultados:
-            dx = x - x0
-            dy = y - y0
-            # filtro 'caixa' de 10 por eixo (consistente com seu uso de raio no código)
-            if abs(dx) <= 10 and abs(dy) <= 10:
-                dist = abs(dx) + abs(dy)  # Manhattan
-                proximos.append((addr, x, y, dist))
-
-        # ordena por distância (e, em empate, por endereço para estabilidade)
-        proximos.sort(key=lambda t: (t[3], int(t[0], 16)))
-
-        if limite is not None:
-            proximos = proximos[:limite]
-
-        return proximos if incluir_dist else [(a, x, y) for (a, x, y, _d) in proximos]
-
-    def testar_nome_e_coordenadas_no_range(
-            self,
-            nome: str = "DL_DoMall",
-            range_inicio_point: int = 0x002E2A94,
-            range_inicio_offset: int = 0x0D9C,
-            range_fim_point: int = 0x00280028,
-            range_fim_offset: int = 0x050C,
-            bloco_leitura: int = 0x100000,  # 1MB
-            busca_padrao_max: int = 0x800  # até 2 KB após o nome para achar o padrão
-    ):
-        """
-        Procura o nome (ASCII) dentro do range:
-          INÍCIO = *(CLIENT + range_inicio_point) + range_inicio_offset
-          FIM    = *(CLIENT + range_fim_point)    + range_fim_offset
-        Ao encontrar, busca o padrão b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF' depois do nome
-        (até 'busca_padrao_max' bytes) e imprime Nome, Endereço, X, Y.
-        Retorna lista de dicts: [{'nome', 'addr_nome', 'addr_padrao', 'x', 'y'}]
-        """
-        padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
-        need_before = 8  # para ler Y e X (Y @ -8..-6, X @ -4..-2)
-
-        # 1) Resolve início e fim do range via point results
-        try:
-            ptr_ini = self.pm.read_uint(self.CLIENT + range_inicio_point) or 0
-            ptr_fim = self.pm.read_uint(self.CLIENT + range_fim_point) or 0
-        except Exception as e:
-            print(f"[ERRO] Falha ao ler point results do range: {e}")
-            return []
-
-        if ptr_ini == 0 or ptr_fim == 0:
-            print("[ERRO] Point result do range retornou 0 (estrutura não inicializada?).")
-            return []
-
-        base_inicio = ptr_ini + range_inicio_offset
-        base_fim = ptr_fim + range_fim_offset
-        if base_inicio > base_fim:
-            base_inicio, base_fim = base_fim, base_inicio
-
-        # 2) Varre pelo NOME no range (usando find com cauda para pegar borda de blocos)
-        resultados = []
-        nome_bytes = nome.encode("ascii", errors="ignore")
-        carry_len = max(0, len(nome_bytes) - 1)
-        addr = base_inicio
-        prev_tail = b""
-
-        while addr < base_fim:
-            tam = min(bloco_leitura, base_fim - addr)
-            try:
-                buf = self.pm.read_bytes(addr, tam)
-            except Exception:
-                # se falhar, avança 4KB e zera cauda
-                addr += 0x1000
-                prev_tail = b""
-                continue
-
-            scan_base = addr - len(prev_tail)
-            scan_buf = prev_tail + buf
-
-            pos = scan_buf.find(nome_bytes)
-            while pos != -1:
-                addr_nome = scan_base + pos
-                # 3) Depois do nome, procurar o padrão de coordenadas até 'busca_padrao_max' bytes
-                search_start = addr_nome + len(nome_bytes)
-                # pequena proteção: se search_start < base_inicio, ajusta
-                if search_start < base_inicio:
-                    search_start = base_inicio
-
-                # leitura de uma janelinha pra buscar o padrão
-                try:
-                    janela = min(busca_padrao_max, base_fim - search_start)
-                    if janela > 0:
-                        janela_bytes = self.pm.read_bytes(search_start, janela)
-                    else:
-                        janela_bytes = b""
-                except Exception:
-                    janela_bytes = b""
-
-                p = janela_bytes.find(padrao) if janela_bytes else -1
-                if p != -1:
-                    addr_padrao = search_start + p
-                    try:
-                        # lê Y e X diretamente da memória (evita borda de buffer)
-                        y = self.pm.read_ushort(addr_padrao - 8)
-                        x = self.pm.read_ushort(addr_padrao - 4)
-                        if y != 0 and x != 0:
-                            info = {
-                                "nome": nome,
-                                "addr_nome": hex(addr_nome),
-                                "addr_padrao": hex(addr_padrao),
-                                "x": x,
-                                "y": y,
-                            }
-                            resultados.append(info)
-                            print(
-                                f"[OK] Nome '{nome}' em {info['addr_nome']}  ->  X={x}  Y={y}  (padrão @ {info['addr_padrao']})")
-                    except Exception:
-                        pass
-
-                # próxima ocorrência do nome neste buffer
-                pos = scan_buf.find(nome_bytes, pos + 1)
-
-            # mantém cauda para não perder match que cruza blocos
-            prev_tail = scan_buf[-carry_len:] if carry_len and len(scan_buf) >= carry_len else scan_buf
-            addr += tam
-
-        return resultados
-
-    def listar_nomes_e_coords_por_padrao(
-            self,
-            range_inicio_point=0x006412A0, range_inicio_offset=0x370,
-            range_fim_point=0x025FE62C, range_fim_offset=0xE50,
-            bloco_leitura=0x100000,  # 1 MB
-            name_delta=0x74,  # distância nome -> padrão (observada nos seus logs)
-            name_max=16  # tamanho máximo do nome
-    ):
-        padrao = b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
-        need_before = 8
-        carry_len = need_before + len(padrao) - 1  # 15
-
-        # --- range pelo point result ---
-        try:
-            ptr_ini = self.pm.read_uint(self.CLIENT + range_inicio_point) or 0
-            ptr_fim = self.pm.read_uint(self.CLIENT + range_fim_point) or 0
-        except Exception as e:
-            print(f"[ERRO] range: {e}")
-            return []
-        if ptr_ini == 0 or ptr_fim == 0:
-            print("[ERRO] range zerado (estrutura não inicializada?).")
-            return []
-
-        base_inicio = ptr_ini + range_inicio_offset
-        base_fim = ptr_fim + range_fim_offset
-        if base_inicio > base_fim:
-            base_inicio, base_fim = base_fim, base_inicio
-
-        resultados, vistos = [], set()
-        addr, prev_tail = base_inicio, b""
-
-        while addr < base_fim:
-            tam = min(bloco_leitura, base_fim - addr)
-            try:
-                buf = self.pm.read_bytes(addr, tam)
-            except Exception:
-                addr += 0x1000
-                prev_tail = b""
-                continue
-
-            scan_base = addr - len(prev_tail)
-            scan_buf = prev_tail + buf
-
-            i = 0
-            while True:
-                pos = scan_buf.find(padrao, i)
-                if pos == -1:
-                    break
-                i = pos + 1
-                if pos < need_before:
-                    continue
-
-                addr_padrao = scan_base + pos
-                try:
-                    y = self.pm.read_ushort(addr_padrao - 8)
-                    x = self.pm.read_ushort(addr_padrao - 4)
-                    if x == 0 or y == 0:
-                        continue
-                except Exception:
-                    continue
-
-                # --- nome em (padrão - name_delta) ---
-                nome_addr = addr_padrao - name_delta
-                nome = None
-                try:
-                    raw = self.pm.read_bytes(nome_addr, name_max)
-                    # tenta C-string
-                    end = raw.find(b"\x00")
-                    if end == -1:
-                        end = len(raw)
-                    cand = bytes(b for b in raw[:end] if 32 <= b <= 126).strip()
-                    if 3 <= len(cand) <= name_max:
-                        nome = cand.decode("ascii", errors="ignore")
-                except Exception:
-                    pass
-
-                # fallback: se não achou, tenta uma “palavra ASCII” curtinha ali
-                if not nome:
-                    try:
-                        pre = self.pm.read_bytes(max(base_inicio, nome_addr),
-                                                 min(64, addr_padrao - max(base_inicio, nome_addr)))
-                        # pega a última sequência ASCII do bloco
-                        j = len(pre) - 1
-                        while j >= 0 and pre[j] == 0:
-                            j -= 1
-                        end = j
-                        while j >= 0 and 32 <= pre[j] <= 126:
-                            j -= 1
-                        cand = pre[j + 1:end + 1].strip()
-                        if 3 <= len(cand) <= name_max:
-                            nome = cand.decode("ascii", errors="ignore")
-                    except Exception:
-                        pass
-
-                key = (addr_padrao, x, y)
-                if key in vistos:
-                    continue
-                vistos.add(key)
-
-                if nome not in ['Red Knight', 'Mutant', 'Potion Girl', 'Baz the Vault Ke', 'Satyros', 'Death Tree',
-                                'Alpha Crust', 'Drakan', 'Great Drakan', 'Phantom Knight', 'Metal Balrog',
-                                'Omega Wing', 'Phoenix of Darkn', 'Hero Mutant', 'Tantalos', 'Ice Queen', 'Ice Monster',
-                                'Hommerd', 'Sea Worm']:
-
-                    resultados.append({
-                        "nome": nome,
-                        "addr_nome": hex(nome_addr) if nome is not None else None,
-                        "addr_padrao": hex(addr_padrao),
-                        "x": x,
-                        "y": y,
-                    })
-
-                    if nome:
-                        print(f"[OK] {nome}  X={x} Y={y}  (nome @ {hex(nome_addr)}, padrão @ {hex(addr_padrao)})")
-                    else:
-                        print(f"[OK] <sem-nome>  X={x} Y={y}  (padrão @ {hex(addr_padrao)})")
-
-            prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
-            addr += tam
-
-        return resultados

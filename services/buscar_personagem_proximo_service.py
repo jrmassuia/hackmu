@@ -1,6 +1,9 @@
 import ctypes
 import threading
+import logging
+import time
 from ctypes import wintypes
+from functools import lru_cache
 
 # ==== Constantes WinAPI (mantenha no topo do arquivo) ====
 PAGE_GUARD = 0x100
@@ -51,6 +54,17 @@ class BuscarPersoangemProximoService:
         'Schriker', 'Blood Soldier', 'Aegis'
     }
 
+    _MSB_BASE_ORDERS = {
+        "0-9A-Z": tuple(range(0x00, 0x24)),  # 0..35 (0x00..0x23)
+        "0-9": tuple(range(0x00, 0x0A)),  # 0..9
+        "A-Z": tuple(range(0x0A, 0x24)),  # 10..35
+        "A-F": tuple(range(0x0A, 0x10)),  # 10..15
+        # adicione outros presets se precisar
+    }
+
+    # cache simples no escopo da classe
+    _msb_cache: dict[tuple[str, tuple[int, ...]], tuple[int, ...]] = {}
+
     def __init__(self, pointer):
         self.pointer = pointer
         self._range_cache: dict[tuple, tuple[int | None, int | None]] = {}
@@ -77,50 +91,6 @@ class BuscarPersoangemProximoService:
                 self._ignore_bytes.add(myname_b)
         except Exception:
             pass
-
-    def add_mob_ignorar(self, nome) -> bool:
-        """
-        Adiciona um nome ao conjunto de ignorados (case-insensitive).
-        Retorna True se adicionou, False se já existia ou nome inválido.
-        Aceita str ou bytes.
-        """
-        if not nome:
-            return False
-        if isinstance(nome, bytes):
-            # tenta decodificar; ajuste o encoding se necessário no seu client
-            nome = nome.decode('utf-8', errors='ignore')
-
-        nome_clean = nome.strip()
-        if not nome_clean:
-            return False
-
-        key = nome_clean.casefold()
-        with self._mobs_lock:
-            if key in self._mobs_ignorar_norm:
-                return False
-            self._mobs_ignorar_raw.add(nome_clean)
-            self._mobs_ignorar_norm.add(key)
-            return True
-
-    def _is_readable(self, protect: int) -> bool:
-        if protect & PAGE_GUARD:
-            return False
-        return bool(protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE))
-
-    def _type_str(self, t):
-        if t == MEM_PRIVATE: return "PRIVATE"
-        if t == MEM_MAPPED:  return "MAPPED"
-        if t == MEM_IMAGE:   return "IMAGE"
-        return hex(t)
-
-    def _protect_str(self, p):
-        flags = []
-        if p & PAGE_READONLY:          flags.append("R")
-        if p & PAGE_READWRITE:         flags.append("RW")
-        if p & PAGE_EXECUTE_READ:      flags.append("XR")
-        if p & PAGE_EXECUTE_READWRITE: flags.append("XRW")
-        if p & PAGE_GUARD:             flags.append("GUARD")
-        return "|".join(flags) or hex(p)
 
     def _iter_regions(self, process_handle):
         addr = 0
@@ -188,11 +158,6 @@ class BuscarPersoangemProximoService:
             self._range_cache[key] = (base_inicio, base_fim)
 
         return base_inicio, base_fim
-
-    def limpar_cache_ranges(self):
-        """Se quiser invalidar manualmente (troca de mapa, loading, etc.)."""
-        with self._range_cache_lock:
-            self._range_cache.clear()
 
     # ---------------------- SUA FUNÇÃO (com melhorias) ----------------------
     def achar_range_private_prefix_e32(self,
@@ -302,47 +267,63 @@ class BuscarPersoangemProximoService:
 
         return None, None
 
-    def _build_msb_order(self, charset: str = "0-9A-Z",
+    @staticmethod
+    @lru_cache(maxsize=128)
+    def _build_msb_order(charset: str = "0-9A-Z",
                          start_hints: tuple[int, ...] = ()) -> tuple[int, ...]:
         """
-        Gera uma ordem de MSBs.
-        - "0-9A-Z": 0..9 e A..Z  => 0..9 e 10..35 (0x00..0x23)
-          (A=10, B=11, ..., Z=35)
-        Você pode adaptar/estender se quiser outros intervalos.
-        start_hints: MSBs para priorizar no início (mantém ordem e remove duplicatas).
+        Versão super rápida com print de início e fim.
         """
-        order = []
+        key = (charset, start_hints)
+        if key in BuscarPersoangemProximoService._msb_cache:
+            return BuscarPersoangemProximoService._msb_cache[key]
 
-        # 0-9
-        if "0-9" in charset:
-            order.extend(range(0x00, 0x0A))  # 0..9
+        # ---- INÍCIO DO LOG ----
+        print(f"[MSB] INICIO _build_msb_order charset={charset} hints={start_hints}")
+        t0 = time.perf_counter()
 
-        # A-Z  (A=10 .. Z=35)
-        if "A-Z" in charset:
-            order.extend(range(0x0A, 0x24))  # 10..35 -> 0x0A..0x23
+        # 1) pega base pronta
+        base = BuscarPersoangemProximoService._MSB_BASE_ORDERS.get(charset)
+        if base is None:
+            seq = []
+            if "0-9" in charset:
+                seq.extend(range(0x00, 0x0A))
+            if "A-Z" in charset:
+                seq.extend(range(0x0A, 0x24))
+            base = tuple(seq)
 
-        # aplica hints no começo e remove duplicatas mantendo ordem estável
-        if start_hints:
-            hinted = list(start_hints) + [x for x in order if x not in start_hints]
-            # normaliza para 0..255 (só por segurança)
-            hinted = [x & 0xFF for x in hinted]
-            seen = set()
-            dedup = []
-            for x in hinted:
-                if x not in seen:
-                    seen.add(x)
-                    dedup.append(x)
-            return tuple(dedup)
+        # 2) se não há hints → retorno direto
+        if not start_hints:
+            BuscarPersoangemProximoService._msb_cache[key] = base
+            dt = (time.perf_counter() - t0) * 1000.0
+            print(f"[MSB] FIM _build_msb_order -> len={len(base)} tempo={dt:.3f} ms")
+            return base
 
-        # sem hints
-        seen = set()
-        dedup = []
-        for x in order:
-            x &= 0xFF
-            if x not in seen:
-                seen.add(x)
-                dedup.append(x)
-        return tuple(dedup)
+        # 3) aplica hints válidos
+        base_set = set(base)
+        seen = [False] * 256
+        prefix = []
+        for h in start_hints:
+            h &= 0xFF
+            if h in base_set and not seen[h]:
+                seen[h] = True
+                prefix.append(h)
+
+        if not prefix:
+            BuscarPersoangemProximoService._msb_cache[key] = base
+            dt = (time.perf_counter() - t0) * 1000.0
+            print(f"[MSB] FIM _build_msb_order -> len={len(base)} (sem hints válidos) tempo={dt:.3f} ms")
+            return base
+
+        tail = [x for x in base if not seen[x]]
+        out = tuple(prefix + tail)
+        BuscarPersoangemProximoService._msb_cache[key] = out
+
+        # ---- FIM DO LOG ----
+        dt = (time.perf_counter() - t0) * 1000.0
+        print(f"[MSB] FIM _build_msb_order -> len={len(out)} tempo={dt:.3f} ms")
+
+        return out
 
     def listar_nomes_e_coords_por_padrao(self,
                                          padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',

@@ -75,8 +75,8 @@ class PkBase(ABC):
 
             if limpou_pk:
                 self.iniciar_pk()
-                # Mantém a pausa para finalizar autodefesa (original)
                 if self.pointer.get_nome_char() != 'Narukami':
+                    print('Esperando 60s!')
                     time.sleep(60)
             else:
                 self.limpar_pk()
@@ -284,7 +284,6 @@ class PkBase(ABC):
 
                     if posicionou:
                         print('POSICIONOU!')
-                        time.sleep(1)
 
                         while True:
                             if self.mover_spot_util.esta_na_safe:
@@ -312,11 +311,27 @@ class PkBase(ABC):
 
     # ---------- Heurísticas visuais ----------
     def _pode_pklizar(self) -> bool:
+        imagens_pk = [
+            './static/pk/loja.png',
+            './static/pk/suiciide.png',
+            './static/pk/fenix.png',
+            './static/pk/suici.png'
+            './static/pk/suicide.png'
+            './static/pk/suicide2.png'
+        ]
+
         screenshot = screenshot_util.capture_window(self.handle)
-        eh_suicide = self.buscar_imagem.buscar_posicoes_de_item('./static/pk/suicide.png', screenshot, precisao=.7)
-        eh_suiciide = self.buscar_imagem.buscar_posicoes_de_item('./static/pk/suiciide.png', screenshot, precisao=.7)
-        eh_loja = self.buscar_imagem.buscar_posicoes_de_item('./static/pk/loja.png', screenshot, precisao=.7)
-        return bool(eh_suicide or eh_suiciide or eh_loja)
+
+        start_time = time.time()
+        while time.time() - start_time <= 2:
+            for img_path in imagens_pk:
+                posicoes = self.buscar_imagem.buscar_posicoes_de_item(
+                    img_path, screenshot, precisao=0.75
+                )
+                if posicoes:
+                    return True
+                time.sleep(.1)
+        return False
 
     # ---------- Ações rápidas ----------
     def _ativar_skill(self):
