@@ -147,6 +147,7 @@ class Teclado_util:
             else:
                 print("Falha ao enviar texto após múltiplas tentativas.")
 
+
     def _toque_arduino(self, tecla: str, delay=0.025) -> None:
         if self.arduino.conexao_arduino:
             self.arduino.tap(tecla, delay=delay)

@@ -1,4 +1,31 @@
 {
-    "mapa": "devias2-1",
-    "local": 1
+    "mapa": "LostTower6",
+    "localizacao": 1,
+    "versao_mapa": 1,
+    "estouro_safe": false,
+    "zen": 750000,
+    "comando_discord": "",
+    "tipo_classe": [
+        {
+            "classe": "BK",
+            "coordy": 28,
+            "coordx": 35,
+            "mousex": 313,
+            "mousey": 277
+        },
+        {
+            "classe": "SM",
+            "coordy": 28,
+            "coordx": 33,
+            "mousex": 430,
+            "mousey": 280
+        },
+        {
+            "classe": "EF",
+            "coordy": 28,
+            "coordx": 31,
+            "mousex": 430,
+            "mousey": 280
+        }
+    ]
 }

@@ -1,9 +1,11 @@
+import math
+import random
+import threading
 import time
-from abc import ABC, abstractmethod
-from typing import Optional, Sequence, Tuple
-
 import win32gui
 
+from abc import ABC, abstractmethod
+from typing import Optional, Sequence, Tuple, Callable
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.up.up_util.up_util import Up_util
 from services.alterar_char_sala_service import AlterarCharSalaService
@@ -57,6 +59,8 @@ class PkBase(ABC):
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
         self.coord_spot_atual: Optional[Tuple[int, int]] = None
         self.tipo_pk: Optional[str] = None
+        self._abates = 0
+        self._abates_lock = threading.Lock()
 
         # Define tipo e senha (fornecidos pela subclasse)
         senha = self._definir_tipo_pk_e_senha()
@@ -68,7 +72,7 @@ class PkBase(ABC):
     def execute(self):
         """Loop principal: lê PK -> se limpo, inicia PK; senão, rotina de limpar PK."""
         while True:
-            limpou_pk = self.ler_pk()
+            limpou_pk = self._limpou_pk()
             if limpou_pk is None:
                 print("erro leitura pk")
                 continue
@@ -91,7 +95,19 @@ class PkBase(ABC):
         """Fluxo ao começar PK (sequência de spots conforme o tipo definido)."""
         raise NotImplementedError()
 
-    # ---------- Utilitários comuns ----------
+    def executar_rota_pk(self, etapas: Sequence[Callable[[], list]]) -> None:
+        """
+        Executa, em sequência, cada etapa da rota de PK:
+          - chama a função geradora de spots
+          - executa PK nesses spots
+          - verifica se pode continuar; se não, encerra a rota
+        """
+        for obter_spots in etapas:
+            spots = obter_spots()  # função que retorna os spots
+            self._executar_pk(spots)  # executa PK nos spots
+            if not self._pk_pode_continuar():  # se não pode continuar, sai
+                return
+
     def _consultar_info_e_verificar(self, imagem_pk: str) -> bool:
         """
         Fluxo comum: mover mouse -> /info -> aguardar -> verificar imagem-alvo (pk0/pk1)
@@ -101,9 +117,8 @@ class PkBase(ABC):
         if self.pointer.get_nome_char() == 'Narukami':
             return True  # early return preservado
 
-        mouse_util.mover(self.handle, 1, 1)  # tira o mouse da tela
-        # Abre /info até o botão OK aparecer
         while True:
+            mouse_util.mover(self.handle, 1, 1)  # tira o mouse da tela
             self.teclado_util.escrever_texto("/info")
             time.sleep(1)
             achou_btn = self.buscar_imagem.buscar_item_simples(self.IMG_OKINFO)
@@ -115,7 +130,7 @@ class PkBase(ABC):
         self._mover_e_clicar_na_opcao(self.IMG_OKINFO)
         return bool(achou)
 
-    def ler_pk(self) -> Optional[bool]:
+    def _limpou_pk(self) -> Optional[bool]:
         return self._consultar_info_e_verificar(self.IMG_PK0)
 
     def _pk_pode_continuar(self) -> bool:
@@ -125,7 +140,7 @@ class PkBase(ABC):
         screenshot = screenshot_util.capture_region(self.handle, 350, 270, 80, 25)
         return bool(self.buscar_imagem.buscar_posicoes_de_item(image_path, screenshot, precisao=.9))
 
-    def _mover_e_clicar_na_opcao(self, imagem_path: str, timeout: float = 60.0) -> bool:
+    def _mover_e_clicar_na_opcao(self, imagem_path: str, timeout: float = 5.0) -> bool:
         """
         Move o mouse, tenta localizar a imagem e clicar nela até *sumir*.
         Corrigido: antes a flag `achou` era zerada a cada iteração.
@@ -177,14 +192,15 @@ class PkBase(ABC):
                 ultimo_check_up = time.time()
 
             if self.morreu():
-                print('Esperando na safe...')
-                time.sleep(300)
+                tempo_espera = random.randint(3 * 60, 10 * 60)
+                print(f"Aguardando {tempo_espera // 60} minutos ({tempo_espera} segundos)... - " + self.tela)
+                time.sleep(tempo_espera)
                 self.mover_para_spot_vazio()
 
             # a cada 180s, checa se limpou PK
             if time.time() - ultimo_check_pk >= 180:
                 ultimo_check_pk = time.time()
-                limpou_pk = self.ler_pk()
+                limpou_pk = self._limpou_pk()
                 if limpou_pk:
                     self.mover_para_sala7()
                     return
@@ -207,7 +223,7 @@ class PkBase(ABC):
         if self.mapa == PathFinder.MAPA_AIDA:
             spots = spot_util.buscar_spots_aida_2()
         elif self.mapa == PathFinder.MAPA_TARKAN:
-            spots = spot_util.buscar_spots_tk2()
+            spots = spot_util.buscar_spots_todos_tk(nao_ignorar_spot_pk=True)
         else:
             spots = ''
 
@@ -283,55 +299,124 @@ class PkBase(ABC):
                     posicionou = self._posicionar_char_pklizar(x, y)
 
                     if posicionou:
-                        print('POSICIONOU!')
-
-                        while True:
-                            if self.mover_spot_util.esta_na_safe:
-                                print('3 - Morreu enqto procurava player')
-                                return
-
-                            if self._pode_pklizar():
-                                print('ACHOU SUICIDE')
-                                if self.pointer.get_nome_char() == 'Narukami':
-                                    time.sleep(3)
-                                    break
-                                else:
-                                    self._ativar_pk()
-                                    mouse_util.ativar_click_direito(self.handle)
-                                    self.teclado_util._toque_arduino("Q")
-                                    time.sleep(.25)
-                            else:
-                                print('NAO ACHOU SUICIDE')
-                                self._desativar_pk()
-                                break
+                        self._tentar_pklizar()
                     else:
                         print('NÃO POSICIONOU!')
 
-                    mouse_util.desativar_click_direito(self.handle)
+    # --- helpers ---------------------------------------------------------------
 
-    # ---------- Heurísticas visuais ----------
-    def _pode_pklizar(self) -> bool:
-        imagens_pk = [
+    def _buscar_pk_cascata(self, prioridade: str | None = None, timeout_total: float = 2.0,
+                           intervalo: float = 0.10) -> str | None:
+        """
+        Procura pelas imagens em cascata por até `timeout_total` segundos (TOTAL).
+        Se `prioridade` vier, checa ela primeiro em todas as iterações.
+        Retorna o caminho da imagem encontrada ou None.
+        """
+        imagens_pk = (
             './static/pk/loja.png',
             './static/pk/suiciide.png',
             './static/pk/fenix.png',
-            './static/pk/suici.png'
-            './static/pk/suicide.png'
-            './static/pk/suicide2.png'
-        ]
+            './static/pk/suici.png',
+            './static/pk/suic.png',
+            './static/pk/suicide.png',
+            './static/pk/suicide2.png',
+        )
 
-        screenshot = screenshot_util.capture_window(self.handle)
+        deadline = time.monotonic() + timeout_total
+        while time.monotonic() < deadline:
+            # 1) tenta a prioritaria primeiro (se houver)
+            if prioridade and self.buscar_imagem.buscar_item_simples(prioridade):
+                return prioridade
 
-        start_time = time.time()
-        while time.time() - start_time <= 2:
-            for img_path in imagens_pk:
-                posicoes = self.buscar_imagem.buscar_posicoes_de_item(
-                    img_path, screenshot, precisao=0.75
-                )
-                if posicoes:
-                    return True
-                time.sleep(.1)
+            # 2) varre as demais em cascata
+            for img in imagens_pk:
+                if img == prioridade:
+                    continue
+                if self.buscar_imagem.buscar_item_simples(img):
+                    return img
+
+            time.sleep(intervalo)
+
+        return None
+
+    def _vigiar_imagem_ate_sumir(self, img_path: str, confirmar_desaparecimento_ms: int = 400,
+                                 intervalo: float = 0.08) -> bool:
+        """
+        Mantém a vigilância da MESMA imagem até ela sumir.
+        Usa um 'debounce' de `confirmar_desaparecimento_ms` (faltas consecutivas)
+        para evitar falsos negativos por flicker.
+        Retorna True quando confirmar que sumiu; False se interrompido (ex.: morreu).
+        """
+        # quantas faltas consecutivas precisamos para cravar que sumiu
+        faltas_necessarias = max(1, math.ceil(confirmar_desaparecimento_ms / (intervalo * 1000)))
+        faltas = 0
+
+        timeout_total = 180
+        deadline = time.monotonic() + timeout_total
+        while time.monotonic() < deadline:
+            if self.mover_spot_util.esta_na_safe:
+                print('3 - Morreu enquanto vigiava o oponente')
+                return False
+
+            self.teclado_util.tap_tecla("Q")
+
+            mouse_util.ativar_click_direito(self.handle)
+
+            if self.buscar_imagem.buscar_item_simples(img_path):
+                faltas = 0  # ainda está na tela
+            else:
+                faltas += 1
+                if faltas >= faltas_necessarias:
+                    self._registrar_abate()
+                    return True  # sumiu de verdade
+
+            time.sleep(intervalo)
+
+        print('Saiu da tentativa de matar suicide em 180s!')
         return False
+
+    def _tentar_pklizar(self) -> None:
+        """
+        1) Posiciona e ativa o ataque (botão direito).
+        2) Procura sinal de PK por até 2s no total.
+        3) Se encontrar, mantém PK ativo e vigia ESSA mesma imagem até sumir.
+        4) Quando sumir, desativa PK e sai.
+        """
+        mouse_util.ativar_click_direito(self.handle)
+
+        try:
+            if self.mover_spot_util.esta_na_safe:
+                print('3 - Morreu enqto procurava player')
+                return
+
+            # 1) busca inicial (2s TOTAL) para "travar" numa imagem base
+            img_base = self._buscar_pk_cascata(prioridade=None, timeout_total=2.0, intervalo=0.10)
+
+            if not img_base:
+                print('NAO ACHOU SUICIDE')
+                self._desativar_pk()
+                return
+
+            # 2) achou algo -> atacar
+            print('ACHOU SUICIDE:', img_base)
+            # if self.pointer.get_nome_char() != 'Narukami':
+            self._ativar_pk()
+
+            # 3) vigiar até sumir (oponente morto ou saiu da tela)
+            sumiu = self._vigiar_imagem_ate_sumir(img_base, confirmar_desaparecimento_ms=400, intervalo=0.08)
+            if sumiu:
+                print('Imagem sumiu — oponente abatido.')
+            else:
+                print('Vigilância interrompida (provável morte / safe).')
+
+        finally:
+            self._desativar_pk()
+            mouse_util.desativar_click_direito(self.handle)
+
+    def _registrar_abate(self) -> None:
+        with self._abates_lock:
+            self._abates += 1
+            print(f"[ABATE] +1 do {self.pointer.get_nome_char()} - (total={self._abates})")
 
     # ---------- Ações rápidas ----------
     def _ativar_skill(self):

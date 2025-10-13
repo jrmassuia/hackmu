@@ -196,7 +196,7 @@ class MoverSpotUtil:
     def _verificar_limpeza_spot(self, x_atual, y_atual, x_ant, y_ant, hora_inicial):
         if (x_ant, y_ant) != (x_atual, y_atual):
             return x_atual, y_atual, datetime.now()
-        elif hora_inicial and (datetime.now() - hora_inicial).total_seconds() >= 2:
+        elif hora_inicial and (datetime.now() - hora_inicial).total_seconds() >= 1.5:
             self._limpar_spot()
             return None, None, None
         return x_ant, y_ant, hora_inicial

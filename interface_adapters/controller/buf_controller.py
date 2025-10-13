@@ -11,6 +11,7 @@ from interface_adapters.controller.DiscordBotController import DiscordBotControl
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from utils import mouse_util, buscar_coordenada_util, buscar_item_util, screenshot_util, safe_util, \
     acao_menu_util
+from utils.buscar_item_util import BuscarItemUtil
 from utils.json_file_manager_util import JsonFileManager
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -49,6 +50,7 @@ class BufController:
         self.pointers = Pointers(handle)
         self.teclado_util = Teclado_util(self.handle, self.conexao_arduino)
         self.mover_spot_util = MoverSpotUtil(self.handle)
+        self.buscar_imagem = BuscarItemUtil(self.handle)
         self.channel_id_sl_bp = 1272950663466324008
         self.channel_id_sl_terminal = 1397939857443000371
         self.arquivo_json = "./data/autobuf.json"
@@ -71,7 +73,10 @@ class BufController:
             self._limpar_mensagens_discord(self.channel_id_sl_terminal, limpar_todas=True)
 
         while True:
-            if self.classe == BufController.CLASSE_BK:
+            if self._verificar_se_bp_esta_conectada():
+                self._notificar_desconectada()
+                exit()
+            elif self.classe == BufController.CLASSE_BK:
                 deve_mover_char_para_bp = self.ultimo_mapa == '' or self._verifica_se_esta_na_safe() or self._deve_mover_bp()
             else:
                 estouro_na_safe = self._verificar_se_estouro_esta_na_safe()
@@ -198,7 +203,6 @@ class BufController:
             moveu = self._mover_bp_para_mapa(bp)
             if moveu is False:
                 return False
-            self.selecionar_party_se_for_bk()
             mouse_util.mover(self.handle, bp.mousex, bp.mousey)
         except ValueError as e:
             print(f"ERRO ao mover BP: {e}")
@@ -252,22 +256,41 @@ class BufController:
 
     def selecionar_party_se_for_bk(self):
         if self.classe == BufController.CLASSE_BK:
-            while True:
-                acao_menu_util.pressionar_painel_comando(self.handle, self.conexao_arduino)
-                time.sleep(.5)
 
-                screenshot_cm = screenshot_util.capture_window(self.handle)
-                image_positions = buscar_item_util.buscar_posicoes_item_epecifico('./static/buf/party.png',
-                                                                                  screenshot_cm,
-                                                                                  confidence_=0.9)
-                if image_positions:
-                    x = image_positions[0][0]
-                    y = image_positions[0][1]
-                    mouse_util.left_clique(self.handle, x, y)
-                    mouse_util.left_clique(self.handle, x, y)
+            while True:
+                achou_btn_fechar = self.buscar_imagem.buscar_posicoes_de_item(
+                    './static/inventario/fecharinventario.png', precisao=0.9)
+
+                if achou_btn_fechar is None:
+
+                    acao_menu_util.pressionar_painel_comando(self.handle, self.conexao_arduino)
+                    time.sleep(.5)
+
+                    screenshot = screenshot_util.capture_window(self.handle)
+                    btn_party = self.buscar_imagem.buscar_posicoes_de_item('./static/buf/party.png',
+                                                                           screenshot=screenshot, precisao=0.9)
+
+                    bk_dono_pt = self.buscar_imagem.buscar_posicoes_de_item(
+                        './static/buf/bk_dono_pt.png', precisao=0.9)
+
+                    if bk_dono_pt is None:
+                        print('BK NAO ESTA DANDO PT!')
+                        self._notificar_bk_nao_esta_dando_pt()
+                        time.sleep(60)
+                        continue
+
+                    elif btn_party:
+                        x = btn_party[0][0]
+                        y = btn_party[0][1]
+                        mouse_util.left_clique(self.handle, x, y)
+                        mouse_util.left_clique(self.handle, x, y)
+                        break
+                else:
                     break
 
     def _ativar_skill(self):
+        self.selecionar_party_se_for_bk()
+        #
         bp = self.carregar_bpconfig_por_classe(self.classe)
         mouse_util.mover(self.handle, bp.mousex, bp.mousey)
 
@@ -297,6 +320,12 @@ class BufController:
                     self._notificar_discord_char_sem_zen()
                     print(f"[{self.pointers.get_nome_char()}] CHAR SEM ZEN!")
                 time.sleep(10)
+
+    def _verificar_se_bp_esta_conectada(self):
+        nao_conectado = self.buscar_imagem.buscar_item_simples('./static/img/nao_conectado.png')
+        if nao_conectado:
+            return True
+        return False
 
     def _verifica_se_esta_na_safe(self):
         return (safe_util.lorencia(self.handle) or safe_util.devias(self.handle) or
@@ -354,7 +383,6 @@ class BufController:
         grupo_escolhido = random.choice(subgrupos_possiveis)
 
         return grupo_escolhido  # retorna o grupo linear com BpConfigs
-
 
     def _montar_base_bp_dungeon(self):
         pass
@@ -528,6 +556,24 @@ class BufController:
             f"⏳ Aguardando {self.tempo_espera_safe} segundos para mover para o próximo local."
         )
         self._enviar_mensagem_discord(self.channel_id_sl_terminal, texto, enviar_imagem=False)
+
+    def _notificar_bk_nao_esta_dando_pt(self):
+        texto = (
+            "---\n"
+            f"🚨️🚨️🚨️ ***BP SEM PARTY*** 🚨️🚨️🚨️\n"
+            f"🧙‍ CHAR [{self.pointers.get_nome_char()}] não está como dono PT!\nFale com o ADMINISTRADOR DA PT!"
+        )
+
+        self._enviar_mensagem_discord(self.channel_id_sl_terminal, texto)
+
+    def _notificar_desconectada(self):
+        texto = (
+            "---\n"
+            f"🚨️🚨️🚨️ ***BP DESCONECTADA*** 🚨️🚨️🚨️\n"
+            f"🧙‍ CHAR [{self.pointers.get_nome_char()}] está desconectado!\nFale com o ADMINISTRADOR DA PT!"
+        )
+
+        self._enviar_mensagem_discord(self.channel_id_sl_terminal, texto)
 
     def _enviar_mensagem_discord(self, channel_id, mensagem: str, enviar_imagem=True):
         print('Enviando msg para o Discord!\n' + mensagem)

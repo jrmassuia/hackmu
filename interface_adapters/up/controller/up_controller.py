@@ -59,6 +59,9 @@ class UpController:
         elif self.pointer.get_nome_char() == 'DL_DoMall':
             self.up_em_land_liberado = False
             self.acc_free = False
+        elif self.pointer.get_nome_char() == 'NC_elf':
+            self.up_em_land_liberado = False
+            self.acc_free = False
         else:
             self.up_em_land_liberado = False
             self.acc_free = True
@@ -142,7 +145,7 @@ class UpController:
 
     def _rotina_kalima7(self):
         self.pode_upar_kalima7 = self._executar_kalima7()
-        if not self.pode_upar_kalima7:
+        if not self.pode_upar_kalima7 and self.casos_uso['kalima7'].up_liberado:
             self.casos_uso['aida'].ja_moveu_para_aida = False
 
     def _rotina_k2(self):
@@ -175,8 +178,7 @@ class UpController:
         return self.pode_upar_kalima6 and lvl >= 331 and self.pointer.get_reset() >= 120 and lvl < self.lvl_reset
 
     def _lvl_para_kalima7(self, lvl):
-        return self.pode_upar_kalima6 is False and self.pode_upar_kalima7 and lvl >= 350 and \
-            self.pointer.get_reset() >= 120 and lvl < self.lvl_reset
+        return self.pode_upar_kalima7 and lvl >= 350 and self.pointer.get_reset() >= 120 and lvl < self.lvl_reset
 
     def _lvl_para_aida(self, lvl):
         nao_upa_em_kanturu = not self.pode_upar_k2 and not self.pode_upar_k3

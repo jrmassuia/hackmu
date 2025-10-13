@@ -36,7 +36,7 @@ class PkAidaUseCase(PkBase):
 
         # AIDA CORREDOR
         elif nome == 'SM_Troyer':
-            senha = 'igsouza90'
+            senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
         elif nome == 'SisteMatyc':
             senha = 'carenae811'
@@ -73,72 +73,41 @@ class PkAidaUseCase(PkBase):
 
     # ---------- Sequências específicas ----------
     def pklizar_aida1(self):
-        spots = spot_util.buscar_spots_aida_1(ignorar_spot_pk=True)
-        self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots_extras = self.buscar_spot_extra_aida1()
-            self._executar_pk(spots_extras)
-
-        if self._pk_pode_continuar():
-            spots = spot_util.buscar_spots_aida_corredor()
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = self.buscar_spot_aida2()
-            self._executar_pk(spots)
+        etapas = (
+            lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
+            self.buscar_spot_extra_aida1,
+            spot_util.buscar_spots_aida_corredor,
+            self.buscar_spot_aida2,
+        )
+        self.executar_rota_pk(etapas)
 
     def pklizar_aida2(self):
-        spots = self.buscar_spot_aida2()
-        self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = spot_util.buscar_spots_aida_corredor()
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = spot_util.buscar_spots_aida_final()
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = self.buscar_spot_extra_aida1()
-            self._executar_pk(spots)
+        etapas = (
+            self.buscar_spot_aida2,
+            spot_util.buscar_spots_aida_corredor,
+            spot_util.buscar_spots_aida_final,
+            self.buscar_spot_extra_aida1,
+        )
+        self.executar_rota_pk(etapas)
 
     def pklizar_aida_corredor(self):
-        spots = spot_util.buscar_spots_aida_corredor()
-        self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = self.buscar_spot_extra_aida1()
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = spot_util.buscar_spots_aida_1(ignorar_spot_pk=True)
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = self.buscar_spot_aida2()
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = spot_util.buscar_spots_aida_final()
-            self._executar_pk(spots)
+        etapas = (
+            spot_util.buscar_spots_aida_corredor,
+            self.buscar_spot_extra_aida1,
+            lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
+            self.buscar_spot_aida2,
+            spot_util.buscar_spots_aida_final,
+        )
+        self.executar_rota_pk(etapas)
 
     def pklizar_aida_final(self):
-        spots = spot_util.buscar_spots_aida_final()
-        self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots = spot_util.buscar_spots_aida_corredor()
-            self._executar_pk(spots)
-
-        if self._pk_pode_continuar():
-            spots_extras = self.buscar_spot_extra_aida1()
-            self._executar_pk(spots_extras)
-
-        if self._pk_pode_continuar():
-            spots = self.buscar_spot_aida2()
-            self._executar_pk(spots)
+        etapas = (
+            spot_util.buscar_spots_aida_final,
+            spot_util.buscar_spots_aida_corredor,
+            self.buscar_spot_extra_aida1,
+            self.buscar_spot_aida2,
+        )
+        self.executar_rota_pk(etapas)
 
     def buscar_spot_extra_aida1(self):
         spots = spot_util.buscar_spots_aida_1()
@@ -153,11 +122,10 @@ class PkAidaUseCase(PkBase):
         spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
         return spots
 
-    # ---------- Implementações específicas de Aida ----------
     def _sair_da_safe(self):
         if safe_util.aida(self.handle):
             self._desbugar_goblin()
-            self.mover_spot_util.movimentar_aida((140, 14), max_tempo=10, movimentacao_proxima=True)
+            self.mover_spot_util.movimentar_aida((140, 14), max_tempo=30, movimentacao_proxima=True)
 
     def _desbugar_goblin(self):
         btn_fechar = self.buscar_imagem.buscar_item_simples('./static/img/fechar_painel.png')

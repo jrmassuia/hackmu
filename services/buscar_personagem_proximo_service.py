@@ -1,9 +1,9 @@
 import ctypes
 import threading
-import logging
 import time
 from ctypes import wintypes
 from functools import lru_cache
+from typing import Optional, Tuple, Iterable, Dict, List, Set
 
 # ==== Constantes WinAPI (mantenha no topo do arquivo) ====
 PAGE_GUARD = 0x100
@@ -40,7 +40,10 @@ VirtualQueryEx.restype = ctypes.c_size_t
 
 
 class BuscarPersoangemProximoService:
-    MOBS_IGNORAR = {
+    # ---- Lista base de MOBS a ignorar (match EXATO) ----
+    MOBS_IGNORAR: Set[str] = {
+        #NPC
+        'Soldier de Alexi',
         # TARKAN
         'Mutant', 'Bloody Wolf', 'Iron Wheel', 'Cursed King', 'Tantalos', 'Hero Mutant', 'Beam Knight',
         'Death Beam Knigh',
@@ -54,45 +57,51 @@ class BuscarPersoangemProximoService:
         'Schriker', 'Blood Soldier', 'Aegis'
     }
 
-    _MSB_BASE_ORDERS = {
+    # ---- Ordens MSB pré-calculadas ----
+    _MSB_BASE_ORDERS: Dict[str, Tuple[int, ...]] = {
         "0-9A-Z": tuple(range(0x00, 0x24)),  # 0..35 (0x00..0x23)
-        "0-9": tuple(range(0x00, 0x0A)),  # 0..9
-        "A-Z": tuple(range(0x0A, 0x24)),  # 10..35
-        "A-F": tuple(range(0x0A, 0x10)),  # 10..15
-        # adicione outros presets se precisar
+        "0-9":    tuple(range(0x00, 0x0A)),  # 0..9
+        "A-Z":    tuple(range(0x0A, 0x24)),  # 10..35
+        "A-F":    tuple(range(0x0A, 0x10)),  # 10..15
     }
 
-    # cache simples no escopo da classe
-    _msb_cache: dict[tuple[str, tuple[int, ...]], tuple[int, ...]] = {}
+    # ---- Caches globais por classe ----
+    _msb_cache: Dict[Tuple[str, Tuple[int, ...]], Tuple[int, ...]] = {}          # cache da ordem MSB
+    _fixed_ranges: Dict[Tuple, Tuple[int, int]] = {}                              # (pid, padrao) -> (ini,fim)
+    _fixed_lock = threading.Lock()
 
     def __init__(self, pointer):
         self.pointer = pointer
-        self._range_cache: dict[tuple, tuple[int | None, int | None]] = {}
+
+        # Cache de varredura por chamada de achar_range (com flags)
+        self._range_cache: Dict[Tuple, Tuple[Optional[int], Optional[int]]] = {}
         self._range_cache_lock = threading.Lock()
 
-        # --- IGNORE: conjuntos exatos (str e bytes) ---
-        # Obs.: os nomes do jogo são ASCII/ANSI; usamos encode('ascii', 'ignore') para ter a versão bytes.
-        self._ignore_str: set[str] = set(self.MOBS_IGNORAR)
-        self._ignore_bytes: set[bytes] = {s.encode('ascii', errors='ignore') for s in self._ignore_str}
+        # IGNORE: conjuntos exatos (str e bytes)
+        self._ignore_str: Set[str] = set(self.MOBS_IGNORAR)
+        self._ignore_bytes: Set[bytes] = {s.encode('ascii', errors='ignore') for s in self._ignore_str}
 
-        # Adiciona seu próprio nome (se existir) às duas estruturas
+        # Adiciona o próprio nome (se existir)
         try:
             myname = self.pointer.get_nome_char()
             if myname:
                 if isinstance(myname, bytes):
-                    myname_b = myname.split(b'\x00', 1)[0]  # corta em null se vier
+                    myname_b = myname.split(b'\x00', 1)[0]
                     myname_s = myname_b.decode('ascii', errors='ignore')
                 else:
                     myname_s = str(myname)
                     myname_b = myname_s.encode('ascii', errors='ignore')
-
-                # match EXATO
                 self._ignore_str.add(myname_s)
                 self._ignore_bytes.add(myname_b)
         except Exception:
             pass
 
-    def _iter_regions(self, process_handle):
+        # Cache de MSBs com hit por PID (ordenação dinâmica)
+        self._msb_result_cache: Dict[Tuple[int, int], Tuple[int, int]] = {}  # (pid,msb)->(ini,fim)
+        self._msb_hit_order: Dict[int, List[int]] = {}                       # pid-> [msbs com sucesso]
+
+    # ----------------- Iterador de regiões (VirtualQueryEx) -----------------
+    def _iter_regions(self, process_handle) -> Iterable[Tuple[int, int, MEMORY_BASIC_INFORMATION]]:
         addr = 0
         mbi = MEMORY_BASIC_INFORMATION()
         sizeof_mbi = ctypes.sizeof(mbi)
@@ -100,11 +109,8 @@ class BuscarPersoangemProximoService:
         while True:
             got = VirtualQueryEx(process_handle, ctypes.c_void_p(addr), ctypes.byref(mbi), sizeof_mbi)
             if not got:
-                # opcional: debug do erro
-                # print("VirtualQueryEx falhou em", hex(addr), "GetLastError=", ctypes.get_last_error())
                 break
 
-            # BaseAddress pode virar None quando é 0x0. Trate como 0.
             base = ctypes.cast(mbi.BaseAddress, ctypes.c_void_p).value
             if base is None:
                 base = 0
@@ -117,10 +123,56 @@ class BuscarPersoangemProximoService:
 
             next_addr = base + size
             if next_addr <= addr:
-                # proteção contra loop infinito
                 break
             addr = next_addr
 
+    # ----------------- Helpers de região fixa -----------------
+    def _fixed_key(self, padrao: bytes) -> Tuple[int, bytes]:
+        pid = getattr(self.pointer.pm, "process_id", None)
+        return (pid, padrao)
+
+    def _region_alive_and_readable(self, base: int) -> bool:
+        """Valida se o endereço ainda está em região COMMIT legível."""
+        mbi = MEMORY_BASIC_INFORMATION()
+        got = VirtualQueryEx(self.pointer.pm.process_handle,
+                             ctypes.c_void_p(base),
+                             ctypes.byref(mbi),
+                             ctypes.sizeof(mbi))
+        if not got:
+            return False
+        if mbi.State != MEM_COMMIT:
+            return False
+        if mbi.Type not in (MEM_PRIVATE, MEM_MAPPED, MEM_IMAGE):
+            return False
+        p = int(mbi.Protect)
+        if p & PAGE_GUARD:
+            return False
+        if not (p & (PAGE_READONLY | PAGE_READWRITE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE)):
+            return False
+        region_base = ctypes.cast(mbi.BaseAddress, ctypes.c_void_p).value or 0
+        region_size = int(mbi.RegionSize)
+        return region_base <= base < region_base + region_size
+
+    def _get_fixed_range(self, padrao: bytes) -> Tuple[Optional[int], Optional[int]]:
+        key = self._fixed_key(padrao)
+        with self._fixed_lock:
+            rng = self._fixed_ranges.get(key)
+        if not rng:
+            return None, None
+        b0, b1 = rng
+        if self._region_alive_and_readable(b0):
+            return b0, b1
+        # inválido → descarta
+        with self._fixed_lock:
+            self._fixed_ranges.pop(key, None)
+        return None, None
+
+    def _set_fixed_range(self, padrao: bytes, base_inicio: int, base_fim: int) -> None:
+        key = self._fixed_key(padrao)
+        with self._fixed_lock:
+            self._fixed_ranges[key] = (base_inicio, base_fim)
+
+    # ----------------- Wrapper cacheado do finder -----------------
     def achar_range_private_prefix_cached(self,
                                           *,
                                           padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
@@ -130,11 +182,7 @@ class BuscarPersoangemProximoService:
                                           msb: int = 0x0E,
                                           require_region_msb: bool = True,
                                           use_msb_band_hint: bool = True,
-                                          force_refresh: bool = False) -> tuple[int | None, int | None]:
-        """
-        Versão cacheada de achar_range_private_prefix_e32.
-        A chave do cache inclui PID, MSB, padrão e demais flags que afetam o resultado.
-        """
+                                          force_refresh: bool = False) -> Tuple[Optional[int], Optional[int]]:
         pid = getattr(self.pointer.pm, "process_id", None)
         key = (pid, msb, padrao, exigir_rw, bloco_leitura, margem, require_region_msb, use_msb_band_hint)
 
@@ -159,25 +207,17 @@ class BuscarPersoangemProximoService:
 
         return base_inicio, base_fim
 
-    # ---------------------- SUA FUNÇÃO (com melhorias) ----------------------
+    # ----------------- Core: encontrar range por MSB -----------------
     def achar_range_private_prefix_e32(self,
                                        padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
                                        bloco_leitura=0x40000,  # 256 KB
-                                       margem=0x800,  # 2 KB nas pontas
+                                       margem=0x800,           # 2 KB nas pontas
                                        exigir_rw=True,
                                        msb: int = 0x0E,
                                        require_region_msb: bool = True,
-                                       use_msb_band_hint: bool = True):
-        """
-        (mesmo corpo que te passei antes, com filtros flexíveis)
-        """
-        PAGE_READWRITE = 0x04
-        PAGE_EXECUTE_READWRITE = 0x40
-        PAGE_GUARD = 0x100
-        MEM_COMMIT = 0x1000
-        MEM_PRIVATE = 0x20000
+                                       use_msb_band_hint: bool = True) -> Tuple[Optional[int], Optional[int]]:
 
-        def _is_rw(protect):
+        def _is_rw(protect: int) -> bool:
             if protect & PAGE_GUARD:
                 return False
             return bool(protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE))
@@ -185,12 +225,12 @@ class BuscarPersoangemProximoService:
         def _low32(addr: int) -> int:
             return int(addr) & 0xFFFFFFFF
 
-        def _has_msb(addr, wanted_msb: int) -> bool:
+        def _has_msb(addr: int, wanted_msb: int) -> bool:
             try:
                 low = _low32(addr)
             except Exception:
                 return False
-            return ((low >> 24) & 0xFF) == wanted_msb
+            return ((low >> 24) & 0xFF) == (wanted_msb & 0xFF)
 
         def _region_intersects_msb_band(region_start: int, size: int, wanted_msb: int) -> bool:
             if size <= 0:
@@ -215,10 +255,11 @@ class BuscarPersoangemProximoService:
             if exigir_rw and not _is_rw(mbi.Protect):
                 continue
 
-            if require_region_msb and not _has_msb(region_start, msb):
-                continue
-            if not require_region_msb and use_msb_band_hint:
-                if not _region_intersects_msb_band(region_start, size, msb):
+            if require_region_msb:
+                if not _has_msb(region_start, msb):
+                    continue
+            else:
+                if use_msb_band_hint and not _region_intersects_msb_band(region_start, size, msb):
                     continue
 
             region_end = region_start + size
@@ -267,22 +308,18 @@ class BuscarPersoangemProximoService:
 
         return None, None
 
+    # ----------------- Ordem MSB: rápida com print e cache -----------------
     @staticmethod
     @lru_cache(maxsize=128)
     def _build_msb_order(charset: str = "0-9A-Z",
-                         start_hints: tuple[int, ...] = ()) -> tuple[int, ...]:
-        """
-        Versão super rápida com print de início e fim.
-        """
+                         start_hints: Tuple[int, ...] = ()) -> Tuple[int, ...]:
         key = (charset, start_hints)
         if key in BuscarPersoangemProximoService._msb_cache:
             return BuscarPersoangemProximoService._msb_cache[key]
 
-        # ---- INÍCIO DO LOG ----
         print(f"[MSB] INICIO _build_msb_order charset={charset} hints={start_hints}")
         t0 = time.perf_counter()
 
-        # 1) pega base pronta
         base = BuscarPersoangemProximoService._MSB_BASE_ORDERS.get(charset)
         if base is None:
             seq = []
@@ -292,14 +329,12 @@ class BuscarPersoangemProximoService:
                 seq.extend(range(0x0A, 0x24))
             base = tuple(seq)
 
-        # 2) se não há hints → retorno direto
         if not start_hints:
             BuscarPersoangemProximoService._msb_cache[key] = base
             dt = (time.perf_counter() - t0) * 1000.0
             print(f"[MSB] FIM _build_msb_order -> len={len(base)} tempo={dt:.3f} ms")
             return base
 
-        # 3) aplica hints válidos
         base_set = set(base)
         seen = [False] * 256
         prefix = []
@@ -319,12 +354,11 @@ class BuscarPersoangemProximoService:
         out = tuple(prefix + tail)
         BuscarPersoangemProximoService._msb_cache[key] = out
 
-        # ---- FIM DO LOG ----
         dt = (time.perf_counter() - t0) * 1000.0
         print(f"[MSB] FIM _build_msb_order -> len={len(out)} tempo={dt:.3f} ms")
-
         return out
 
+    # ----------------- Scanner (usa fixed range → otimização MSB) -----------------
     def listar_nomes_e_coords_por_padrao(self,
                                          padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
                                          bloco_leitura=0x40000,
@@ -333,11 +367,10 @@ class BuscarPersoangemProximoService:
                                          xy_max=4096,
                                          start_hints=(0x0E, 0x0F, 0x0A, 0x08, 0x0B),
                                          force_refresh=False,
-                                         mobs_ignorar=None):
+                                         mobs_ignorar=None) -> List[dict]:
 
-        # Se quiser mesclar com uma lista extra vinda por parâmetro (EXATA):
+        # Mesclar lista extra de ignores (EXATOS)
         if mobs_ignorar:
-            # adiciona SEM normalização => comparação exata
             for s in mobs_ignorar:
                 if isinstance(s, bytes):
                     s_b = s.split(b'\x00', 1)[0]
@@ -348,169 +381,229 @@ class BuscarPersoangemProximoService:
                 self._ignore_str.add(s_s)
                 self._ignore_bytes.add(s_b)
 
-        def _scan_range(base_inicio: int, base_fim: int):
-            need_before = 8
-            carry_len = need_before + len(padrao) - 1
-            resultados, vistos = [], set()
-            addr, prev_tail = base_inicio, b""
+        # 1) TENTAR RANGE FIXO PRIMEIRO (instantâneo)
+        if not force_refresh:
+            f_ini, f_fim = self._get_fixed_range(padrao)
+            if f_ini and f_fim and f_ini < f_fim:
+                res = self._scan_range_core(f_ini, f_fim, padrao, bloco_leitura, name_delta, name_max, xy_max)
+                if res:
+                    return res
 
-            while addr < base_fim:
-                tam = min(bloco_leitura, base_fim - addr)
-                try:
-                    buf = self.pointer.pm.read_bytes(addr, tam)
-                except Exception:
-                    addr += 0x1000
-                    prev_tail = b""
+        # 2) GERA ORDEM MSB (rápida)
+        msb_order = self._build_msb_order(charset="0-9A-Z", start_hints=tuple(start_hints))
+
+        # 2.1) Normaliza hints (ints 0..255), preserva ordem e filtra só os presentes em msb_order
+        msb_order_set = set(msb_order)
+        hints_clean = []
+        seen = set()
+        for h in start_hints:
+            v = int(h) & 0xFF
+            if v in msb_order_set and v not in seen:
+                hints_clean.append(v)
+                seen.add(v)
+
+        # 3) FASE 1 — TENTAR TODOS OS START_HINTS SEM EARLY-ABORT
+        pid = getattr(self.pointer.pm, "process_id", None)
+        # print(f"[SCAN] Testando hints (sem abort): {list(map(hex, hints_clean))}")
+        for msb in hints_clean:
+            # cache MSB->range anterior
+            rng = self._msb_result_cache.get((pid, msb))
+            if rng:
+                b0, b1 = rng
+                if b0 and b1 and b0 < b1:
+                    res = self._scan_range_core(b0, b1, padrao, bloco_leitura, name_delta, name_max, xy_max)
+                    if res:
+                        print(f"[SCAN] Cache hit MSB={hex(msb)} (hints) ({len(res)} resultados)")
+                        return res
+            # três tentativas rápidas
+            for margem, req_msb, hint in ((0x800, True, True),
+                                          (0x1000, False, True),
+                                          (0x2000, False, False)):
+                b0, b1 = self.achar_range_private_prefix_cached(
+                    padrao=padrao, bloco_leitura=bloco_leitura, margem=margem,
+                    exigir_rw=True, msb=msb, require_region_msb=req_msb,
+                    use_msb_band_hint=hint, force_refresh=force_refresh
+                )
+                if b0 and b1 and b0 < b1:
+                    res = self._scan_range_core(b0, b1, padrao, bloco_leitura, name_delta, name_max, xy_max)
+                    if res:
+                        # salvar MSB com sucesso (ordenação futura)
+                        self._msb_result_cache[(pid, msb)] = (b0, b1)
+                        hits = self._msb_hit_order.get(pid, [])
+                        self._msb_hit_order[pid] = [msb] + [m for m in hits if m != msb]
+                        # salvar RANGE FIXO para padrao
+                        self._set_fixed_range(padrao, b0, b1)
+                        print(
+                            f"[SCAN] Encontrado (hints) MSB={hex(msb)} base={hex(b0)}..{hex(b1)} ({len(res)} resultados)")
+                        return res
+
+        # 4) FASE 2 — RESTANTE (com early-abort)
+        pid = getattr(self.pointer.pm, "process_id", None)
+        hits = self._msb_hit_order.get(pid, [])
+        # ordered = hits + (resto de msb_order que não está nem em hints nem em hits)
+        excluded = set(hints_clean)
+        ordered = list(hits) + [m for m in msb_order if m not in excluded and m not in hits]
+
+        consecutive_misses = 0
+        MAX_MISSES = 3
+        # print(f"[SCAN] Restante com early-abort: primeiros={list(map(hex, ordered[:8]))} (total={len(ordered)})")
+
+        for msb in ordered:
+            rng = self._msb_result_cache.get((pid, msb))
+            if rng:
+                b0, b1 = rng
+                if b0 and b1 and b0 < b1:
+                    res = self._scan_range_core(b0, b1, padrao, bloco_leitura, name_delta, name_max, xy_max)
+                    if res:
+                        print(f"[SCAN] Cache hit MSB={hex(msb)} (resto) ({len(res)} resultados)")
+                        return res
+                # mesmo com cache, se não deu resultado, conta como miss
+                consecutive_misses += 1
+                if consecutive_misses >= MAX_MISSES:
+                    # print(f"[SCAN] Abortado após {MAX_MISSES} misses consecutivos (resto)")
+                    break
+                continue
+
+            # três tentativas rápidas
+            found_here = False
+            for margem, req_msb, hint in ((0x800, True, True),
+                                          (0x1000, False, True),
+                                          (0x2000, False, False)):
+                b0, b1 = self.achar_range_private_prefix_cached(
+                    padrao=padrao, bloco_leitura=bloco_leitura, margem=margem,
+                    exigir_rw=True, msb=msb, require_region_msb=req_msb,
+                    use_msb_band_hint=hint, force_refresh=force_refresh
+                )
+                if b0 and b1 and b0 < b1:
+                    res = self._scan_range_core(b0, b1, padrao, bloco_leitura, name_delta, name_max, xy_max)
+                    if res:
+                        self._msb_result_cache[(pid, msb)] = (b0, b1)
+                        self._msb_hit_order[pid] = [msb] + [m for m in hits if m != msb]
+                        self._set_fixed_range(padrao, b0, b1)
+                        print(
+                            f"[SCAN] Encontrado (resto) MSB={hex(msb)} base={hex(b0)}..{hex(b1)} ({len(res)} resultados)")
+                        return res
+                    found_here = True  # achou range, mas scan vazio → ainda assim reset misses
+
+            if found_here:
+                consecutive_misses = 0
+            else:
+                consecutive_misses += 1
+                if consecutive_misses >= MAX_MISSES:
+                    # print(f"[SCAN] Abortado após {MAX_MISSES} misses consecutivos (resto)")
+                    break
+
+        print("[SCAN] Nenhum resultado.")
+        return []
+
+    # ----------------- Corpo do scan (reutilizável) -----------------
+    def _scan_range_core(self, base_inicio: int, base_fim: int,
+                         padrao: bytes, bloco_leitura: int,
+                         name_delta: int, name_max: int, xy_max: int) -> List[dict]:
+        """Extrai nomes/coords dentro de um range. Usa filtros de ignore otimizados."""
+        need_before = 8
+        carry_len = need_before + len(padrao) - 1
+        resultados, vistos = [], set()
+        addr, prev_tail = base_inicio, b""
+
+        ignore_bytes = self._ignore_bytes
+        ignore_str = self._ignore_str
+
+        while addr < base_fim:
+            tam = min(bloco_leitura, base_fim - addr)
+            try:
+                buf = self.pointer.pm.read_bytes(addr, tam)
+            except Exception:
+                addr += 0x1000
+                prev_tail = b""
+                continue
+
+            scan_base = addr - len(prev_tail)
+            scan_buf = prev_tail + buf
+
+            i = 0
+            while True:
+                pos = scan_buf.find(padrao, i)
+                if pos == -1:
+                    break
+                i = pos + 1
+                if pos < need_before:
                     continue
 
-                scan_base = addr - len(prev_tail)
-                scan_buf = prev_tail + buf
+                ap = scan_base + pos  # addr_padrao
 
-                i = 0
-                while True:
-                    pos = scan_buf.find(padrao, i)
-                    if pos == -1:
-                        break
-                    i = pos + 1
-                    if pos < need_before:
+                # coords
+                try:
+                    y = self.pointer.pm.read_ushort(ap - 8)
+                    x = self.pointer.pm.read_ushort(ap - 4)
+                    if not (0 < x < xy_max and 0 < y < xy_max):
                         continue
+                except Exception:
+                    continue
 
-                    addr_padrao = scan_base + pos
-
-                    # coords
-                    try:
-                        y = self.pointer.pm.read_ushort(addr_padrao - 8)
-                        x = self.pointer.pm.read_ushort(addr_padrao - 4)
-                        if not (0 < x < xy_max and 0 < y < xy_max):
+                # nome (fast ignore por bytes)
+                nome_addr = ap - name_delta
+                nome = None
+                try:
+                    raw = self.pointer.pm.read_bytes(nome_addr, name_max)
+                    end0 = raw.find(b"\x00")
+                    raw0 = raw[:end0] if end0 != -1 else raw
+                    if raw0 in ignore_bytes:
+                        continue
+                    cand_b = bytes(b for b in raw0 if 32 <= b <= 126).strip()
+                    if 3 <= len(cand_b) <= name_max:
+                        nome = cand_b.decode("ascii", errors="ignore")
+                        if nome in ignore_str:
                             continue
-                    except Exception:
-                        continue
+                except Exception:
+                    pass
 
-                    # nome (fast-path: verificar IGNORE em BYTES antes de decodificar)
-                    nome_addr = addr_padrao - name_delta
-                    nome = None
+                if not nome:
                     try:
-                        raw = self.pointer.pm.read_bytes(nome_addr, name_max)
-                        end0 = raw.find(b"\x00")
-                        if end0 != -1:
-                            raw0 = raw[:end0]
-                        else:
-                            raw0 = raw
-
-                        # FAST IGNORE (bytes exatos)
-                        if raw0 in self._ignore_bytes:
-                            continue  # ignora sem decodificar
-
-                        # Se não ignorou pelos bytes, faz limpeza ASCII básica e decodifica
-                        # (mantém a lógica original para montar 'nome' do resultado)
-                        cand_bytes = bytes(b for b in raw0 if 32 <= b <= 126).strip()
-                        if 3 <= len(cand_bytes) <= name_max:
-                            nome = cand_bytes.decode("ascii", errors="ignore")
-
-                            # IGNORE exato em string (redundante na maioria, mas mantém consistência)
-                            if nome in self._ignore_str:
-                                continue
-
+                        pre_ini = max(base_inicio, nome_addr)
+                        pre_len = min(64, ap - pre_ini)
+                        if pre_len > 0:
+                            pre = self.pointer.pm.read_bytes(pre_ini, pre_len)
+                            j = len(pre) - 1
+                            while j >= 0 and pre[j] == 0: j -= 1
+                            end = j
+                            while j >= 0 and 32 <= pre[j] <= 126: j -= 1
+                            cand = pre[j + 1:end + 1].strip()
+                            if 3 <= len(cand) <= name_max:
+                                if cand in ignore_bytes:
+                                    continue
+                                nome = cand.decode("ascii", errors="ignore")
+                                if nome in ignore_str:
+                                    continue
                     except Exception:
                         pass
 
-                    if not nome:
-                        # fallback (pode ser caro; só roda se não ignoramos via bytes/str)
-                        try:
-                            pre_ini = max(base_inicio, nome_addr)
-                            pre_len = min(64, addr_padrao - pre_ini)
-                            if pre_len > 0:
-                                pre = self.pointer.pm.read_bytes(pre_ini, pre_len)
-                                j = len(pre) - 1
-                                while j >= 0 and pre[j] == 0: j -= 1
-                                end = j
-                                while j >= 0 and 32 <= pre[j] <= 126: j -= 1
-                                cand = pre[j + 1:end + 1].strip()
-                                if 3 <= len(cand) <= name_max:
-                                    # checa ignore exato ANTES de decodificar
-                                    if cand in self._ignore_bytes:
-                                        continue
-                                    nome = cand.decode("ascii", errors="ignore")
-                                    if nome in self._ignore_str:
-                                        continue
-                        except Exception:
-                            pass
+                key = (ap, x, y)
+                if key in vistos:
+                    continue
+                vistos.add(key)
 
-                    key = (addr_padrao, x, y)
-                    if key in vistos:
-                        continue
-                    vistos.add(key)
+                resultados.append({
+                    "nome": nome,
+                    "x": x,
+                    "y": y,
+                    "addr_padrao": hex(ap),
+                    "addr_nome": hex(nome_addr) if nome is not None else None,
+                })
 
-                    resultados.append({
-                        "nome": nome,
-                        "x": x,
-                        "y": y,
-                        "addr_padrao": hex(addr_padrao),
-                        "addr_nome": hex(nome_addr) if nome is not None else None,
-                    })
+            prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
+            addr += tam
 
-                prev_tail = scan_buf[-carry_len:] if len(scan_buf) >= carry_len else scan_buf
-                addr += tam
+        return resultados
 
-            return resultados
-
-        # resto do método (ordem MSB + cache) permanece igual ao que você já tem
-        msb_order = self._build_msb_order(charset="0-9A-Z", start_hints=start_hints)
-
-        for msb in msb_order:
-            base_inicio, base_fim = self.achar_range_private_prefix_cached(
-                padrao=padrao, bloco_leitura=bloco_leitura, margem=0x800,
-                exigir_rw=True, msb=msb, require_region_msb=True, use_msb_band_hint=True,
-                force_refresh=force_refresh
-            )
-            if base_inicio and base_fim and base_inicio < base_fim:
-                res = _scan_range(base_inicio, base_fim)
-                if res:
-                    return res
-
-            base_inicio, base_fim = self.achar_range_private_prefix_cached(
-                padrao=padrao, bloco_leitura=bloco_leitura, margem=0x1000,
-                exigir_rw=True, msb=msb, require_region_msb=False, use_msb_band_hint=True,
-                force_refresh=force_refresh
-            )
-            if base_inicio and base_fim and base_inicio < base_fim:
-                res = _scan_range(base_inicio, base_fim)
-                if res:
-                    return res
-
-            base_inicio, base_fim = self.achar_range_private_prefix_cached(
-                padrao=padrao, bloco_leitura=max(bloco_leitura, 0x80000),
-                margem=0x2000, exigir_rw=True, msb=msb,
-                require_region_msb=False, use_msb_band_hint=False,
-                force_refresh=force_refresh
-            )
-            if base_inicio and base_fim and base_inicio < base_fim:
-                res = _scan_range(base_inicio, base_fim)
-                if res:
-                    return res
-
-        return []
-
-    from typing import List
-
-    def ordenar_proximos(
-            self,
-            resultados: list,
-            limite: int | None = None,
-            incluir_dist: bool = True
-    ) -> List[dict]:
+    # ----------------- Pós-processamento: ordenar próximos -----------------
+    def ordenar_proximos(self,
+                         resultados: List,
+                         limite: Optional[int] = None,
+                         incluir_dist: bool = True) -> List[dict]:
         """
         Filtra e ordena resultados próximos (|dx|<=10 e |dy|<=10) em relação às coords do self.
-        Aceita `resultados` em dois formatos:
-          - dicts: {"nome":..., "x": int, "y": int, "addr_padrao": "0x...", "addr_nome": "0x..."}
-          - tuplas/listas: (addr_hex_or_int, x, y)
-
-        Retorna lista de dicionários com pelo menos as chaves:
-          - "addr": str   (endereço escolhido, preferindo addr_padrao -> addr_nome -> tuple addr)
-          - "x": int
-          - "y": int
-          - "dist": int   (apenas se incluir_dist == True)
-        Quando disponíveis, também inclui "nome", "addr_padrao", "addr_nome".
+        Aceita dicts {"nome", "x", "y", ...} ou tuplas (addr, x, y).
         """
         x0 = self.pointer.get_cood_x()
         y0 = self.pointer.get_cood_y()
@@ -521,67 +614,43 @@ class BuscarPersoangemProximoService:
         proximos = []
 
         for item in resultados:
-            # extrai campos de forma robusta
             try:
                 if isinstance(item, dict):
-                    x = item.get("x")
-                    y = item.get("y")
+                    x = item.get("x"); y = item.get("y")
                     nome = item.get("nome")
                     addr_padrao = item.get("addr_padrao")
                     addr_nome = item.get("addr_nome")
-                    # prefer addr_padrao, depois addr_nome, depois qualquer chave 'addr'
                     addr_candidate = addr_padrao or addr_nome or item.get("addr") or item.get("address")
-                    # se nada, tenta ver se existe 'addr_hex' ou 'address_hex'
                     if addr_candidate is None:
                         addr_candidate = item.get("addr_hex")
                     addr_raw = addr_candidate
                 else:
-                    # tuple/list: (addr, x, y)
-                    addr_raw = item[0]
-                    x = item[1]
-                    y = item[2]
-                    nome = None
-                    addr_padrao = None
-                    addr_nome = None
+                    addr_raw, x, y = item[0], item[1], item[2]
+                    nome = None; addr_padrao = None; addr_nome = None
 
-                # normalize coords
                 if x is None or y is None:
-                    # pula entradas sem coords válidas
                     continue
-                x = int(x)
-                y = int(y)
+                x = int(x); y = int(y)
             except Exception as e:
                 print(f"[WARN] item ignorado (formato inválido): {item} -> {e}")
                 continue
 
-            dx = x - x0
-            dy = y - y0
+            dx = x - x0; dy = y - y0
             if abs(dx) <= 10 and abs(dy) <= 10:
-                dist = abs(dx) + abs(dy)  # Manhattan
+                dist = abs(dx) + abs(dy)
 
-                # normaliza addr para string de saída
                 addr_str = None
-                if addr_raw is None:
-                    addr_str = None
-                else:
-                    # se for inteiro -> hex string; se for str, mantém
+                if addr_raw is not None:
                     try:
-                        if isinstance(addr_raw, int):
-                            addr_str = hex(addr_raw)
-                        else:
-                            addr_str = str(addr_raw)
+                        addr_str = hex(addr_raw) if isinstance(addr_raw, int) else str(addr_raw)
                     except Exception:
                         addr_str = str(addr_raw)
 
-                # calcula valor numérico para ordenação por endereço (estabilidade)
                 sort_addr_val = 0
                 if isinstance(addr_str, str):
                     try:
                         s = addr_str.strip()
-                        if s.lower().startswith("0x"):
-                            sort_addr_val = int(s, 16)
-                        else:
-                            sort_addr_val = int(s)
+                        sort_addr_val = int(s, 16) if s.lower().startswith("0x") else int(s)
                     except Exception:
                         sort_addr_val = abs(hash(addr_str)) & 0x7FFFFFFF
 
@@ -596,29 +665,18 @@ class BuscarPersoangemProximoService:
                     "_sort_addr_val": sort_addr_val
                 })
 
-        # ordena por (dist, endereco_normalizado)
         proximos.sort(key=lambda d: (d["dist"], d["_sort_addr_val"]))
 
-        # aplica limite
         if limite is not None:
             proximos = proximos[:limite]
 
-        # prepara saída final removendo campo auxiliar _sort_addr_val
         resultado_final = []
         for d in proximos:
-            out = {
-                # "addr": d["addr"],
-                "x": d["x"],
-                "y": d["y"],
-            }
-            # if incluir_dist:
-            #     out["dist"] = d["dist"]
+            out = {"x": d["x"], "y": d["y"]}
+            if incluir_dist:
+                out["dist"] = d["dist"]
             if d.get("nome") is not None:
                 out["nome"] = d["nome"]
-            # if d.get("addr_padrao") is not None:
-            #     out["addr_padrao"] = d["addr_padrao"]
-            # if d.get("addr_nome") is not None:
-            #     out["addr_nome"] = d["addr_nome"]
             resultado_final.append(out)
 
         return resultado_final
