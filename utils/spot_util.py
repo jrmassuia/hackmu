@@ -412,6 +412,36 @@ def buscar_spots_aida_volta_final(ignorar_spot_pk=False):
     return coordenadas
 
 
+def buscar_spots_knv():
+    coordenadas = []
+    coordenadas.extend([
+        [
+            [['SM', 'MG'], [(59, 135)], (398, 240)],  # 0
+        ],
+        [
+            [['SM', 'MG'], [(92, 122)], (398, 240)],  # 1
+        ],
+        [
+            [['SM', 'MG'], [(112, 99)], (398, 240)],  # 2
+        ],
+        [
+            [['SM', 'MG'], [(145, 91)], (398, 240)],  # 3
+        ],
+        [
+            [['SM', 'MG'], [(168, 113)], (398, 240)],  # 4
+        ],
+        [
+            [['SM', 'MG'], [(130, 118)], (398, 240)],  # 5
+        ], [
+            [['SM', 'MG'], [(126, 166)], (398, 240)],  # 6
+        ],
+        [
+            [['SM', 'MG'], [(95, 158)], (398, 240)],  # 7
+        ]
+    ])
+    return coordenadas
+
+
 def buscar_spots_k1_k2():
     coordenadas = []
     coordenadas.extend(buscar_spots_k1())
@@ -535,6 +565,9 @@ def buscar_spots_k2():
 
 def buscar_spots_k3():
     return [
+        [
+            [['SM', 'MG'], [(100, 81)], (398, 240)],  # 0
+        ],
         [
             [['SM', 'MG', 'BK'], [(166, 95)], (398, 240)],  # 0
             [['DL'], [(170, 90)], (420, 146)],

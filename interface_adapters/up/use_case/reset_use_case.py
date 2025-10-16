@@ -108,6 +108,6 @@ class ResetUseCase:
 
         elif self.pointer.get_nome_char() == 'NC_elf':
             self.teclado_util.escrever_texto("/f 2000")
-            self.teclado_util.escrever_texto("/a 18000")
+            self.teclado_util.escrever_texto("/a 20000")
             self.teclado_util.escrever_texto("/v 500")
-            self.teclado_util.escrever_texto("/e 32450")
+            self.teclado_util.escrever_texto("/e 32485")

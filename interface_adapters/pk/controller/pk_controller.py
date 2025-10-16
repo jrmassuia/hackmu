@@ -1,7 +1,11 @@
 import socket
 
 from interface_adapters.pk.use_case.pk_aida_use_case import PkAidaUseCase
+from interface_adapters.pk.use_case.pk_k3_use_case import PkK3UseCase
+from interface_adapters.pk.use_case.pk_kanturu_use_case import PkKanturuUseCase
+from interface_adapters.pk.use_case.pk_knv_use_case import PkKnvUseCase
 from interface_adapters.pk.use_case.pk_tarkan_use_case import PktarkanUseCase
+from utils import safe_util
 from utils.rota_util import PathFinder
 
 
@@ -12,13 +16,40 @@ class PKController:
         self.arduino = arduino
 
     def execute(self):
+
         if 'PC1' in socket.gethostname():
-            self.pklizar_tarkan()
+            if safe_util.tk(self.handle):
+                # self.pklizar_tarkan()
+                self.pklizar_tarkan_knv()
+            elif safe_util.aida(self.handle):
+                self.pklizar_aida()
+            elif safe_util.k3(self.handle):
+                self.pklizar_k3()
+            # elif safe_util.k1(self.handle):
+            #     self.pklizar_knv()
+            else:
+                self.pklizar_tarkan_knv()
         else:
             self.pklizar_aida()
 
     def pklizar_aida(self):
         PkAidaUseCase(self.handle, self.arduino, PathFinder.MAPA_AIDA).execute()
 
+    def pklizar_tarkan_knv(self):
+        while True:
+            tarkan = self.pklizar_tarkan()
+            tarkan.execute(loop=False)
+            if tarkan.pklizou:
+                self.pklizar_knv().execute(loop=False)
+
     def pklizar_tarkan(self):
-        PktarkanUseCase(self.handle, self.arduino, PathFinder.MAPA_TARKAN).execute()
+        return PktarkanUseCase(self.handle, self.arduino, PathFinder.MAPA_TARKAN)
+
+    def pklizar_knv(self):
+        return PkKnvUseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2)
+
+    def pklizar_kanturu(self):
+        PkKanturuUseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2).execute()
+
+    def pklizar_k3(self):
+        PkK3UseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_3).execute()

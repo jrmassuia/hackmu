@@ -57,19 +57,19 @@ class PkAidaUseCase(PkBase):
         self.mover_para_sala7()
         self.teclado_util.escrever_texto('/re off')
         self._sair_da_safe()
-        self._ativar_skill()
+        if not self.morreu:
+            self._ativar_skill()
 
-        if self.tipo_pk == self.PKLIZAR_AIDA_1:
-            self.pklizar_aida1()
-        elif self.tipo_pk == self.PKLIZAR_AIDA_2:
-            self.pklizar_aida2()
-        elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
-            self.pklizar_aida_corredor()
-        elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
-            self.pklizar_aida_final()
-        else:
-            # fallback mantido como no original
-            self.pklizar_aida1()
+            if self.tipo_pk == self.PKLIZAR_AIDA_1:
+                self.pklizar_aida1()
+            elif self.tipo_pk == self.PKLIZAR_AIDA_2:
+                self.pklizar_aida2()
+            elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
+                self.pklizar_aida_corredor()
+            elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
+                self.pklizar_aida_final()
+            else:
+                self.pklizar_aida1()
 
     # ---------- Sequências específicas ----------
     def pklizar_aida1(self):
@@ -125,7 +125,10 @@ class PkAidaUseCase(PkBase):
     def _sair_da_safe(self):
         if safe_util.aida(self.handle):
             self._desbugar_goblin()
-            self.mover_spot_util.movimentar_aida((140, 14), max_tempo=30, movimentacao_proxima=True)
+            saiu_safe = self.mover_spot_util.movimentar_aida((104, 8), max_tempo=5,
+                                                             movimentacao_proxima=True)
+            if not saiu_safe:
+                self.morreu = True
 
     def _desbugar_goblin(self):
         btn_fechar = self.buscar_imagem.buscar_item_simples('./static/img/fechar_painel.png')

@@ -135,7 +135,7 @@ class MoverSpotUtil:
                             'Tempo máximo atingido para movimentação com o char ' + self.pointer.get_nome_char() + ' no mapa ' + mapa)
                         return True
 
-                    if verficar_se_movimentou and self._checar_safe_zone(mapa):
+                    if self._verificar_se_morreu() or (verficar_se_movimentou and self._checar_safe_zone(mapa)):
                         self.esta_na_safe = True
                         mouse_util.desativar_click_esquerdo(self.handle)
                         return False
@@ -173,8 +173,6 @@ class MoverSpotUtil:
             print("Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " + mapa + f" : {e}")
 
     def _checar_safe_zone(self, mapa):
-        if self.pointer.get_hp() == 0:
-            return True
         if mapa == PathFinder.MAPA_KANTURU_1_E_2:
             return safe_util.k1(self.handle)
         if mapa == PathFinder.MAPA_AIDA or mapa == PathFinder.MAPA_KALIMA:
@@ -191,6 +189,11 @@ class MoverSpotUtil:
             return safe_util.losttower(self.handle)
         if mapa == PathFinder.MAPA_DUNGEON:
             return safe_util.lorencia(self.handle)
+        return False
+
+    def _verificar_se_morreu(self):
+        if self.pointer.get_hp() == 0:
+            return True
         return False
 
     def _verificar_limpeza_spot(self, x_atual, y_atual, x_ant, y_ant, hora_inicial):
@@ -240,6 +243,18 @@ class MoverSpotUtil:
         esta_proximo = len(caminho) <= 4
         clique_rapido = not movimentacao_proxima and len(caminho) <= 5
 
+        if posicionar_mouse_coordenada:
+            if 4 < len(caminho) <= 8:
+                ultimos_quatro = [caminho[-4]]
+                prox_posicao = self._obter_proxima_posicao(ultimos_quatro, self.pointer.get_cood_y(),
+                                                           self.pointer.get_cood_x())
+                py, px, cx, cy = prox_posicao
+                mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
+                esta_proximo = True
+            elif len(caminho) > 8:
+                mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
+                return False
+
         if posicionar_mouse_coordenada and esta_proximo:
             return self._executar_movimento_e_posicionar_mouse(caminho, cx, cy)
 
@@ -257,8 +272,8 @@ class MoverSpotUtil:
         return False
 
     def _executar_movimento_e_posicionar_mouse(self, caminho, cx, cy):
-        mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
-
+        # mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
+        time.sleep(.5)
         destino_y = caminho[len(caminho) - 1][0]
         destino_x = caminho[len(caminho) - 1][1]
 
@@ -284,6 +299,9 @@ class MoverSpotUtil:
 
         try:
             caminho = self.pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
+            if len(caminho) > 4:
+                print('Erro ao buscar posição do char para pklizar')
+
             prox_posicao = self._obter_proxima_posicao(caminho, y_atual, x_atual)
             py, px, cx, cy = prox_posicao
             mouse_util.mover(self.handle, cx, cy)

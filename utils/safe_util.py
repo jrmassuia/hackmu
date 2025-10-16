@@ -39,6 +39,7 @@ def tk(handle):
     x, y = _coordenadas(handle)
     return _dentro_da_area(x, y, 50, 74, 185, 207)
 
+
 def tk2_portal(handle):
     x, y = _coordenadas(handle)
     return _dentro_da_area(x, y, 190, 210, 7, 20)
@@ -47,6 +48,11 @@ def tk2_portal(handle):
 def aida(handle):
     x, y = _coordenadas(handle)
     return _dentro_da_area(x, y, 5, 17, 75, 92)
+
+
+def knv(handle):
+    x, y = _coordenadas(handle)
+    return _dentro_da_area(x, y, 174, 188, 66, 76)
 
 
 def k1(handle):

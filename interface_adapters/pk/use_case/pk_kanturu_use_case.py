@@ -2,7 +2,7 @@ from interface_adapters.pk.use_case.pk_base_use_case import PkBase
 from utils import mouse_util, safe_util, spot_util
 
 
-class PkAidaUseCase(PkBase):
+class PkKanturuUseCase(PkBase):
     PKLIZAR_k1 = 'KANTURU_1'
     PKLIZAR_k2 = 'KANTURU_2'
 
@@ -16,39 +16,41 @@ class PkAidaUseCase(PkBase):
         elif nome == 'ReiDav1':
             senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_k2
+        else:
+            self.tipo_pk = self.PKLIZAR_k1
 
         return senha
+
+    def _limpou_pk(self):
+        return self._consultar_info_e_verificar(self.IMG_PK0) or self._consultar_info_e_verificar(self.IMG_PK1)
 
     def iniciar_pk(self):
         self.mover_para_sala7()
         self.teclado_util.escrever_texto('/re off')
         self._sair_da_safe()
         self._ativar_skill()
-
-        if self.tipo_pk == self.PKLIZAR_k1:
-            self.pklizar_kanturu1()
-        elif self.tipo_pk == self.PKLIZAR_k2:
-            self.pklizar_kanturu2()
+        self.pklizar_kanturu1()
+        # if self.tipo_pk == self.PKLIZAR_k1:
+        #     self.pklizar_kanturu1()
+        # elif self.tipo_pk == self.PKLIZAR_k2:
+        #     self.pklizar_kanturu2()
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
-            self.mover_spot_util.movimentar_kanturu_1_2((46, 222), movimentacao_proxima=True)
+            self.mover_spot_util.movimentar_kanturu_1_2((46, 222),
+                                                        movimentacao_proxima=True,
+                                                        verficar_se_movimentou=True)
 
     def pklizar_kanturu1(self):
         etapas = (
-            spot_util.buscar_spots_k1()
+            lambda: spot_util.buscar_spots_k1(),
+            lambda: spot_util.buscar_spots_k2()
         )
         self.executar_rota_pk(etapas)
 
     def pklizar_kanturu2(self):
         etapas = (
             spot_util.buscar_spots_k2,
-        )
-        self.executar_rota_pk(etapas)
-
-    def pklizar_no_dinasty(self):
-        etapas = (
-            spot_util.buscar_spots_k1_k2(),
         )
         self.executar_rota_pk(etapas)
 

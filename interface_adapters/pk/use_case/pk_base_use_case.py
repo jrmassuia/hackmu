@@ -61,6 +61,8 @@ class PkBase(ABC):
         self.tipo_pk: Optional[str] = None
         self._abates = 0
         self._abates_lock = threading.Lock()
+        self.morreu = False
+        self.teclado_util.escrever_texto('/re off')
 
         # Define tipo e senha (fornecidos pela subclasse)
         senha = self._definir_tipo_pk_e_senha()
@@ -102,10 +104,11 @@ class PkBase(ABC):
           - executa PK nesses spots
           - verifica se pode continuar; se não, encerra a rota
         """
+        self.morreu = False
         for obter_spots in etapas:
             spots = obter_spots()  # função que retorna os spots
-            self._executar_pk(spots)  # executa PK nos spots
-            if not self._pk_pode_continuar():  # se não pode continuar, sai
+            self._executar_pk(spots)
+            if self.morreu or not self.pk_pode_continuar():  # pk_pode_continuar utilizar somente no info pra verificar o pk, caso contrario return true
                 return
 
     def _consultar_info_e_verificar(self, imagem_pk: str) -> bool:
@@ -133,7 +136,7 @@ class PkBase(ABC):
     def _limpou_pk(self) -> Optional[bool]:
         return self._consultar_info_e_verificar(self.IMG_PK0)
 
-    def _pk_pode_continuar(self) -> bool:
+    def pk_pode_continuar(self) -> bool:
         return self._consultar_info_e_verificar(self.IMG_PK1) or self._consultar_info_e_verificar(self.IMG_PK0)
 
     def _eh_pk(self, image_path: str) -> bool:
@@ -242,27 +245,6 @@ class PkBase(ABC):
             self.coord_mouse_atual = poscionar.get_coord_mouse()
             self.coord_spot_atual = poscionar.get_coord_spot()
 
-    # ---------- Pontos de extensão obrigatórios ----------
-    @abstractmethod
-    def _corrigir_coordenada_e_mouse(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def morreu(self) -> bool:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _movimentar_char_spot(self, coordenadas: Tuple[int, int]) -> bool:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _sair_da_safe(self) -> None:
-        raise NotImplementedError()
-
     # ---------- Núcleo de caça (comum) ----------
     def _executar_pk(self, spots: Sequence[Sequence[Tuple[Sequence[str], Sequence[Tuple[int, int]], Tuple[int, int]]]]):
         """
@@ -283,6 +265,7 @@ class PkBase(ABC):
 
                 if not movimentou:
                     print('1 - Morreu enqto procurava player')
+                    self.morreu = True
                     return
 
                 resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
@@ -301,9 +284,11 @@ class PkBase(ABC):
                     if posicionou:
                         self._tentar_pklizar()
                     else:
-                        print('NÃO POSICIONOU!')
+                        print('MORREU ENQTO POSICIONAVA!')
+                        self.morreu = True
+                        return
 
-    # --- helpers ---------------------------------------------------------------
+                        # --- helpers ---------------------------------------------------------------
 
     def _buscar_pk_cascata(self, prioridade: str | None = None, timeout_total: float = 2.0,
                            intervalo: float = 0.10) -> str | None:
@@ -358,7 +343,8 @@ class PkBase(ABC):
                 print('3 - Morreu enquanto vigiava o oponente')
                 return False
 
-            self.teclado_util.tap_tecla("Q")
+            if self.mapa == PathFinder.MAPA_AIDA:
+                self.teclado_util.tap_tecla("Q")
 
             mouse_util.ativar_click_direito(self.handle)
 
@@ -399,7 +385,6 @@ class PkBase(ABC):
 
             # 2) achou algo -> atacar
             print('ACHOU SUICIDE:', img_base)
-            # if self.pointer.get_nome_char() != 'Narukami':
             self._ativar_pk()
 
             # 3) vigiar até sumir (oponente morto ou saiu da tela)
@@ -410,15 +395,14 @@ class PkBase(ABC):
                 print('Vigilância interrompida (provável morte / safe).')
 
         finally:
-            self._desativar_pk()
             mouse_util.desativar_click_direito(self.handle)
+            self._desativar_pk()
 
     def _registrar_abate(self) -> None:
         with self._abates_lock:
             self._abates += 1
             print(f"[ABATE] +1 do {self.pointer.get_nome_char()} - (total={self._abates})")
 
-    # ---------- Ações rápidas ----------
     def _ativar_skill(self):
         self.teclado_util.selecionar_skill_3()
         mouse_util.clickDireito(self.handle)
@@ -431,3 +415,25 @@ class PkBase(ABC):
     def _desativar_pk(self):
         if self.pointer.get_pk_ativo() == 1:
             self.teclado_util.combo_tecla("LCTRL", "LSHIFT")
+
+    # ---------- Pontos de extensão obrigatórios ----------
+
+    @abstractmethod
+    def _corrigir_coordenada_e_mouse(self) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def morreu(self) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _movimentar_char_spot(self, coordenadas: Tuple[int, int]) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _sair_da_safe(self) -> None:
+        raise NotImplementedError()

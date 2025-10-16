@@ -42,7 +42,7 @@ VirtualQueryEx.restype = ctypes.c_size_t
 class BuscarPersoangemProximoService:
     # ---- Lista base de MOBS a ignorar (match EXATO) ----
     MOBS_IGNORAR: Set[str] = {
-        #NPC
+        # NPC
         'Soldier de Alexi',
         # TARKAN
         'Mutant', 'Bloody Wolf', 'Iron Wheel', 'Cursed King', 'Tantalos', 'Hero Mutant', 'Beam Knight',
@@ -52,22 +52,25 @@ class BuscarPersoangemProximoService:
         'Omega Wing', 'Phoenix of Darkn',
         # AIDA
         'Death Tree', 'Forest Orc', 'Death Rider', 'Guard Archer', 'Blue Golem', 'Hell Maine', 'Witch Queen',
+        # KANTURU
+        'Splinter Wolf', 'Iron Rider', 'Satyros', 'Red Knight', 'Kentauros', 'Gigantis', 'Berserker', 'Twin Tale',
+        'Persona', 'Canon Trap', 'Dreadfear',
         # KALIMA
-        'Hero Mutant', 'Lizard Warrior', 'Rogue Centurion', 'Death Angel', 'Sea Worm', 'Necron', 'Death Centurion',
-        'Schriker', 'Blood Soldier', 'Aegis'
+        'Hero Mutant', 'Lizard Warrior', 'Rogue Centurion', 'Death Angel', 'Sea Worm', 'Necron',
+        'Death Centurion', 'Schriker', 'Blood Soldier', 'Aegis'
     }
 
     # ---- Ordens MSB pré-calculadas ----
     _MSB_BASE_ORDERS: Dict[str, Tuple[int, ...]] = {
         "0-9A-Z": tuple(range(0x00, 0x24)),  # 0..35 (0x00..0x23)
-        "0-9":    tuple(range(0x00, 0x0A)),  # 0..9
-        "A-Z":    tuple(range(0x0A, 0x24)),  # 10..35
-        "A-F":    tuple(range(0x0A, 0x10)),  # 10..15
+        "0-9": tuple(range(0x00, 0x0A)),  # 0..9
+        "A-Z": tuple(range(0x0A, 0x24)),  # 10..35
+        "A-F": tuple(range(0x0A, 0x10)),  # 10..15
     }
 
     # ---- Caches globais por classe ----
-    _msb_cache: Dict[Tuple[str, Tuple[int, ...]], Tuple[int, ...]] = {}          # cache da ordem MSB
-    _fixed_ranges: Dict[Tuple, Tuple[int, int]] = {}                              # (pid, padrao) -> (ini,fim)
+    _msb_cache: Dict[Tuple[str, Tuple[int, ...]], Tuple[int, ...]] = {}  # cache da ordem MSB
+    _fixed_ranges: Dict[Tuple, Tuple[int, int]] = {}  # (pid, padrao) -> (ini,fim)
     _fixed_lock = threading.Lock()
 
     def __init__(self, pointer):
@@ -98,7 +101,7 @@ class BuscarPersoangemProximoService:
 
         # Cache de MSBs com hit por PID (ordenação dinâmica)
         self._msb_result_cache: Dict[Tuple[int, int], Tuple[int, int]] = {}  # (pid,msb)->(ini,fim)
-        self._msb_hit_order: Dict[int, List[int]] = {}                       # pid-> [msbs com sucesso]
+        self._msb_hit_order: Dict[int, List[int]] = {}  # pid-> [msbs com sucesso]
 
     # ----------------- Iterador de regiões (VirtualQueryEx) -----------------
     def _iter_regions(self, process_handle) -> Iterable[Tuple[int, int, MEMORY_BASIC_INFORMATION]]:
@@ -211,7 +214,7 @@ class BuscarPersoangemProximoService:
     def achar_range_private_prefix_e32(self,
                                        padrao=b'\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
                                        bloco_leitura=0x40000,  # 256 KB
-                                       margem=0x800,           # 2 KB nas pontas
+                                       margem=0x800,  # 2 KB nas pontas
                                        exigir_rw=True,
                                        msb: int = 0x0E,
                                        require_region_msb: bool = True,
@@ -616,7 +619,8 @@ class BuscarPersoangemProximoService:
         for item in resultados:
             try:
                 if isinstance(item, dict):
-                    x = item.get("x"); y = item.get("y")
+                    x = item.get("x");
+                    y = item.get("y")
                     nome = item.get("nome")
                     addr_padrao = item.get("addr_padrao")
                     addr_nome = item.get("addr_nome")
@@ -626,16 +630,20 @@ class BuscarPersoangemProximoService:
                     addr_raw = addr_candidate
                 else:
                     addr_raw, x, y = item[0], item[1], item[2]
-                    nome = None; addr_padrao = None; addr_nome = None
+                    nome = None;
+                    addr_padrao = None;
+                    addr_nome = None
 
                 if x is None or y is None:
                     continue
-                x = int(x); y = int(y)
+                x = int(x);
+                y = int(y)
             except Exception as e:
                 print(f"[WARN] item ignorado (formato inválido): {item} -> {e}")
                 continue
 
-            dx = x - x0; dy = y - y0
+            dx = x - x0;
+            dy = y - y0
             if abs(dx) <= 10 and abs(dy) <= 10:
                 dist = abs(dx) + abs(dy)
 

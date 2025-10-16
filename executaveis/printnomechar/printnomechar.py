@@ -2,6 +2,7 @@ import ctypes
 import os
 import time
 from ctypes import wintypes
+from datetime import datetime
 
 import win32gui
 
@@ -105,4 +106,9 @@ def obter_titulo_do_filho(handle):
 
 
 if __name__ == "__main__":
-    main()
+    data_limite = datetime(2025, 12, 31)
+    data_atual = datetime.now()
+    if data_atual > data_limite:
+        exit()
+    else:
+        main()
