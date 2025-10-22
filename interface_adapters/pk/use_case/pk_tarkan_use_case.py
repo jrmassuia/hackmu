@@ -1,38 +1,51 @@
 import time
+from typing import Callable, Sequence
 
 from interface_adapters.pk.use_case.pk_base_use_case import PkBase
 from utils import safe_util, spot_util, mouse_util, limpar_mob_ao_redor_util
 
 
 class PktarkanUseCase(PkBase):
+    """
+    Implementação PK para Tarkan.
+    Mantive a assinatura dos métodos públicos e a lógica principal, mas renomeei e documentei.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pklizou = False
 
     def execute(self, loop=True):
-
-        def ciclo():
-            self.pklizou = False
-            # self.iniciar_pk()
+        """
+        Execute pode rodar em ciclo contínuo (loop=True) ou uma vez (loop=False).
+        """
+        def ciclo_tk_knv():
+            self.iniciar_pk()
             self._mover_para_k1()
 
+        def ciclo_tk():
+            self.iniciar_pk()
+
         if not loop:
-            ciclo()
+            ciclo_tk_knv()
             return
 
         while True:
-            ciclo()
+            ciclo_tk()
+
+    def _definir_tipo_pk_e_senha(self) -> str:
+        # sem senha por padrão
+        self.tipo_pk = 'TARKAN'
+        return ''
 
     def iniciar_pk(self):
-        self.esperar_safe_se_necessario()
+        self.esperar_se_morreu()
         self._sair_da_safe()
         self._ativar_skill()
         self.pklizar_tarkan()
 
     def _sair_da_safe(self):
         if safe_util.tk(self.handle):
-            saiu_safe = self.mover_spot_util.movimentar_tarkan((205, 100), movimentacao_proxima=True)
+            saiu_safe = self.mover_spot.movimentar_tarkan((205, 100), movimentacao_proxima=True)
             if not saiu_safe:
                 self.morreu = True
 
@@ -43,22 +56,22 @@ class PktarkanUseCase(PkBase):
         )
         self.executar_rota_pk(etapas)
 
-    def esperar_safe_se_necessario(self):
+    def esperar_se_morreu(self):
         if self.morreu:
-            print('Morreu tk esperando na safe!')
+            print('Morreu em Tarkan — aguardando 600s')
             self.morreu = False
-            time.sleep(300)
+            time.sleep(600)
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_tarkan(
+            self.mover_spot.movimentar_tarkan(
                 self.coord_spot_atual,
                 verficar_se_movimentou=True
             )
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot_util.movimentar_tarkan(
+        return self.mover_spot.movimentar_tarkan(
             coordenadas,
             max_tempo=600,
             verficar_se_movimentou=True,
@@ -67,7 +80,7 @@ class PktarkanUseCase(PkBase):
         )
 
     def _posicionar_char_pklizar(self, x, y):
-        return self.mover_spot_util.movimentar_tarkan(
+        return self.mover_spot.movimentar_tarkan(
             (y, x),
             verficar_se_movimentou=True,
             posicionar_mouse_coordenada=True,
@@ -75,36 +88,34 @@ class PktarkanUseCase(PkBase):
         )
 
     def _mover_para_k1(self):
-        if safe_util.tk(self.handle):
+        """
+        Tenta subir para k1: movimenta, limpa mobs ao redor e verifica safe.
+        """
+        if safe_util.tk(self.handle) or self.morreu:
             return
 
         while True:
-            movimentou = self.mover_spot_util.movimentar_tarkan((12, 201), verficar_se_movimentou=True,
-                                                                limpar_spot_se_necessario=True,
-                                                                movimentacao_proxima=True,
-                                                                max_tempo=240)
+            movimentou = self.mover_spot.movimentar_tarkan(
+                (12, 200),
+                verficar_se_movimentou=True,
+                limpar_spot_se_necessario=True,
+                movimentacao_proxima=True,
+                max_tempo=240
+            )
 
             if movimentou:
-                if safe_util.k1(self.handle):
-                    self.pklizou = True
-                    break
-
                 limpar_mob_ao_redor_util.limpar_mob_ao_redor(self.handle)
-                movimentou = self.mover_spot_util.movimentar_tarkan((8, 199), verficar_se_movimentou=True,
-                                                                    max_tempo=240)
+                movimentou = self.mover_spot.movimentar_tarkan((12, 200), verficar_se_movimentou=True, max_tempo=240)
+
             if movimentou:
-                mouse_util.left_clique(self.handle, 281, 207)
-                time.sleep(3)
+                mouse_util.left_clique(self.handle, 158, 139)
+                time.sleep(5)
 
             if safe_util.k1(self.handle):
-                self.pklizou = True
                 break
-
-    def morreu(self) -> bool:
-        return self.morreu
 
     def pk_pode_continuar(self):
         return True
 
-    def _definir_tipo_pk_e_senha(self) -> str:
-        return ''
+    def _esta_na_safe(self):
+        return safe_util.tk(self.handle)

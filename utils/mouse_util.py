@@ -161,7 +161,7 @@ def clicar_na_imagem_ou_coordenada(handle, imagem_path, fallback_position, timeo
             if posicao:
                 left_clique(handle, *posicao, delay=.5)
                 return True
-            else:
+            elif fallback_position is not None:
                 left_clique(handle, *fallback_position)
         return False
     except:

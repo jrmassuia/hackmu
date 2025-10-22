@@ -17,6 +17,8 @@ class AlterarCharSalaService:
         self.teclado_util = Teclado_util(self.handle, arduino)
 
     def selecionar_sala(self, sala=None):
+        mouse_util.desativar_click_esquerdo(self.handle)
+        mouse_util.desativar_click_direito(self.handle)
         self.teclado_util.tap_esc()
         mouse_util.tira_mouse_tela(self.handle)
         time.sleep(2)
@@ -26,16 +28,27 @@ class AlterarCharSalaService:
             ["./static/img/selecionarsalas.png", (222, 216)]
         ]
 
-        if sala == 7:
-            acoes_troca_sala.append(["./static/img/sala7.png", (420, 371)])
-        elif sala == 2:
+        if sala == 2:
             acoes_troca_sala.append(["./static/img/sala2.png", (401, 249)])
+        elif sala == 3:
+            acoes_troca_sala.append([None, (401, 272)])
+        elif sala == 8:
+            acoes_troca_sala.append([None, (401, 401)])
+        elif sala == 7:
+            acoes_troca_sala.append(["./static/img/sala7.png", (420, 371)])
+        elif sala == 9:
+            acoes_troca_sala.append([None, (401, 427)])
         else:
             salas = [
                 (401, 249),  # 2
-                (402, 272),  # 3
-                (394, 294),  # 4
-                (385, 396)  # 10
+                (401, 272),  # 3
+                (401, 294),  # 4
+                (401, 318),  # 5
+                # (401, 346),  # 6
+                # (401, 374),  # 7
+                (401, 401),  # 8
+                (401, 427),  # 9
+                (401, 396)  # 10
             ]
             escolha = random.choice(salas)
             acoes_troca_sala.append([None, escolha])
@@ -48,6 +61,8 @@ class AlterarCharSalaService:
                 if 'escolhersala' in menu:
                     time.sleep(4)
             time.sleep(2)
+
+        mouse_util.tira_mouse_tela(self.handle)
 
         self.teclado_util.digitar_senha(self.senha)
         mouse_util.clicar_na_imagem_ou_coordenada(self.handle, "./static/img/btnoksenha.png", None)

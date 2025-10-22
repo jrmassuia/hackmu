@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 import ctypes
 import os
 import random
@@ -17,6 +19,8 @@ import MuEntityScannerPK
 import testeautopk
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from services.foco_mutex_service import FocoMutexService
+from services.verificador_imagem_userbar import VerificadorImagemUseBar
+from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
 
 kernel32 = ctypes.windll.kernel32
@@ -140,10 +144,11 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointer = Pointers(handle)
+    pointer = Pointers(handle).teste_pointer_necessarios()
 
-    movimentou = MoverSpotUtil(handle).movimentar_kanturu_1_2((18, 201), max_tempo=15)
-    mouse_util.left_clique(handle, 482, 25)
+
+    # movimentou = MoverSpotUtil(handle).movimentar_kanturu_1_2((18, 201), max_tempo=15)
+    # mouse_util.left_clique(handle, 482, 25)
 
     # spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
     # spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))

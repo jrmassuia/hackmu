@@ -145,9 +145,6 @@ class Up_util:
         self.teclado_util.escrever_texto(["/re off", "/autopick on", "/autodc off"])
         self.teclado_util.pressionar_zoon()
 
-    def paniel_lateral_esta_aberto(self):
-        return self.pointer.get_painel_lateral_aberto_item() == 1
-
     def focar_janela(self, handle: int, pausa_final: float = 0.05) -> bool:
         """
         Traz a janela indicada por `handle` para frente e define o foco de forma robusta.

@@ -50,7 +50,7 @@ class Pointers:
             #
             self.PK_ATIVO_POINTER = self.get_pointer(self.CLIENT + 0x00116838, offsets=[0x0])
             #
-            # self.PAINEL_LATERAL_ABERTO_POINTER = self.get_pointer(self.CLIENT + 0x00295554, offsets=[0xA0])
+            self.CHAR_PK_SELECIONADO_POINTER = self.get_pointer(self.CLIENT + 0x000D8054, offsets=[0x0])
             #
             self.SALA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x00156E9C, offsets=[0x104])
             #
@@ -85,8 +85,7 @@ class Pointers:
             #
             # self.DETECCAO_SM_DL_MG_PROX_POINTER = self.get_pointer(self.CLIENT + 0x0009A5A8, offsets=[0x20])
             #
-            # self.DETECCAO_ELF_PROX_POINTER = self.get_pointer(self.CLIENT + 0x0006AE90,
-            #                                                   offsets=[0x5C8, 0x4C, 0x4C, 0x488, 0xF0])
+
             #
             # self.DETECCAO_MG_PROX_POINTER = self.get_pointer(self.CLIENT + 0x0003A6D0,
             #                                                  offsets=[0x288, 0x138, 0xA40, 0x198, 0x58C])
@@ -149,8 +148,8 @@ class Pointers:
         print('RESET:' + str(self.get_reset()))
         print('LEVEL:' + str(self.get_lvl()))
         print('PK ATIVO:' + str(self.get_pk_ativo()))
+        print('PK SELECIONADO:' + str(self.get_char_pk_selecionado()))
         print('MOSTRA DESC ITEM:' + str(self.get_mostrar_desc_item()))
-        # print('PAINEL LATERAL ABERTO:' + str(self.get_painel_lateral_aberto_item()))
         print('SALA ATUAL:' + str(self.get_sala_atual()))
 
     def get_cood_x(self):
@@ -190,6 +189,12 @@ class Pointers:
     def get_pk_ativo(self):
         return self.read_value(self.PK_ATIVO_POINTER, data_type="int")
 
+    def get_char_pk_selecionado(self):
+        valor = int(self.read_value(self.CHAR_PK_SELECIONADO_POINTER, data_type="word"))
+        if valor == 65535:
+            return None
+        return valor
+
     def get_lvl(self):
         info = self.read_value(self.LVL_POINTER, data_type="word")
         if info:
@@ -198,9 +203,6 @@ class Pointers:
 
     def get_mostrar_desc_item(self):
         return self.read_value(self.MOSTRAR_DESC_POINTER, data_type="int")
-
-    def get_painel_lateral_aberto_item(self):
-        return self.read_value(self.PAINEL_LATERAL_ABERTO_POINTER, data_type="word")
 
     def get_sala_atual(self):
         return self.read_value(self.SALA_ATUAL_POINTER, data_type="int")

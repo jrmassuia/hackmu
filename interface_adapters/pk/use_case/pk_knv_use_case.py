@@ -11,16 +11,20 @@ class PkKnvUseCase(PkBase):
         super().__init__(*args, **kwargs)
 
     def execute(self, loop=True):
-        def ciclo():
+
+        def ciclo_knv_tk():
             self.iniciar_pk()
             self._mover_para_tk()
 
+        def ciclo_tk():
+            self.iniciar_pk()
+
         if not loop:
-            ciclo()
+            ciclo_knv_tk()
             return
 
         while True:
-            ciclo()
+            ciclo_tk()
 
     def iniciar_pk(self):
         self._esperar_safe_se_necessario()
@@ -36,7 +40,8 @@ class PkKnvUseCase(PkBase):
 
         while True:
             # 1) Sair da safe
-            self.mover_spot_util.movimentar_kanturu_1_2((24, 206), max_tempo=5, movimentacao_proxima=True) # DESBUGAR MOVIMENTACAO
+            self.mover_spot_util.movimentar_kanturu_1_2((24, 206), max_tempo=5,
+                                                        movimentacao_proxima=True)  # DESBUGAR MOVIMENTACAO
             movimentou = self.mover_spot_util.movimentar_kanturu_1_2((20, 201))
             if not movimentou:
                 self.morreu = True
@@ -46,7 +51,7 @@ class PkKnvUseCase(PkBase):
                 break
 
         if self._mover_portal_knv():
-            # 2) Entrar no KNV
+            # 2) Entrar em KNV
             saiu_safe = self.mover_spot_util.movimentar_kanturu_1_2((57, 155), max_tempo=15, movimentacao_proxima=True)
             if not saiu_safe:
                 self.morreu = True
@@ -78,8 +83,10 @@ class PkKnvUseCase(PkBase):
                 movimentacao_proxima=True
             )
             if voltou:
-                print('ESPERANDO 300s PARA PROXIMO PK EM KNV')
-                time.sleep(300)
+                print('ESPERANDO 600s PARA PROXIMO PK EM KNV')
+                time.sleep(600)
+        else:
+            time.sleep(8)  # DELAY PARA CASO MORRA E VOLTAR PARA SAFE
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
@@ -107,10 +114,13 @@ class PkKnvUseCase(PkBase):
         )
 
     def _mover_para_tk(self):
-        time.sleep(5)
         if safe_util.k1(self.handle):
             mouse_util.left_clique(self.handle, 472, 40)
             time.sleep(5)
+            self.mover_spot_util.movimentar_tarkan((17, 198), verficar_se_movimentou=True,
+                                                   limpar_spot_se_necessario=True,
+                                                   movimentacao_proxima=True,
+                                                   max_tempo=5)
 
     def _marcar_morte(self):
         self.morreu = True
@@ -123,3 +133,6 @@ class PkKnvUseCase(PkBase):
 
     def pk_pode_continuar(self) -> bool:
         return True
+
+    def _esta_na_safe(self):
+        return safe_util.k1(self.handle)

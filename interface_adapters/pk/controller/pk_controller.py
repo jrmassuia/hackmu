@@ -1,4 +1,5 @@
 import socket
+import time
 
 from interface_adapters.pk.use_case.pk_aida_use_case import PkAidaUseCase
 from interface_adapters.pk.use_case.pk_k3_use_case import PkK3UseCase
@@ -18,17 +19,23 @@ class PKController:
     def execute(self):
 
         if 'PC1' in socket.gethostname():
+
+            if safe_util.k3(self.handle):
+                self.pklizar_k3()
+            elif safe_util.aida(self.handle):
+                self.pklizar_aida()
+            else:
+                self.pklizar_kanturu()
+
+        elif 'PC2' in socket.gethostname():
             if safe_util.tk(self.handle):
-                # self.pklizar_tarkan()
-                self.pklizar_tarkan_knv()
+                self.pklizar_tarkan()
             elif safe_util.aida(self.handle):
                 self.pklizar_aida()
             elif safe_util.k3(self.handle):
                 self.pklizar_k3()
-            # elif safe_util.k1(self.handle):
-            #     self.pklizar_knv()
-            else:
-                self.pklizar_tarkan_knv()
+            elif safe_util.k1(self.handle):
+                self.pklizar_knv()
         else:
             self.pklizar_aida()
 
@@ -36,17 +43,19 @@ class PKController:
         PkAidaUseCase(self.handle, self.arduino, PathFinder.MAPA_AIDA).execute()
 
     def pklizar_tarkan_knv(self):
-        while True:
-            tarkan = self.pklizar_tarkan()
-            tarkan.execute(loop=False)
-            if tarkan.pklizou:
-                self.pklizar_knv().execute(loop=False)
+        tarkan = PktarkanUseCase(self.handle, self.arduino, PathFinder.MAPA_TARKAN)
+        knv = PkKnvUseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2)
+        tarkan.execute()
+        # while True:
+        #     tarkan.execute(loop=False)
+        #     if not tarkan.morreu:
+        #         self.pklizar_knv().execute(loop=False)
 
     def pklizar_tarkan(self):
-        return PktarkanUseCase(self.handle, self.arduino, PathFinder.MAPA_TARKAN)
+        return PktarkanUseCase(self.handle, self.arduino, PathFinder.MAPA_TARKAN).execute()
 
     def pklizar_knv(self):
-        return PkKnvUseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2)
+        return PkKnvUseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2).execute()
 
     def pklizar_kanturu(self):
         PkKanturuUseCase(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2).execute()
