@@ -459,7 +459,7 @@ class PkBase(ABC):
                 print('Morreu enquanto matava o char no spot!')
                 return False
 
-            if self.mapa == PathFinder.MAPA_AIDA:
+            if self.mapa == PathFinder.MAPA_AIDA or self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
                 self.teclado.tap_tecla("Q")
 
             mouse_util.ativar_click_direito(self.handle)
