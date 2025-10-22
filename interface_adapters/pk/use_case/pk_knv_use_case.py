@@ -40,9 +40,9 @@ class PkKnvUseCase(PkBase):
 
         while True:
             # 1) Sair da safe
-            self.mover_spot_util.movimentar_kanturu_1_2((24, 206), max_tempo=5,
-                                                        movimentacao_proxima=True)  # DESBUGAR MOVIMENTACAO
-            movimentou = self.mover_spot_util.movimentar_kanturu_1_2((20, 201))
+            # DESBUGAR MOVIMENTACAO
+            self.mover_spot.movimentar_kanturu_1_2((24, 206), max_tempo=5, movimentacao_proxima=True)
+            movimentou = self.mover_spot.movimentar_kanturu_1_2((20, 201))
             if not movimentou:
                 self.morreu = True
                 return
@@ -52,7 +52,7 @@ class PkKnvUseCase(PkBase):
 
         if self._mover_portal_knv():
             # 2) Entrar em KNV
-            saiu_safe = self.mover_spot_util.movimentar_kanturu_1_2((57, 155), max_tempo=15, movimentacao_proxima=True)
+            saiu_safe = self.mover_spot.movimentar_kanturu_1_2((57, 155), max_tempo=15, movimentacao_proxima=True)
             if not saiu_safe:
                 self.morreu = True
 
@@ -77,7 +77,7 @@ class PkKnvUseCase(PkBase):
 
     def voltar_pra_safe_e_esperar_proximo_pk(self):
         if not self.morreu:
-            voltou = self.mover_spot_util.movimentar_kanturu_1_2(
+            voltou = self.mover_spot.movimentar_kanturu_1_2(
                 (71, 180),
                 verficar_se_movimentou=True,
                 movimentacao_proxima=True
@@ -90,14 +90,14 @@ class PkKnvUseCase(PkBase):
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_kanturu_1_2(
+            self.mover_spot.movimentar_kanturu_1_2(
                 self.coord_spot_atual,
                 verficar_se_movimentou=True
             )
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot_util.movimentar_kanturu_1_2(
+        return self.mover_spot.movimentar_kanturu_1_2(
             coordenadas,
             max_tempo=600,
             verficar_se_movimentou=True,
@@ -106,7 +106,7 @@ class PkKnvUseCase(PkBase):
         )
 
     def _posicionar_char_pklizar(self, x, y):
-        return self.mover_spot_util.movimentar_kanturu_1_2(
+        return self.mover_spot.movimentar_kanturu_1_2(
             (y, x),
             verficar_se_movimentou=True,
             posicionar_mouse_coordenada=True,
@@ -117,10 +117,10 @@ class PkKnvUseCase(PkBase):
         if safe_util.k1(self.handle):
             mouse_util.left_clique(self.handle, 472, 40)
             time.sleep(5)
-            self.mover_spot_util.movimentar_tarkan((17, 198), verficar_se_movimentou=True,
-                                                   limpar_spot_se_necessario=True,
-                                                   movimentacao_proxima=True,
-                                                   max_tempo=5)
+            self.mover_spot.movimentar_tarkan((17, 198), verficar_se_movimentou=True,
+                                              limpar_spot_se_necessario=True,
+                                              movimentacao_proxima=True,
+                                              max_tempo=5)
 
     def _marcar_morte(self):
         self.morreu = True

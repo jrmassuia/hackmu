@@ -342,6 +342,9 @@ class PkBase(ABC):
     def _verificar_se_eh_tohell(self, nome):
         return self.verificador_imagem_usebar.verificar_pasta(nome, "./static/usebar/tohell/")
 
+    def _verificar_se_eh_suicide(self, nome):
+        return self.verificador_imagem_usebar.verificar_pasta(nome, "./static/usebar/suicide/")
+
     def _buscar_pk_cascata(self, prioridade: Optional[str] = None, timeout_total: float = 2.0,
                            intervalo: float = 0.10) -> Optional[str]:
         """
@@ -413,7 +416,6 @@ class PkBase(ABC):
         return False
 
     def _tentar_pklizar(self, nome) -> None:
-        mouse_util.ativar_click_direito(self.handle)
         try:
             if self.mover_spot.esta_na_safe:
                 print('Morreu enquanto procurava player')
@@ -422,20 +424,17 @@ class PkBase(ABC):
             if self._verificar_se_eh_tohell(nome):
                 return
 
-            # img_base = self._buscar_pk_cascata(prioridade=None, timeout_total=2.0, intervalo=0.10)
-            # if not img_base:
-            #     print('Não encontrou alvo para PK')
-            #     self._desativar_pk()
-            #     return
+            mouse_util.ativar_click_direito(self.handle)
 
             if self.pointer.get_char_pk_selecionado() is None:
                 print('Não encontrou alvo para PK')
                 self._desativar_pk()
             else:
-                print('Alvo detectado')
-                self._ativar_pk()
+                if self.pointer.get_sala_atual() == 7 or (
+                        self.pointer.get_sala_atual() != 7 and self._verificar_se_eh_suicide(nome)):
+                    print('Alvo detectado')
+                    self._ativar_pk()
 
-            # sumiu = self._vigiar_imagem_ate_sumir(img_base, confirmar_desaparecimento_ms=400, intervalo=0.08)
             sumiu = self._pklizar()
             if sumiu:
                 print('Oponente abatido.')

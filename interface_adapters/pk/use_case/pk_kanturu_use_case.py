@@ -21,7 +21,7 @@ class PkKanturuUseCase(PkBase):
 
         if nome == 'Heisemberg':
             senha = '93148273'
-            self.tipo_pk = self.PKLIZAR_K1
+            self.tipo_pk = self.PKLIZAR_K2
         elif nome == 'SM_Troyer':
             senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_K2
@@ -37,7 +37,11 @@ class PkKanturuUseCase(PkBase):
         self._mover_para_k1()
         self._sair_da_safe()
         self._ativar_skill()
-        self.pklizar_kanturu1()
+
+        if self.tipo_pk == self.PKLIZAR_K1:
+            self.pklizar_kanturu1()
+        elif self.tipo_pk == self.PKLIZAR_K2:
+            self.pklizar_kanturu2()
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
