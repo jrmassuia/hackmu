@@ -1,5 +1,5 @@
 import time
-from typing import Callable, Sequence
+from typing import Callable, Sequence, List
 
 from interface_adapters.pk.use_case.pk_base_use_case import PkBase
 from utils import safe_util, spot_util, mouse_util, limpar_mob_ao_redor_util
@@ -18,6 +18,7 @@ class PktarkanUseCase(PkBase):
         """
         Execute pode rodar em ciclo contínuo (loop=True) ou uma vez (loop=False).
         """
+
         def ciclo_tk_knv():
             self.iniciar_pk()
             self._mover_para_k1()
@@ -50,8 +51,8 @@ class PktarkanUseCase(PkBase):
                 self.morreu = True
 
     def pklizar_tarkan(self):
-        etapas = (
-            lambda: spot_util.buscar_spots_tk1(),
+        etapas: Sequence[Callable[[], List]] = (
+            spot_util.buscar_spots_tk1,
             lambda: spot_util.buscar_spots_tk2(nao_ignorar_spot_pk=True),
         )
         self.executar_rota_pk(etapas)
@@ -114,7 +115,7 @@ class PktarkanUseCase(PkBase):
             if safe_util.k1(self.handle):
                 break
 
-    def pk_pode_continuar(self):
+    def verificar_se_pode_continuar_com_pk(self):
         return True
 
     def _esta_na_safe(self):

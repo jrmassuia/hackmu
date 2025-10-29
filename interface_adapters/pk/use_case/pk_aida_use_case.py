@@ -20,11 +20,7 @@ class PkAidaUseCase(PkBase):
 
     # ---------- Definição de senha/tipo ----------
     def _definir_tipo_pk_e_senha(self) -> str:
-        """
-        Define self.tipo_pk e retorna a senha correspondente ao personagem (se houver).
-        """
         nome = self.pointer.get_nome_char()
-        senha = ''
 
         # AIDA 1
         if nome == 'AlfaVictor':
@@ -32,6 +28,9 @@ class PkAidaUseCase(PkBase):
             self.tipo_pk = self.PKLIZAR_AIDA_1
         elif nome == 'ReiDav1':
             senha = 'romualdo12'
+            self.tipo_pk = self.PKLIZAR_AIDA_1
+        elif nome == 'ESTAMUERTO':
+            senha = '93148273'
             self.tipo_pk = self.PKLIZAR_AIDA_1
 
         # AIDA 2
@@ -43,6 +42,9 @@ class PkAidaUseCase(PkBase):
             self.tipo_pk = self.PKLIZAR_AIDA_2
         elif nome == 'Omale_DL':
             senha = 'gtkn6iVy'
+            self.tipo_pk = self.PKLIZAR_AIDA_2
+        elif nome == 'Heisemberg':
+            senha = '93148273'
             self.tipo_pk = self.PKLIZAR_AIDA_2
 
         # AIDA CORREDOR
@@ -61,27 +63,16 @@ class PkAidaUseCase(PkBase):
             senha = '9876Sonso'
             self.tipo_pk = self.PKLIZAR_AIDA_FINAL
         else:
-            # padrão
             print('Tela sem configuração definida! ' + self.titulo_janela)
             exit()
 
         return senha
 
-    # ---------- Entrada do fluxo ----------
-    def execute(self):
-        """
-        Loop principal para Aida — mantém o comportamento de execução contínua.
-        """
-        while True:
-            self.iniciar_pk()
-
     def iniciar_pk(self):
-        """
-        Fluxo principal de PK para Aida:
-        - assegura sala 7, desliga /re, sai da safe, ativa skill e executa a sequência
-          correspondente ao tipo de Aida definido.
-        """
+
         salas = [7, 3, 8, 9]
+        self.morreu = False
+
         for sala in salas:
             self.mover_para_sala(sala)
             self.teclado.escrever_texto('/re off')
@@ -91,30 +82,37 @@ class PkAidaUseCase(PkBase):
                 self._ativar_skill()
 
                 if sala != 7:
-                    self.pklizar_aida()
+                    continuar = self.pklizar_aida()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_1:
-                    self.pklizar_aida1()
+                    continuar = self.pklizar_aida1()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_2:
-                    self.pklizar_aida2()
+                    continuar = self.pklizar_aida2()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
-                    self.pklizar_aida_corredor()
+                    continuar = self.pklizar_aida_corredor()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
-                    self.pklizar_aida_final()
+                    continuar = self.pklizar_aida_final()
                 else:
-                    self.pklizar_aida1()
+                    continuar = self.pklizar_aida1()
+
+                if continuar is False:
+                    break
+
             else:
                 break
+
+        if self.morreu:
+            print('Relizada a rota completa de PK: ' + self.titulo_janela)
 
     # ---------- Sequências específicas ----------
     def pklizar_aida(self):
         etapas: Sequence[Callable[[], List]] = (
-            # lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
-            # self.buscar_spot_extra_aida1,
-            # self.buscar_spot_aida2,
-            # spot_util.buscar_spots_aida_corredor,
-            # spot_util.buscar_spots_aida_final,
+            lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
+            self.buscar_spot_extra_aida1,
+            self.buscar_spot_aida2,
+            spot_util.buscar_spots_aida_corredor,
+            spot_util.buscar_spots_aida_final,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
     def pklizar_aida1(self):
         etapas: Sequence[Callable[[], List]] = (
@@ -123,7 +121,7 @@ class PkAidaUseCase(PkBase):
             spot_util.buscar_spots_aida_corredor,
             self.buscar_spot_aida2,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
     def pklizar_aida2(self):
         etapas: Sequence[Callable[[], List]] = (
@@ -132,7 +130,7 @@ class PkAidaUseCase(PkBase):
             spot_util.buscar_spots_aida_final,
             self.buscar_spot_extra_aida1,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
     def pklizar_aida_corredor(self):
         etapas: Sequence[Callable[[], List]] = (
@@ -142,7 +140,7 @@ class PkAidaUseCase(PkBase):
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_final,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
     def pklizar_aida_final(self):
         etapas: Sequence[Callable[[], List]] = (
@@ -151,45 +149,30 @@ class PkAidaUseCase(PkBase):
             self.buscar_spot_extra_aida1,
             self.buscar_spot_aida2,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
-    # ---------- helpers de busca de spots ----------
     def buscar_spot_extra_aida1(self) -> List:
-        """
-        Retorna os 3 últimos grupos de spots da lista de Aida_1 (caso existam).
-        """
         spots = spot_util.buscar_spots_aida_1()
         inicio = max(0, len(spots) - 3)
         return [spots[i] for i in range(inicio, len(spots))]
 
     def buscar_spot_aida2(self) -> List:
-        """
-        Combina spots de volta final + spots de Aida 2 e retorna a lista concatenada.
-        """
         spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
         spots.extend(spot_util.buscar_spots_aida_2(ignorar_spot_pk=True))
         return spots
 
-    # ---------- saída da safe e correções ----------
     def _sair_da_safe(self):
-        """
-        Se estiver na safe de Aida, tenta sair movendo para coordenada conhecida.
-        Inclui um passo para "desbugar" painéis que possam atrapalhar.
-        """
         if safe_util.aida(self.handle):
             self._desbugar_goblin()
             saiu = self.mover_spot.movimentar_aida(
-                (104, 8),
-                max_tempo=5,
+                (115, 13),
+                max_tempo=60,
                 movimentacao_proxima=True
             )
-            if not saiu:
+            if saiu is False:
                 self.morreu = True
 
     def _desbugar_goblin(self):
-        """
-        Fecha painéis abertos (se houver) para evitar bloqueios ao sair da safe.
-        """
         btn_fechar = self.buscar_imagem.buscar_item_simples('./static/img/fechar_painel.png')
         if btn_fechar:
             x, y = btn_fechar
@@ -200,9 +183,6 @@ class PkAidaUseCase(PkBase):
 
     # ---------- correção de coordenadas / movimentação ----------
     def _corrigir_coordenada_e_mouse(self):
-        """
-        Se o código já tinha um spot/mouse salvo, tenta reposicionar para reduzir erros.
-        """
         if self.coord_spot_atual and self.coord_mouse_atual:
             self.mover_spot.movimentar_aida(
                 self.coord_spot_atual,
@@ -211,10 +191,6 @@ class PkAidaUseCase(PkBase):
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas):
-        """
-        Move o personagem até o spot informado usando mover_spot.movimentar_aida com parâmetros
-        que refletem o comportamento original (timeout longo, limpeza de spot se necessário).
-        """
         return self.mover_spot.movimentar_aida(
             coordenadas,
             max_tempo=600,
@@ -224,10 +200,6 @@ class PkAidaUseCase(PkBase):
         )
 
     def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
-        """
-        Posiciona o personagem para "pklizar" um alvo nas coordenadas (x,y).
-        Note a inversão (y,x) quando o mover espera (linha, coluna).
-        """
         return self.mover_spot.movimentar_aida(
             (y, x),
             verficar_se_movimentou=True,
@@ -236,7 +208,4 @@ class PkAidaUseCase(PkBase):
         )
 
     def _esta_na_safe(self) -> bool:
-        """
-        Retorna True se o personagem estiver na safe da Aida.
-        """
         return safe_util.aida(self.handle)

@@ -147,7 +147,7 @@ def main():
     pointer = Pointers(handle).teste_pointer_necessarios()
 
 
-    # movimentou = MoverSpotUtil(handle).movimentar_kanturu_1_2((18, 201), max_tempo=15)
+    # movimentou = MoverSpotUtil(handle).movimentar_kanturu_1_2((130, 118))
     # mouse_util.left_clique(handle, 482, 25)
 
     # spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)

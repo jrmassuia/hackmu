@@ -1,6 +1,8 @@
 import random
 import time
 
+import win32gui
+
 from interface_adapters.up.up_util.up_util import Up_util
 from utils import mouse_util
 from utils.pointer_util import Pointers
@@ -15,6 +17,7 @@ class AlterarCharSalaService:
         self.up_util = Up_util(self.handle, conexao_arduino=arduino)
         self.pointer = Pointers(self.handle)
         self.teclado_util = Teclado_util(self.handle, arduino)
+        self.titulo_janela = win32gui.GetWindowText(handle)
 
     def selecionar_sala(self, sala=None):
         mouse_util.desativar_click_esquerdo(self.handle)
@@ -27,6 +30,8 @@ class AlterarCharSalaService:
             ["./static/img/escolhersala.png", (398, 208)],
             ["./static/img/selecionarsalas.png", (222, 216)]
         ]
+
+        print('Movendo para sala:' + str(sala) + ' - ' + self.titulo_janela)
 
         if sala == 2:
             acoes_troca_sala.append(["./static/img/sala2.png", (401, 249)])

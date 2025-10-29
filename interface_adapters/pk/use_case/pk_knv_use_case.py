@@ -131,7 +131,7 @@ class PkKnvUseCase(PkBase):
     def morreu(self) -> bool:
         return self.morreu
 
-    def pk_pode_continuar(self) -> bool:
+    def verificar_se_pode_continuar_com_pk(self) -> bool:
         return True
 
     def _esta_na_safe(self):

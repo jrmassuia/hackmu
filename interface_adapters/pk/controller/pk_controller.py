@@ -19,11 +19,14 @@ class PKController:
     def execute(self):
 
         if 'PC1' in socket.gethostname():
-
             if safe_util.k3(self.handle):
                 self.pklizar_k3()
             elif safe_util.aida(self.handle):
                 self.pklizar_aida()
+            elif safe_util.k1(self.handle):
+                self.pklizar_knv()
+            elif safe_util.tk(self.handle):
+                self.pklizar_tarkan()
             else:
                 self.pklizar_kanturu()
 

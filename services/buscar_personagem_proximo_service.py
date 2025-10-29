@@ -43,7 +43,7 @@ class BuscarPersoangemProximoService:
     # ---- Lista base de MOBS a ignorar (match EXATO) ----
     MOBS_IGNORAR: Set[str] = {
         # NPC
-        'Soldier de Alexi', 'Guard Lancer',
+        'Soldier de Alexi', 'Guard Lancer', 'Soldier de iorii',
         # TARKAN
         'Mutant', 'Bloody Wolf', 'Iron Wheel', 'Cursed King', 'Tantalos', 'Hero Mutant', 'Beam Knight',
         'Death Beam Knigh',

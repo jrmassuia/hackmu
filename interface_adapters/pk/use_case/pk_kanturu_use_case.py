@@ -7,11 +7,6 @@ from utils.rota_util import PathFinder
 
 
 class PkKanturuUseCase(PkBase):
-    """
-    PK para Kanturu (K1 / K2).
-    Mantive a lógica de definição de senha por nome, movimentações entre mapas e método iniciar_pk.
-    """
-
     PKLIZAR_K1 = 'KANTURU_1'
     PKLIZAR_K2 = 'KANTURU_2'
 
@@ -25,6 +20,9 @@ class PkKanturuUseCase(PkBase):
         elif nome == 'SM_Troyer':
             senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_K2
+        elif nome == 'ESTAMUERTO':
+            senha = '93148273'
+            self.tipo_pk = self.PKLIZAR_K2
         else:
             self.tipo_pk = self.PKLIZAR_K1
 
@@ -33,7 +31,7 @@ class PkKanturuUseCase(PkBase):
     def iniciar_pk(self):
         # garantir mapa KANTURU (o fluxo original reseta mapa para TK em alguns casos)
         self.mapa = PathFinder.MAPA_KANTURU_1_E_2
-        self.mover_para_sala7()
+        self.mover_para_sala(7)
         self._mover_para_k1()
         self._sair_da_safe()
         self._ativar_skill()
@@ -45,7 +43,7 @@ class PkKanturuUseCase(PkBase):
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
-            if self._verificar_se_limpo():
+            if self.verificar_se_pode_continuar_com_pk():
                 self.mover_spot.movimentar_kanturu_1_2((46, 222), movimentacao_proxima=True)
             else:
                 mouse_util.left_clique(self.handle, 472, 40)  # VOLTA PARA TK PARA LIMPAR PK
@@ -58,14 +56,14 @@ class PkKanturuUseCase(PkBase):
             spot_util.buscar_spots_k1,
             spot_util.buscar_spots_k2,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
     def pklizar_kanturu2(self):
         etapas: Sequence[Callable[[], List]] = (
             spot_util.buscar_spots_k2,
             spot_util.buscar_spots_k1,
         )
-        self.executar_rota_pk(etapas)
+        return self.executar_rota_pk(etapas)
 
     def morreu(self) -> bool:
         return safe_util.k1(self.handle)
