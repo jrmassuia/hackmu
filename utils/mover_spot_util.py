@@ -113,13 +113,12 @@ class MoverSpotUtil:
     def movimentar_land(self, coords, **kwargs):
         return self._movimentar_para(coords, PathFinder.MAPA_LAND, **kwargs)
 
-    def \
-            _movimentar(self, destino, mapa,
-                        max_tempo=60,
-                        verficar_se_movimentou=False,
-                        limpar_spot_se_necessario=False,
-                        movimentacao_proxima=False,
-                        posicionar_mouse_coordenada=False):
+    def _movimentar(self, destino, mapa,
+                    max_tempo=60,
+                    verficar_se_movimentou=False,
+                    limpar_spot_se_necessario=False,
+                    movimentacao_proxima=False,
+                    posicionar_mouse_coordenada=False):
         try:
 
             destino_y, destino_x = destino[0]

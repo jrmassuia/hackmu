@@ -1,5 +1,6 @@
 import ctypes
 import os
+import re
 import time
 
 from utils import mouse_util, screenshot_util, limpar_mob_ao_redor_util
@@ -29,12 +30,16 @@ class Up_util:
     def imagens_sao_iguais(self, img1, img2):
         return screenshot_util.is_image_in_region(img1, img2)
 
-    def selecionar_char_no_launcher(self):
+    def selecionar_char_no_launcher(self, char=None):
         folder_path = "./static/up/char"
         mouse_util.tira_mouse_tela(self.handle)
         while True:
             for filename in os.listdir(folder_path):
                 if filename.endswith((".png", ".jpg")):
+
+                    if char and char not in filename:
+                        continue
+
                     image_position = self.verifica_se_personagem_esta_na_tela(folder_path, filename)
                     if image_position:
                         x, y = image_position
@@ -140,3 +145,62 @@ class Up_util:
     def enviar_comandos_iniciais(self):
         self.teclado_util.escrever_texto(["/re off", "/autopick on", "/autodc off"])
         self.teclado_util.pressionar_zoon()
+
+    def verificar_nivel_pk(self):
+
+        CAMINHO_OKINFO = "./static/pk/okinfo.png"
+        CAMINHO_PK0 = "./static/pk/pk0.png"
+        CAMINHO_PK1 = "./static/pk/pk1.png"
+        REGEX_PKS = re.compile(r"PK's:\s*(\d+)", re.IGNORECASE)
+        REGIAO_PK = (350, 270, 80, 25)
+        buscar_imagem = BuscarItemUtil(self.handle)
+
+        def _esperar_okinfo() -> bool:
+            timeout_s = 5.0
+            deadline = time.monotonic() + timeout_s
+            while time.monotonic() < deadline:
+                mouse_util.mover(self.handle, 1, 1)
+                self.teclado_util.escrever_texto("/info")
+                time.sleep(0.8)
+                if buscar_imagem.buscar_item_simples(CAMINHO_OKINFO):
+                    return True
+            return False
+
+        try:
+            if not _esperar_okinfo():
+                print("[WARN] /info não apareceu (OKINFO não encontrado dentro do timeout).")
+                return None
+
+            time.sleep(.25)
+
+            # descricao: str = self.pointer.get_descricao_info() or ""
+            #
+            # m = REGEX_PKS.search(descricao)
+            # if m:
+            #     pks = int(m.group(1))
+            #     print(f"[INFO] PK extraído por texto: {pks}")
+            #     return pks
+
+            x, y, w, h = REGIAO_PK
+            screenshot = screenshot_util.capture_region(self.handle, x, y, w, h)
+
+            encontrou_pk0 = bool(buscar_imagem.buscar_posicoes_de_item(CAMINHO_PK0, screenshot, precisao=0.90))
+            if encontrou_pk0:
+                print("[INFO] PK detectado por imagem: 0")
+                return 0
+
+            encontrou_pk1 = bool(buscar_imagem.buscar_posicoes_de_item(CAMINHO_PK1, screenshot, precisao=0.90))
+            if encontrou_pk1:
+                print("[INFO] PK detectado por imagem: 1")
+                return 1
+
+            # Se chegou aqui, não reconheceu PK0 nem PK1 na região
+            print("[WARN] Não foi possível identificar PK0/PK1 na região. Retornando 100 (desconhecido).")
+            return 100
+
+        except Exception as e:
+            print(f"[ERRO] verificar_nivel_pk: {e}")
+            return None
+
+        finally:
+            self.teclado_util.tap_esc()

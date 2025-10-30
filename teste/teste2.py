@@ -11,6 +11,7 @@ import time
 from typing import Iterable
 
 import psutil
+import pyautogui
 import pydivert
 import win32con
 import win32gui
@@ -144,8 +145,7 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointer = Pointers(handle).teste_pointer_necessarios()
-
+    pointer = Pointers(handle).imprimir_todos_tipos_do_endereco_memoria()
 
     # movimentou = MoverSpotUtil(handle).movimentar_kanturu_1_2((130, 118))
     # mouse_util.left_clique(handle, 482, 25)

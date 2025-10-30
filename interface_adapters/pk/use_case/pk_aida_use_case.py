@@ -64,8 +64,7 @@ class PkAidaUseCase(PkBase):
             self.tipo_pk = self.PKLIZAR_AIDA_FINAL
         else:
             print('Tela sem configuração definida! ' + self.titulo_janela)
-            exit()
-
+            senha = ''
         return senha
 
     def iniciar_pk(self):
@@ -100,10 +99,9 @@ class PkAidaUseCase(PkBase):
             else:
                 break
 
-        if self.morreu:
+        if not self.morreu:
             print('Relizada a rota completa de PK: ' + self.titulo_janela)
 
-    # ---------- Sequências específicas ----------
     def pklizar_aida(self):
         etapas: Sequence[Callable[[], List]] = (
             lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),

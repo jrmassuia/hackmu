@@ -1,19 +1,22 @@
 import random
 import time
-
+import pyperclip
+import pyautogui
 import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
 from utils import mouse_util
+from utils.buscar_item_util import BuscarItemUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
 class AlterarCharSalaService:
-    def __init__(self, handle, senha, arduino):
+    def __init__(self, handle, senha, arduino, char=None):
         self.handle = handle
         self.senha = senha
         self.arduino = arduino
+        self.char = char
         self.up_util = Up_util(self.handle, conexao_arduino=arduino)
         self.pointer = Pointers(self.handle)
         self.teclado_util = Teclado_util(self.handle, arduino)
@@ -33,14 +36,22 @@ class AlterarCharSalaService:
 
         print('Movendo para sala:' + str(sala) + ' - ' + self.titulo_janela)
 
-        if sala == 2:
+        if sala == 1:
+            acoes_troca_sala.append([None, (401, 216)])
+        elif sala == 2:
             acoes_troca_sala.append(["./static/img/sala2.png", (401, 249)])
         elif sala == 3:
             acoes_troca_sala.append([None, (401, 272)])
+        elif sala == 4:
+            acoes_troca_sala.append([None, (401, 294)])
+        elif sala == 5:
+            acoes_troca_sala.append([None, (401, 318)])
+        elif sala == 6:
+            acoes_troca_sala.append([None, (401, 346)])
+        elif sala == 7:
+            acoes_troca_sala.append(["./static/img/sala7.png", (401, 371)])
         elif sala == 8:
             acoes_troca_sala.append([None, (401, 401)])
-        elif sala == 7:
-            acoes_troca_sala.append(["./static/img/sala7.png", (420, 371)])
         elif sala == 9:
             acoes_troca_sala.append([None, (401, 427)])
         else:
@@ -71,7 +82,24 @@ class AlterarCharSalaService:
 
         self.teclado_util.digitar_senha(self.senha)
         mouse_util.clicar_na_imagem_ou_coordenada(self.handle, "./static/img/btnoksenha.png", None)
-        self.up_util.selecionar_char_no_launcher()
+
+        if 'Narukami' == self.char:
+            while True:
+                mouse_util.tira_mouse_tela(self.handle)
+                pyautogui.moveTo(500, 500)  # clica no token do navegador
+                pyautogui.click()
+                token = pyperclip.paste()
+                self.teclado_util.digitar_token(token)
+                mouse_util.clicar_na_imagem_ou_coordenada(self.handle, "./static/img/btnoktoken.png", None)
+                time.sleep(1)
+                msgtokeninvalido = BuscarItemUtil(self.handle).buscar_posicoes_de_item(
+                    './static/img/msgtokeninvalido.png', precisao=0.90)
+                if msgtokeninvalido is None:
+                    break
+                else:
+                    mouse_util.left_clique(self.handle, 402, 330) #CLICA NO OK MSG TOKEN INVALIDO
+
+        self.up_util.selecionar_char_no_launcher(self.char)
 
         if sala is not None and sala != self.pointer.get_sala_atual():
             print('Tentado  selecionar novamente a sala!')

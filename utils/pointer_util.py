@@ -53,9 +53,7 @@ class Pointers:
             #
             self.SALA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x0014F3EC, offsets=[0x104])
             #
-            self.DESC_INFO_POINTER = self.get_pointer(self.CLIENT + 0x002D0D24, offsets=[0x1D0])
-            #
-            self.NIVEL_PK_POINTER = self.get_pointer(self.CLIENT + 0x002A9D20, offsets=[0x15C])
+            self.DESC_INFO_POINTER = self.get_pointer(self.CLIENT + 0x002D0D24, offsets=[0x1DC])
             #
             # pointer_base = self.CLIENT + 0x03524634
             # if pointer_base:
@@ -161,8 +159,7 @@ class Pointers:
         print('PK SELECIONADO:' + str(self.get_char_pk_selecionado()))
         print('MOSTRA DESC ITEM:' + str(self.get_mostrar_desc_item()))
         print('SALA ATUAL:' + str(self.get_sala_atual()))
-        # print('DESCRIÇÃO INFO:' + self.get_descricao_info())
-        print('NIVEL PK:' + str(self.get_nivel_pk_info()))
+        print('DESCRIÇÃO INFO:' + self.get_descricao_info())
 
     def get_cood_x(self):
         return self.read_value(self.X_POINTER, data_type="int")
@@ -220,17 +217,7 @@ class Pointers:
         return self.read_value(self.SALA_ATUAL_POINTER, data_type="int")
 
     def get_descricao_info(self):
-        return self.read_value(self.DESC_INFO_POINTER, data_type="string", byte=100)
-
-    def get_nivel_pk_info(self):
-        nivel = self.read_value(self.NIVEL_PK_POINTER, data_type="int")
-        if nivel == 25709:
-            nivel = 0
-        elif nivel == 6581619:
-            nivel = 1
-        else:
-            nivel = 2
-        return nivel
+        return self.read_value(self.DESC_INFO_POINTER, data_type="string")
 
     def get_mapa_atual(self):
         # mapa = self.read_value(self.MAPA_ATUAL_POINTER, data_type="string")

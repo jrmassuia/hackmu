@@ -6,7 +6,7 @@ class MenuGUI:
         self.app = app
         self.root = tk.Tk()
         self.root.title("Menu Interativo")
-        self.root.geometry("350x450")
+        self.root.geometry("350x500")
         # self.root.minsize(600, 500)
         self.root.configure(bg="#2b2b2b")
 
@@ -47,7 +47,8 @@ class MenuGUI:
             ('ref_peq', 'Ref. Peq'),
             ('upar', 'AutoUp'),
             ('buf', 'Buf'),
-            ('pk', 'Pklizar')
+            ('pk', 'Pklizar'),
+            ('recrutar', 'Recrutar')
         ]
 
         for idx, (tela_nome, _) in enumerate(telas):
@@ -98,7 +99,8 @@ class MenuGUI:
             'ref_peq': tela_vars['ref_peq'].get(),
             'upar': tela_vars['upar'].get(),
             'buf': tela_vars['buf'].get(),
-            'pk': tela_vars['pk'].get()
+            'pk': tela_vars['pk'].get(),
+            'recrutar': tela_vars['recrutar'].get()
         }
 
     def run(self):

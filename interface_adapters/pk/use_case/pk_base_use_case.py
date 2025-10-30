@@ -1,5 +1,4 @@
 import random
-import random
 import threading
 import time
 from abc import ABC, abstractmethod
@@ -117,13 +116,15 @@ class PkBase(ABC):
         return True
 
     def _verificar_se_limpou(self) -> Optional[bool]:
-        nivel_pk = self.pointer.get_nivel_pk_info()
-        if nivel_pk == 0:
+        nivel_pk = self.up_util.verificar_nivel_pk()
+        if (self.pointer.get_sala_atual() == 2 and nivel_pk == 0) or (
+                self.pointer.get_sala_atual() != 2 and nivel_pk <= 1):
             return True
-        return False
+        else:
+            return False
 
     def verificar_se_pode_continuar_com_pk(self) -> Optional[bool]:
-        nivel_pk = self.pointer.get_nivel_pk_info()
+        nivel_pk = self.up_util.verificar_nivel_pk()
         if nivel_pk <= 1:
             return True
         return False
@@ -176,10 +177,10 @@ class PkBase(ABC):
         if self.mapa == PathFinder.MAPA_AIDA:
             spots = spot_util.buscar_spots_aida_2()
         elif self.mapa == PathFinder.MAPA_TARKAN:
-            spots = spot_util.buscar_spots_todos_tk(nao_ignorar_spot_pk=True)
+            spots = spot_util.buscar_todos_spots_tk(nao_ignorar_spot_pk=True)
         elif self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
             self.mapa = PathFinder.MAPA_TARKAN
-            spots = spot_util.buscar_spots_todos_tk()
+            spots = spot_util.buscar_todos_spots_tk()
         else:
             spots = []
 

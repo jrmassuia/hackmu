@@ -13,6 +13,7 @@ from interface_adapters.controller.sd_small_controller import SdSmallController
 from interface_adapters.helpers.session_manager import *
 from interface_adapters.helpers.session_manager_new import *
 from interface_adapters.pk.controller.pk_controller import PKController
+from interface_adapters.recrutar.controller.recrutar_controller import RecrutarController
 from interface_adapters.up.controller.up_controller import UpController
 from interface_adapters.up.use_case.pick_kanturu_use_case import PickKanturuUseCase
 from menu2 import MenuGUI
@@ -161,6 +162,8 @@ class MainApp:
             obj = PickKanturuUseCase(handle, self.conexao_arduino)
         elif tipoHack == MenuFields.PKLIZAR:
             obj = PKController(handle, self.conexao_arduino)
+        elif tipoHack == MenuFields.RECRUTAR:
+            obj = RecrutarController(handle, self.conexao_arduino)
 
         thread = threading.Thread(target=obj.execute)
         self.threads_ativas.append((obj, thread))  # Armazena o objeto e a thread
@@ -205,6 +208,8 @@ class MainApp:
                 self._executar_pick_kanturu(handle)
             elif sessao.ler_menu(MenuFields.PKLIZAR) == 1:
                 self._executar_pklizar(handle)
+            elif sessao.ler_menu(MenuFields.RECRUTAR) == 1:
+                self._executar_recrutar(handle)
             else:
                 self._executar_autopick(handle)
 
@@ -254,6 +259,12 @@ class MainApp:
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
         self.rodar_em_thread(handle, MenuFields.PKLIZAR)
+        time.sleep(2)
+
+    def _executar_recrutar(self, handle):
+        print('Inciando telas:')
+        print('--' + win32gui.GetWindowText(handle))
+        self.rodar_em_thread(handle, MenuFields.RECRUTAR)
         time.sleep(2)
 
     def _executar_macro(self):

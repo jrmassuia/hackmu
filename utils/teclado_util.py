@@ -177,6 +177,12 @@ class Teclado_util:
             return
         self._enviar_texto_por_handle(janelas[-2], senha)
 
+    def digitar_token(self, senha):
+        janelas = self._listar_janelas_filhas()
+        if len(janelas) < 1:
+            return
+        self._enviar_texto_por_handle(janelas[-1], senha)
+
     def _listar_janelas_filhas(self):
         janelas: list[int] = []
         win32gui.EnumChildWindows(self.handle, self.enum_child_windows_callback, janelas)

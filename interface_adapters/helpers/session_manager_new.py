@@ -42,6 +42,7 @@ class MenuFields(Enum):
     REF_PEQ = "ref_peq"
     BUF = "buf"
     PKLIZAR = "pk"
+    RECRUTAR = "recrutar"
 
 
 class GenericoFields(Enum):

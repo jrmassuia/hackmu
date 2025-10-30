@@ -7,7 +7,7 @@ def buscar_spots_noria():
     ]
 
 
-def buscar_spots_todos_tk(nao_ignorar_spot_pk=False):
+def buscar_todos_spots_tk(nao_ignorar_spot_pk=False):
     coordenadas = []
     coordenadas.extend(buscar_spots_tk1())
     coordenadas.extend(buscar_spots_tk2(nao_ignorar_spot_pk=nao_ignorar_spot_pk))
