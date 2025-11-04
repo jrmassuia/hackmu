@@ -36,6 +36,7 @@ class RecrutarUseCase:
         #     self.movimentar_mapa(self.pointer.get_sala_atual())
         # else:
         salas = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        # salas = [6, 7, 8, 9]
         for sala in salas:
             self.alternar_sala.selecionar_sala(sala)
             self.movimentar_mapa(sala)
@@ -53,22 +54,22 @@ class RecrutarUseCase:
 
     def _mover_para_lorencia(self):
         self.teclado.escrever_texto('/move lorencia')
-        time.sleep(2)
+        time.sleep(4)
         self.enviar_carta_personagem_proximo()
 
     def _mover_para_atlans(self):
         self.teclado.escrever_texto('/move atlans')
-        time.sleep(2)
+        time.sleep(4)
         self.enviar_carta_personagem_proximo()
 
     def _mover_para_losttower(self):
         self.teclado.escrever_texto('/move losttower')
-        time.sleep(2)
+        time.sleep(4)
         self.enviar_carta_personagem_proximo()
 
     def _mover_para_tk(self):
         self.teclado.escrever_texto('/move tarkan')
-        time.sleep(2)
+        time.sleep(4)
         self.enviar_carta_personagem_proximo()
         spots = spot_util.buscar_todos_spots_tk()
         self.ir_para_spot(spots, PathFinder.MAPA_TARKAN)
@@ -80,23 +81,23 @@ class RecrutarUseCase:
 
     def _mover_para_icarus(self):
         self.teclado.escrever_texto('/move icarus')
-        time.sleep(2)
+        time.sleep(4)
         spots = spot_util.buscar_spots_icarus(qtd_resets=0)
         self.ir_para_spot(spots, PathFinder.MAPA_ICARUS)
 
     def _mover_para_aida(self):
         self.teclado.escrever_texto('/move aida')
+        time.sleep(4)
         self.enviar_carta_personagem_proximo()
         spots = spot_util.buscar_todos_spots_aida()
         self.ir_para_spot(spots, PathFinder.MAPA_AIDA)
-        time.sleep(2)
 
     def _mover_para_kanturu(self):
         self.teclado.escrever_texto('/move kanturu')
+        time.sleep(4)
         self.enviar_carta_personagem_proximo()
         spots = spot_util.buscar_spots_k1()
         self.ir_para_spot(spots, PathFinder.MAPA_KANTURU_1_E_2)
-        time.sleep(2)
 
     def ir_para_spot(self, spots, path):
         for indice_spot, grupo_de_spots in enumerate(spots):
@@ -193,7 +194,6 @@ class RecrutarUseCase:
 
     @staticmethod
     def _hoje_iso() -> str:
-        # Usa data local (sem timezone na string)
         return datetime.now().date().isoformat()
 
     def _carregar(self) -> dict:
@@ -208,14 +208,10 @@ class RecrutarUseCase:
         self.json.write(data)
 
     def pode_enviar(self, nome: str) -> bool:
-        """
-        True se nunca enviou OU se último envio foi há 7+ dias.
-        """
         data = self._carregar()
         info = data["jogadores"].get(nome)
         if not info:
             return True  # nunca enviado
-
         try:
             ultimo = datetime.fromisoformat(info.get("ultimo_envio", "1970-01-01")).date()
         except ValueError:

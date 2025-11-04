@@ -65,6 +65,7 @@ class PkAidaUseCase(PkBase):
         else:
             print('Tela sem configuração definida! ' + self.titulo_janela)
             senha = ''
+
         return senha
 
     def iniciar_pk(self):

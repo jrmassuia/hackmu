@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple, Sequence, Dict, Union, List, cast
 import urllib.parse
-import requests
+import cloudscraper
 import numpy as np
 import cv2
 from pathlib import Path
@@ -24,6 +24,17 @@ class ResultadoDeteccao:
 
 
 class VerificadorImagemUseBar:
+    HEADERS = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/120.0.0.0 Safari/537.36"),
+        "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,"
+                   "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"),
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://www.mucabrasil.com.br/",
+        "Connection": "keep-alive",
+    }
+
     _cache_templates_gray: Dict[str, np.ndarray] = {}
     _cache_listagem_pasta: Dict[Tuple[str, Tuple[str, ...]], List[Path]] = {}
 
@@ -42,8 +53,12 @@ class VerificadorImagemUseBar:
     # -------- util ----------
     def _baixar_imagem(self, url: str) -> Optional[np.ndarray]:
         try:
-            headers = {"User-Agent": self.user_agent} if self.user_agent else {}
-            r = requests.get(url, headers=headers, timeout=self.timeout_download)
+            scraper = cloudscraper.create_scraper()
+            r = scraper.get(url, headers=self.HEADERS, timeout=15)
+            if r.status_code != 200:
+                print('ERRO AO BUSCAR USEBAR NO SITE!!!')
+                exit()
+
             r.raise_for_status()
             data = np.frombuffer(r.content, np.uint8)
             img = cv2.imdecode(data, cv2.IMREAD_UNCHANGED)

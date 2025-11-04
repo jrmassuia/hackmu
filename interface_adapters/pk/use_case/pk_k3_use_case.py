@@ -18,6 +18,7 @@ class PkK3UseCase(PkBase):
 
     def execute(self):
         while True:
+            self.atualizar_lista_player()
             self.iniciar_pk()
 
     def _definir_tipo_pk_e_senha(self) -> str:

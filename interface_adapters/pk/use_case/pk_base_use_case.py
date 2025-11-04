@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 from typing import Tuple, Callable, List
 
+import requests
 import win32gui
 
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
@@ -12,10 +13,8 @@ from interface_adapters.up.up_util.up_util import Up_util
 from services.alterar_char_sala_service import AlterarCharSalaService
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from services.posicionamento_spot_service import PosicionamentoSpotService
-from services.verificador_imagem_userbar import VerificadorImagemUseBar
 from utils import mouse_util, spot_util
 from utils.buscar_item_util import BuscarItemUtil
-from utils.json_file_manager_util import JsonFileManager
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.rota_util import PathFinder
@@ -40,12 +39,6 @@ class PkBase(ABC):
         self.up = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.buscar_imagem = BuscarItemUtil(self.handle)
-        self.verificador_imagem_usebar = VerificadorImagemUseBar()
-
-        # json de personagens
-        self._arquivo_personagens = "./data/personagens.json"
-        self.json_manager = JsonFileManager(self._arquivo_personagens)
-        self.personagens = self.json_manager.read().get("Personagem", [])
 
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
@@ -54,6 +47,8 @@ class PkBase(ABC):
         self._abates = 0
         self._abates_lock = threading.Lock()
         self.morreu = False
+        self.lista_player_tohell = None
+        self.lista_player_suicide = None
 
         # comando inicial
         self.teclado.escrever_texto('/re off')
@@ -70,6 +65,7 @@ class PkBase(ABC):
                 continue
 
             if limpou:
+                self.atualizar_lista_player()
                 self.iniciar_pk()
             else:
                 self.limpar_pk()
@@ -103,6 +99,28 @@ class PkBase(ABC):
     @abstractmethod
     def _sair_da_safe(self) -> None:
         raise NotImplementedError()
+
+    def atualizar_lista_player(self):
+        self.atualizar_lista_tohell()
+        self.atualizar_lista_suicide()
+
+    def atualizar_lista_tohell(self):
+        try:
+            r = requests.get("http://192.168.101.14:8000/tohell/players?offset=0&limit=1000", timeout=10)
+            r.raise_for_status()
+            self.lista_player_tohell = r.json().get("items", [])
+        except Exception as e:
+            print(f"[ERRO] Falha ToHeLL: {e}")
+            exit()
+
+    def atualizar_lista_suicide(self):
+        try:
+            r = requests.get("http://192.168.101.14:8000/suicide/players?offset=0&limit=1000", timeout=10)
+            r.raise_for_status()
+            self.lista_player_suicide = r.json().get("items", [])
+        except Exception as e:
+            print(f"[ERRO] Falha Suicide: {e}")
+            exit()
 
     def executar_rota_pk(self, etapas: Sequence[Callable[[], List]]):
         self.morreu = False
@@ -253,10 +271,16 @@ class PkBase(ABC):
             self._desativar_pk()
 
     def _verificar_se_eh_tohell(self, nome):
-        return self.verificador_imagem_usebar.verificar_pasta(nome, "./static/usebar/tohell/")
+        for player in self.lista_player_tohell:
+            if player == nome:
+                return True
+        return False
 
     def _verificar_se_eh_suicide(self, nome):
-        return self.verificador_imagem_usebar.verificar_pasta(nome, "./static/usebar/suicide/")
+        for player in self.lista_player_suicide:
+            if player == nome:
+                return True
+        return False
 
     def _tentar_pklizar(self) -> None:
         try:
@@ -368,73 +392,3 @@ class PkBase(ABC):
             return self.pointer.get_pk_ativo() == 0
         except Exception:
             return False
-
-    # def _buscar_pk_cascata(self, prioridade: Optional[str] = None, timeout_total: float = 2.0,
-    #                        intervalo: float = 0.10) -> Optional[str]:
-    #     """
-    #     Varre uma lista de imagens de PK por até timeout_total segundos.
-    #     Se 'prioridade' fornecida, checa-a antes das demais.
-    #     Retorna o caminho da imagem encontrada ou None.
-    #     """
-    #     imagens = [
-    #         './static/pk/suiciide.png',
-    #         './static/pk/suici.png',
-    #         './static/pk/suic.png',
-    #         './static/pk/suicide.png',
-    #         './static/pk/suicide2.png',
-    #     ]
-    #
-    #     # exclusivos da sala 7
-    #     if self.pointer.get_sala_atual() == 7:
-    #         imagens += [
-    #             './static/pk/loja.png',
-    #             './static/pk/fenix.png',
-    #         ]
-    #
-    #     deadline = time.monotonic() + timeout_total
-    #     while time.monotonic() < deadline:
-    #         if prioridade and self.buscar_imagem.buscar_item_simples(prioridade):
-    #             return prioridade
-    #
-    #         for img in imagens:
-    #             if img == prioridade:
-    #                 continue
-    #             if self.buscar_imagem.buscar_item_simples(img):
-    #                 return img
-    #
-    #         time.sleep(intervalo)
-    #     return None
-    #
-    # def _vigiar_imagem_ate_sumir(self, caminho_img: str, confirmar_desaparecimento_ms: int = 400,
-    #                              intervalo: float = 0.08) -> bool:
-    #     """
-    #     Observa a mesma imagem até confirmar que desapareceu.
-    #     Usa debounce (faltas consecutivas) para evitar falsos positivos.
-    #     Retorna True se confirmado sumiço; False se interrompido (ex.: morreu).
-    #     """
-    #     faltas_necessarias = max(1, math.ceil(confirmar_desaparecimento_ms / (intervalo * 1000)))
-    #     faltas = 0
-    #     deadline = time.monotonic() + 30  # timeout genérico 30s
-    #
-    #     while time.monotonic() < deadline:
-    #         if self.mover_spot.esta_na_safe:
-    #             print('Morreu enquanto vigiava o oponente')
-    #             return False
-    #
-    #         if self.mapa == PathFinder.MAPA_AIDA:
-    #             self.teclado.tap_tecla("Q")
-    #
-    #         mouse_util.ativar_click_direito(self.handle)
-    #
-    #         if self.buscar_imagem.buscar_item_simples(caminho_img):
-    #             faltas = 0
-    #         else:
-    #             faltas += 1
-    #             if faltas >= faltas_necessarias:
-    #                 self._registrar_abate()
-    #                 return True
-    #
-    #         time.sleep(intervalo)
-    #
-    #     print('Tempo excedido (30s) ao vigiar imagem.')
-    #     return False

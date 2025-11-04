@@ -40,6 +40,7 @@ class PktarkanUseCase(PkBase):
 
     def iniciar_pk(self):
         self.esperar_se_morreu()
+        self.atualizar_lista_player()
         self._sair_da_safe()
         self._ativar_skill()
         self.pklizar_tarkan()

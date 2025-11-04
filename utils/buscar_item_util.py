@@ -93,10 +93,9 @@ class BuscarItemUtil:
             screenshot = screenshot_util.capture_window(self.handle)
         return self.buscar_imagem_na_janela(screenshot, imagem_item, precisao, todas=True)
 
-    def buscar_varios_itens(self, caminho_pasta, precisao=0.9):
-        screenshot = screenshot_util.capture_window(self.handle)
+    def buscar_varios_itens(self, caminho_pasta, screenshot=None, precisao=0.9):
         if screenshot is None:
-            return None
+            screenshot = screenshot_util.capture_window(self.handle)
 
         imagem_bgr = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
         itens_encontrados = []

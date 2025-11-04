@@ -46,3 +46,6 @@ frida~=17.2.11
 discord~=2.3.2
 mitmproxy~=11.0.2
 cryptography~=44.0.3
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2

@@ -28,6 +28,7 @@ class PkKnvUseCase(PkBase):
 
     def iniciar_pk(self):
         self._esperar_safe_se_necessario()
+        self.atualizar_lista_player()
         self._sair_da_safe()
         self._ativar_skill()
         self._pklizar_knv()
