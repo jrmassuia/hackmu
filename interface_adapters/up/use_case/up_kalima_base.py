@@ -33,15 +33,20 @@ class UpKalimaBase:
         self.tentativa_up = 0
 
     def executar(self):
-        if self.classe == 'EF' or (self.ja_moveu_para_kalima is False and self._possui_convite() is False):
+        esta_no_spot = self.verficar_se_char_ja_esta_spot()
+
+        if not esta_no_spot or self.classe == 'EF' or (
+                self.ja_moveu_para_kalima is False and self._possui_convite() is False):
             return False
 
         if not self.ja_moveu_para_kalima:
-            moveu = self._mover_e_abrir_portal()
+            if not esta_no_spot:
+                moveu = self._mover_e_abrir_portal()
+                if not moveu:
+                    return False
+                self._posicionar_char_spot()
             self.ja_moveu_para_kalima = True
-            if not moveu:
-                return False
-            self._posicionar_char_spot()
+
 
         if self.up_liberado:
             if safe_util.devias(self.handle):
@@ -140,6 +145,19 @@ class UpKalimaBase:
                     fechou_inventario = True
 
         return False
+
+    def verficar_se_char_ja_esta_spot(self):
+        posiconamento_service = PosicionamentoSpotService(
+            self.handle,
+            self.pointer,
+            self.mover_spot_util,
+            self.classe,
+            None,
+            spot_util.buscar_spots_kalima(),
+            PathFinder.MAPA_KALIMA
+        )
+
+        return posiconamento_service.verficar_se_char_ja_esta_spot()
 
     def _posicionar_char_spot(self):
         self.mover_spot_util.movimentar_kalima((102, 20), movimentacao_proxima=True)

@@ -26,9 +26,7 @@ class PkAidaUseCase(PkBase):
         if nome == 'AlfaVictor':
             senha = 'thiago123'
             self.tipo_pk = self.PKLIZAR_AIDA_1
-        elif nome == 'ReiDav1':
-            senha = 'romualdo12'
-            self.tipo_pk = self.PKLIZAR_AIDA_1
+
         elif nome == 'ESTAMUERTO':
             senha = '93148273'
             self.tipo_pk = self.PKLIZAR_AIDA_1
@@ -37,9 +35,7 @@ class PkAidaUseCase(PkBase):
         elif nome == 'LAZLU':
             senha = 'bebe133171'
             self.tipo_pk = self.PKLIZAR_AIDA_2
-        elif nome == 'DL_JirayA':
-            senha = '134779'
-            self.tipo_pk = self.PKLIZAR_AIDA_2
+
         elif nome == 'Omale_DL':
             senha = 'gtkn6iVy'
             self.tipo_pk = self.PKLIZAR_AIDA_2
@@ -54,6 +50,9 @@ class PkAidaUseCase(PkBase):
         elif nome == 'SisteMatyc':
             senha = 'carenae811'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
+        elif nome == 'ReiDav1':
+            senha = 'romualdo12'
+            self.tipo_pk = self.PKLIZAR_AIDA_1
 
         # AIDA FINAL
         elif nome == '_Offensive':
@@ -62,6 +61,9 @@ class PkAidaUseCase(PkBase):
         elif nome == 'INFECTRIX':
             senha = '9876Sonso'
             self.tipo_pk = self.PKLIZAR_AIDA_FINAL
+        elif nome == 'DL_JirayA':
+            senha = '134779'
+            self.tipo_pk = self.PKLIZAR_AIDA_2
         else:
             print('Tela sem configuração definida! ' + self.titulo_janela)
             senha = ''

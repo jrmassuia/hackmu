@@ -16,6 +16,7 @@ class MoverSpotUtil:
         self.pointer = Pointers(handle)
         self.pathfinder = None
         self.esta_na_safe = False
+        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
 
     def movimentar(self, coords, **kwargs):
         pathfinder = ''
@@ -243,14 +244,20 @@ class MoverSpotUtil:
         clique_rapido = not movimentacao_proxima and len(caminho) <= 5
 
         if posicionar_mouse_coordenada:
-            if 4 < len(caminho) <= 8:
-                ultimos_quatro = [caminho[-4]]
-                prox_posicao = self._obter_proxima_posicao(ultimos_quatro, self.pointer.get_cood_y(),
+            ultimas_posicoes = None
+            if 2 < len(caminho) <= 8 and self.classe in ['BK', 'MG']:
+                ultimas_posicoes = [caminho[-2]]
+            elif 4 < len(caminho) <= 8:
+                ultimas_posicoes = [caminho[-4]] # 164 224
+
+            if ultimas_posicoes:
+                prox_posicao = self._obter_proxima_posicao(ultimas_posicoes, self.pointer.get_cood_y(),
                                                            self.pointer.get_cood_x())
                 py, px, cx, cy = prox_posicao
                 mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
                 esta_proximo = True
-            elif len(caminho) > 8:
+
+            if len(caminho) > 8:
                 mouse_util.left_clique(self.handle, cx, cy, delay=0.05)
                 return False
 

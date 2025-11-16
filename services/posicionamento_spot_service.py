@@ -35,6 +35,19 @@ class PosicionamentoSpotService:
                     return True
         return False
 
+    def verficar_se_char_ja_esta_spot(self):
+        for spot_atual, spot in enumerate(self.spots):
+            if self.spot_up is not None and 1 <= self.spot_up != spot_atual:
+                continue
+            for grupo in spot:
+                classes, coordenadas_spot, coord_mouse = grupo
+                if self.pointer.get_cood_y() == coordenadas_spot[0][0] and \
+                        self.pointer.get_cood_x() == coordenadas_spot[0][1]:
+                    self._configurar_spot(coord_mouse)
+                    return True
+
+        return False
+
     def posicionar_bot_up(self, verificar_spot_livre=True):
         mouse_util.desativar_click_direito(self.handle)
 

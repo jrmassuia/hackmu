@@ -34,10 +34,11 @@ class UpAidaUseCaseNovo:
 
     def executar(self):
         if not self.ja_moveu_para_aida:
-            self.teclado_util.escrever_texto('/move aida2')
-            time.sleep(2)
+            if not self.verficar_se_char_ja_esta_spot():
+                self.teclado_util.escrever_texto('/move aida2')
+                time.sleep(2)
+                self._posicionar_char_spot()
             self.ja_moveu_para_aida = True
-            self._posicionar_char_spot()
 
         if self.up_liberado:
             if self._esta_na_safe_aida():
@@ -51,6 +52,19 @@ class UpAidaUseCaseNovo:
                 self._corrigir_coordenada_e_mouse()
 
         return self.up_liberado
+
+    def verficar_se_char_ja_esta_spot(self):
+        posiconamento_service = PosicionamentoSpotService(
+            self.handle,
+            self.pointer,
+            self.mover_spot_util,
+            self.classe,
+            None,
+            spot_util.buscar_todos_spots_aida(),
+            PathFinder.MAPA_AIDA
+        )
+
+        return posiconamento_service.verficar_se_char_ja_esta_spot()
 
     def _posicionar_char_spot(self, iniciar_por_aida_2=True):
         if iniciar_por_aida_2:

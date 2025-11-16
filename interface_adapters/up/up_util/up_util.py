@@ -1,6 +1,5 @@
 import ctypes
 import os
-import re
 import time
 
 from utils import mouse_util, screenshot_util, limpar_mob_ao_redor_util
@@ -148,10 +147,8 @@ class Up_util:
 
     def verificar_nivel_pk(self):
 
-        CAMINHO_OKINFO = "./static/pk/okinfo.png"
         CAMINHO_PK0 = "./static/pk/pk0.png"
         CAMINHO_PK1 = "./static/pk/pk1.png"
-        REGEX_PKS = re.compile(r"PK's:\s*(\d+)", re.IGNORECASE)
         REGIAO_PK = (350, 270, 80, 25)
         buscar_imagem = BuscarItemUtil(self.handle)
 
@@ -161,8 +158,8 @@ class Up_util:
             while time.monotonic() < deadline:
                 mouse_util.mover(self.handle, 1, 1)
                 self.teclado_util.escrever_texto("/info")
-                time.sleep(0.8)
-                if buscar_imagem.buscar_item_simples(CAMINHO_OKINFO):
+                time.sleep(0.25)
+                if self.pointer.get_situacao_info():
                     return True
             return False
 
@@ -172,14 +169,6 @@ class Up_util:
                 return None
 
             time.sleep(.25)
-
-            # descricao: str = self.pointer.get_descricao_info() or ""
-            #
-            # m = REGEX_PKS.search(descricao)
-            # if m:
-            #     pks = int(m.group(1))
-            #     print(f"[INFO] PK extraído por texto: {pks}")
-            #     return pks
 
             x, y, w, h = REGIAO_PK
             screenshot = screenshot_util.capture_region(self.handle, x, y, w, h)
@@ -203,4 +192,8 @@ class Up_util:
             return None
 
         finally:
-            self.teclado_util.tap_esc()
+            while True:
+                self.teclado_util.tap_esc()
+                time.sleep(.25)
+                if not self.pointer.get_situacao_info():
+                    break

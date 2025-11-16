@@ -85,7 +85,8 @@ class UpController:
             if lvl is not None:
 
                 if lvl == 400:
-                    if (self.pointer.get_reset() >= 250 and self.pointer.get_zen() <= 220000000) or \
+                    if self.pointer.get_nivel_pk() > 0 or \
+                            (self.pointer.get_reset() >= 250 and self.pointer.get_zen() <= 220000000) or \
                             (self.pointer.get_reset() < 250 and self.pointer.get_zen() <= 70000000):
                         lvl = 399
 

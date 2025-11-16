@@ -12,6 +12,7 @@ from interface_adapters.helpers.session_manager_new import Sessao, GenericoField
 from interface_adapters.up.up_util.up_util import Up_util
 from services.alterar_char_sala_service import AlterarCharSalaService
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from services.pklizar_service import PklizarService
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import mouse_util, spot_util
 from utils.buscar_item_util import BuscarItemUtil
@@ -39,6 +40,7 @@ class PkBase(ABC):
         self.up = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.buscar_imagem = BuscarItemUtil(self.handle)
+        self.pklizar = PklizarService(self.handle, arduino, self.mapa)
 
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
@@ -134,7 +136,7 @@ class PkBase(ABC):
         return True
 
     def _verificar_se_limpou(self) -> Optional[bool]:
-        nivel_pk = self.up_util.verificar_nivel_pk()
+        nivel_pk = self.pointer.get_nivel_pk()
         if (self.pointer.get_sala_atual() == 2 and nivel_pk == 0) or (
                 self.pointer.get_sala_atual() != 2 and nivel_pk <= 1):
             return True
@@ -142,7 +144,7 @@ class PkBase(ABC):
             return False
 
     def verificar_se_pode_continuar_com_pk(self) -> Optional[bool]:
-        nivel_pk = self.up_util.verificar_nivel_pk()
+        nivel_pk = self.pointer.get_nivel_pk()
         if nivel_pk <= 1:
             return True
         return False
@@ -152,7 +154,7 @@ class PkBase(ABC):
             print("Aguardando 60s para ir limpar PK...")
             time.sleep(60)
         self.mover_para_sala(2)
-        self._desativar_pk()
+        self.pklizar.desativar_pk()
         self.teclado.escrever_texto('/re off')
         self.up.ativar_desc_item_spot()
         self.mover_para_spot_vazio()
@@ -174,8 +176,8 @@ class PkBase(ABC):
                 time.sleep(espera)
                 self.mover_para_spot_vazio()
 
-            # checar PK a cada 180s
-            if time.time() - ultimo_check_pk >= 180:
+            # checar se limpou PK
+            if time.time() - ultimo_check_pk >= 10:
                 ultimo_check_pk = time.time()
                 limpou = self._verificar_se_limpou()
                 if limpou:
@@ -221,7 +223,7 @@ class PkBase(ABC):
 
     def _executar_pk(self, spots: Sequence[Sequence]):
         try:
-            self._ativar_pk()
+            self.pklizar.ativar_pk()
             for indice_spot, grupo_de_spots in enumerate(spots):
                 for grupo in grupo_de_spots:
                     classes, coordenadas_spot, coordenada_mouse = grupo
@@ -268,7 +270,7 @@ class PkBase(ABC):
                             print('Continuando procura de suicide...')
                             continue
         finally:
-            self._desativar_pk()
+            self.pklizar.desativar_pk()
 
     def _verificar_se_eh_tohell(self, nome):
         for player in self.lista_player_tohell:
@@ -309,7 +311,7 @@ class PkBase(ABC):
     def _pklizar(self, confirmar_desaparecimento_ms: int = 1000,
                  intervalo: float = 0.08) -> bool:
 
-        tempo_total_s = 15
+        tempo_total_s = 25
         deadline = time.monotonic() + tempo_total_s
 
         # Marca do último instante em que o alvo foi visto selecionado
@@ -362,33 +364,3 @@ class PkBase(ABC):
         self.teclado.selecionar_skill_3()
         mouse_util.clickDireito(self.handle)
         self.teclado.selecionar_skill_1()
-
-    def _ativar_pk(self) -> bool:
-        try:
-            if self.pointer.get_pk_ativo() == 1:
-                return True
-            self.teclado.combo_tecla("LCTRL", "LSHIFT")
-            time.sleep(0.12)
-            if self.pointer.get_pk_ativo() == 1:
-                return True
-            # segunda tentativa (simples)
-            self.teclado.combo_tecla("LCTRL", "LSHIFT")
-            time.sleep(0.12)
-            return self.pointer.get_pk_ativo() == 1
-        except Exception:
-            return False
-
-    def _desativar_pk(self) -> bool:
-        try:
-            if self.pointer.get_pk_ativo() == 0:
-                return True
-            self.teclado.combo_tecla("LCTRL", "LSHIFT")
-            time.sleep(0.12)
-            if self.pointer.get_pk_ativo() == 0:
-                return True
-            # segunda tentativa (simples)
-            self.teclado.combo_tecla("LCTRL", "LSHIFT")
-            time.sleep(0.12)
-            return self.pointer.get_pk_ativo() == 0
-        except Exception:
-            return False

@@ -65,28 +65,31 @@ class AlterarCharSalaService:
             escolha = random.choice(salas)
             acoes_troca_sala.append([None, escolha])
 
-        while True:
-            self.teclado_util.tap_esc()
-            time.sleep(1)
-            buscar_escolhersala = self.buscar_imagem.buscar_posicoes_de_item('./static/img/escolhersala.png')
-            if buscar_escolhersala is None:
-                print(
-                    'Não encontrou escolhersala.png, possível autodefesa ativa, esperando 10s...' + self.titulo_janela)
-                time.sleep(10)
-                continue
-            else:
-                time.sleep(2)
-                mouse_util.clicar_na_imagem_ou_coordenada(self.handle, './static/img/escolhersala.png', (398, 208))
-                time.sleep(5)
-                #
-                buscar_selecionarsalas = self.buscar_imagem.buscar_posicoes_de_item('./static/img/selecionarsalas.png')
-                if buscar_selecionarsalas is None:
-                    print('Não encontrou selecionarsalas.png!' + self.titulo_janela)
-                    continue
-                else:
-                    mouse_util.clicar_na_imagem_ou_coordenada(self.handle, './static/img/selecionarsalas.png',
-                                                              (222, 216))
-                    break
+        self._clicar_no_escolher_sala()
+        self._clicar_no_selecionar_sala()
+
+        # while True:
+        #     self.teclado_util.tap_esc()
+        #     time.sleep(3)
+        #     buscar_escolhersala = self.buscar_imagem.buscar_posicoes_de_item('./static/img/escolhersala.png')
+        #     if buscar_escolhersala is None:
+        #         print(
+        #             'Não encontrou escolhersala.png, possível autodefesa ativa, esperando 10s...' + self.titulo_janela)
+        #         time.sleep(10)
+        #         continue
+        #     else:
+        #         time.sleep(2)
+        #         mouse_util.clicar_na_imagem_ou_coordenada(self.handle, './static/img/escolhersala.png', (398, 208))
+        #         time.sleep(5)
+        #         #
+        #         buscar_selecionarsalas = self.buscar_imagem.buscar_posicoes_de_item('./static/img/selecionarsalas.png')
+        #         if buscar_selecionarsalas is None:
+        #             print('Não encontrou selecionarsalas.png!' + self.titulo_janela)
+        #             continue
+        #         else:
+        #             mouse_util.clicar_na_imagem_ou_coordenada(self.handle, './static/img/selecionarsalas.png',
+        #                                                       (222, 216))
+        #             break
 
         for menu, coord_mouse in acoes_troca_sala:
             if menu is None:
@@ -121,3 +124,35 @@ class AlterarCharSalaService:
         if sala is not None and sala != self.pointer.get_sala_atual():
             print('Tentado  selecionar novamente a sala!')
             self.selecionar_sala(sala)
+
+    def _clicar_no_escolher_sala(self):
+        imagem = './static/img/escolhersala.png'
+        while True:
+            mouse_util.tira_mouse_tela(self.handle)
+            self.teclado_util.tap_esc()
+            time.sleep(2)
+            achou = self._validar_se_opcao_esta_na_tela(imagem)
+            if achou:
+                mouse_util.left_clique(self.handle, 398, 208)
+                break
+        time.sleep(5)
+
+
+    def _clicar_no_selecionar_sala(self):
+        imagem = './static/img/selecionarsalas.png'
+        while True:
+            mouse_util.tira_mouse_tela(self.handle)
+            achou = self._validar_se_opcao_esta_na_tela(imagem)
+            if achou:
+                mouse_util.left_clique(self.handle, 222, 216)
+                break
+        time.sleep(3)
+
+    def _validar_se_opcao_esta_na_tela(self, imagem):
+        end_time = time.time() + 10
+        while time.time() < end_time:
+            imagem_apareceu = self.buscar_imagem.buscar_posicoes_de_item(imagem)
+            if imagem_apareceu:
+                return True
+        print('NAO ACHOU A IMAGEM AO SELECIONAR OPÇÕA: ' + imagem)
+        return False

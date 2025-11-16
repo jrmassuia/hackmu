@@ -7,9 +7,11 @@ import win32gui
 
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.up.up_util.up_util import Up_util
+from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from services.guardar_gem_bau_service import GuardaGemstoneService
 from services.movimentar_inicial_bot_k1_k2 import MovimentacaoInicialBotK1k2Service
 from services.movimentar_volta_k3_para_k2_service import MovimentacaoVotaK3ParaK2Service
+from services.pklizar_service import PklizarService
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import mouse_util, spot_util, safe_util, limpar_mob_ao_redor_util
@@ -37,12 +39,15 @@ class PickKanturuUseCase:
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.pointer = Pointers(self.handle)
         self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
+        self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
+        self.pklizar = PklizarService(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2)
 
         # Tempos iniciais para controles diversos
         self.tempo_inicial_gem = time.time()
         self.tempo_inicial_pick = time.time()
-        self.tempo_inicial_corrigir_coordenada_e_mouse = 120
+        self.tempo_inicial_corrigir_coordenada_e_mouse = 0
         self.tempo_inicial_limpar_mob_ao_redor = 0
+        self.tempo_inicial_pklizar_ks = 0
         self.tempo_inicial_ativar_skill = 0
 
         # Estado do personagem e controle de ações
@@ -70,6 +75,7 @@ class PickKanturuUseCase:
             auto_pick.execute()
             self._guardar_gem_no_inventario_se_necessario()
             self.limpar_mob_ao_redor()
+            self.pklizar_ks()
             self._ativar_skill()
             self._corrigir_coordenada_e_mouse()  ## SEMPRE DEIXAR POR UTILMO PRA ATIVAR UP
             mouse_util.ativar_click_direito(self.handle)
@@ -77,9 +83,11 @@ class PickKanturuUseCase:
 
     def _definir_spot_up(self):
         if 'PC1' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 19, '9876Sonso'], ['[2/3]', 15, ''], ['[3/3]', 10, '9876Sonso']]
+            spots_por_tela = [['[1/3]', 9, '9876Sonso'], ['[2/3]', 10, ''], ['[3/3]', 8, '9876Sonso']]
         elif 'PC2' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 3, ''], ['[2/3]', 8, ''], ['[3/3]', 9, '']]
+            spots_por_tela = [['[1/3]', 2, 'romualdo12'], ['[2/3]', 3, 'romualdo12'], ['[3/3]', 4, '']]
+        elif 'PC3' in socket.gethostname():
+            spots_por_tela = [['[1/3]', 5, 'MGPK2025PK'], ['[2/3]', 6, 'bbpYuM3Z'], ['[3/3]', 7, 'estouroth24']]
         else:
             spots_por_tela = [['[1/3]', 4, 'MGPK2025PK'], ['[2/3]', 5, 'bbpYuM3Z'], ['[3/3]', 6, 'estouroth24']]
 
@@ -203,7 +211,9 @@ class PickKanturuUseCase:
         if (time.time() - self.tempo_inicial_corrigir_coordenada_e_mouse) > 120:
             self.tempo_inicial_corrigir_coordenada_e_mouse = time.time()
             if self.coord_spot_atual:
-                self.mover_spot_util.movimentar_kanturu_1_2(self.coord_spot_atual, verficar_se_movimentou=True)
+                self.mover_spot_util.movimentar_kanturu_1_2(self.coord_spot_atual,
+                                                            verficar_se_movimentou=True,
+                                                            max_tempo=3)
         if self.coord_mouse_atual:
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
@@ -211,6 +221,17 @@ class PickKanturuUseCase:
         self.tempo_inicial_limpar_mob_ao_redor = self.up_util.limpar_mob_ao_redor(
             self.tempo_inicial_limpar_mob_ao_redor,
             self.classe)
+
+    def pklizar_ks(self):
+        if (time.time() - self.tempo_inicial_pklizar_ks) > 180:
+            nivel_pk = self.pointer.get_nivel_pk()
+            self.tempo_inicial_pklizar_ks = time.time()
+            self.pklizar.atualizar_lista_player()
+            self.pklizar.execute(ativar_pk=True, nivel_pk=1)
+            # SE FOR DIFERENTE SIGNIFICA Q PKLIZOU E RESETA O TEMPO DE VERIFICAÇÃO DE GEM POIS
+            # PODE DROPAR UMA GEM DO KS E BUGAR O SELECIONAR CHAR
+            if nivel_pk != self.pointer.get_nivel_pk():
+                self.tempo_inicial_gem = time.time()
 
     def _ativar_skill(self):
         self.tempo_inicial_ativar_skill = self.up_util.ativar_skill(self.classe, self.tempo_inicial_ativar_skill)
