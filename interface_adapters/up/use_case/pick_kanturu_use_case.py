@@ -69,6 +69,7 @@ class PickKanturuUseCase:
         auto_pick = PegarItemUseCase(self.handle, self.arduino)
 
         print('PC - ' + socket.gethostname() + f' - Iniciando bot - {self.tela}')
+        self.verficar_se_char_ja_esta_spot()  # Força a corrigir coordenadas se necessário
 
         while True:
             self._mover_mapa()
@@ -83,13 +84,13 @@ class PickKanturuUseCase:
 
     def _definir_spot_up(self):
         if 'PC1' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 9, '9876Sonso'], ['[2/3]', 10, ''], ['[3/3]', 8, '9876Sonso']]
+            spots_por_tela = [['[1/3]', 24, ''], ['[2/3]', 15, ''], ['[3/3]', 14, '']]
         elif 'PC2' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 2, 'romualdo12'], ['[2/3]', 3, 'romualdo12'], ['[3/3]', 4, '']]
+            spots_por_tela = [['[1/3]', 21, ''], ['[2/3]', 22, ''], ['[3/3]', 26, '']]
         elif 'PC3' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 5, 'MGPK2025PK'], ['[2/3]', 6, 'bbpYuM3Z'], ['[3/3]', 7, 'estouroth24']]
+            spots_por_tela = [['[1/3]', 17, ''], ['[2/3]', 16, ''], ['[3/3]', 18, '']]
         else:
-            spots_por_tela = [['[1/3]', 4, 'MGPK2025PK'], ['[2/3]', 5, 'bbpYuM3Z'], ['[3/3]', 6, 'estouroth24']]
+            spots_por_tela = [['[1/3]', 4, ''], ['[2/3]', 5, ''], ['[3/3]', 6, '']]
 
         for texto_tela, spot, senha in spots_por_tela:
             if texto_tela in self.tela:
@@ -140,13 +141,13 @@ class PickKanturuUseCase:
     def _mover_ate_k1_se_necessario(self):
         if safe_util.tk(self.handle) or safe_util.tk2_portal(self.handle):
             if safe_util.tk(self.handle):
-                self.mover_spot_util.movimentar_tarkan((157, 58))
+                self.mover_spot_util.movimentar((157, 58))
 
             while True:
                 limpar_mob_ao_redor_util.limpar_mob_ao_redor(self.handle)
-                movimentou = self.mover_spot_util.movimentar_tarkan((8, 199), verficar_se_movimentou=True,
-                                                                    limpar_spot_se_necessario=True,
-                                                                    max_tempo=240)
+                movimentou = self.mover_spot_util.movimentar((8, 199), verficar_se_movimentou=True,
+                                                             limpar_spot_se_necessario=True,
+                                                             max_tempo=240)
                 if movimentou:
                     mouse_util.left_clique(self.handle, 281, 207)
                     time.sleep(2)
@@ -211,9 +212,14 @@ class PickKanturuUseCase:
         if (time.time() - self.tempo_inicial_corrigir_coordenada_e_mouse) > 120:
             self.tempo_inicial_corrigir_coordenada_e_mouse = time.time()
             if self.coord_spot_atual:
-                self.mover_spot_util.movimentar_kanturu_1_2(self.coord_spot_atual,
-                                                            verficar_se_movimentou=True,
-                                                            max_tempo=3)
+                self.mover_spot_util.movimentar(self.coord_spot_atual, verficar_se_movimentou=True, max_tempo=3)
+
+            if self.classe == 'SM':
+                if self.pklizar.buscar_players_para_pklizar():
+                    self.teclado_util.selecionar_skill_1()
+                else:
+                    self.teclado_util.selecionar_skill_4()
+
         if self.coord_mouse_atual:
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
@@ -223,7 +229,7 @@ class PickKanturuUseCase:
             self.classe)
 
     def pklizar_ks(self):
-        if (time.time() - self.tempo_inicial_pklizar_ks) > 180:
+        if (time.time() - self.tempo_inicial_pklizar_ks) > 600:
             nivel_pk = self.pointer.get_nivel_pk()
             self.tempo_inicial_pklizar_ks = time.time()
             self.pklizar.atualizar_lista_player()
@@ -237,17 +243,33 @@ class PickKanturuUseCase:
         self.tempo_inicial_ativar_skill = self.up_util.ativar_skill(self.classe, self.tempo_inicial_ativar_skill)
 
     def _posicionar_char_spot(self):
-        spots = spot_util.buscar_spots_k1_k2()
-        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe,
-                                              self.spot_up, spots,
-                                              PathFinder.MAPA_KANTURU_1_E_2)
-        poscionar.posicionar_bot_farm()
-        self.chegou_spot = poscionar.get_chegou_ao_spot()
-        self.coord_mouse_atual = poscionar.get_coord_mouse()
-        if self.chegou_spot:
-            self.coord_spot_atual = poscionar.get_coord_spot()
-        else:
-            self.coord_spot_atual = (self.pointer.get_cood_y(), self.pointer.get_cood_x())
+        if not self.verficar_se_char_ja_esta_spot():
+            spots = spot_util.buscar_todos_spots_k1_k2()
+            poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe,
+                                                  self.spot_up, spots)
+            poscionar.posicionar_bot_farm()
+            self.chegou_spot = poscionar.get_chegou_ao_spot()
+            self.coord_mouse_atual = poscionar.get_coord_mouse()
+            if self.chegou_spot:
+                self.coord_spot_atual = poscionar.get_coord_spot()
+            else:
+                self.coord_spot_atual = (self.pointer.get_cood_y(), self.pointer.get_cood_x())
+
+    def verficar_se_char_ja_esta_spot(self):
+        posiconamento_service = PosicionamentoSpotService(
+            self.handle,
+            self.pointer,
+            self.mover_spot_util,
+            None,
+            None,
+            spot_util.buscar_todos_spots_k1_k2()
+        )
+
+        if posiconamento_service.verficar_se_char_ja_esta_spot():
+            self.coord_mouse_atual = posiconamento_service.get_coord_mouse()
+            self.coord_spot_atual = posiconamento_service.get_coord_spot()
+            return True
+        return False
 
     def _guardar_gem_no_inventario_se_necessario(self):
         if self.arduino.conexao_arduino:

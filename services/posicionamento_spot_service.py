@@ -4,18 +4,16 @@ from interface_adapters.up.up_util.up_util import Up_util
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from utils import mouse_util
 from utils.buscar_item_util import BuscarItemUtil
-from utils.rota_util import PathFinder
 
 
 class PosicionamentoSpotService:
-    def __init__(self, handle, pointer, mover_spot_util, classe, spot_up, spots, mapa, conexao_arduino=None):
+    def __init__(self, handle, pointer, mover_spot_util, classe, spot_up, spots, conexao_arduino=None):
         self.handle = handle
         self.pointer = pointer
         self.mover_spot_util = mover_spot_util
         self.classe = classe
         self.spot_up = spot_up
         self.spots = spots
-        self.mapa = mapa
         self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
         self.buscar_personagem = BuscarPersoangemProximoService(self.pointer)
 
@@ -94,88 +92,7 @@ class PosicionamentoSpotService:
         return True
 
     def movimentar_mapa(self):
-        if self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
-            return self.movimentar_k1_k2()
-        elif self.mapa == PathFinder.MAPA_KANTURU_3:
-            return self.movimentar_K3()
-        elif self.mapa == PathFinder.MAPA_AIDA:
-            return self.movimentar_aida()
-        elif self.mapa == PathFinder.MAPA_LAND:
-            return self.movimentar_land()
-        elif self.mapa == PathFinder.MAPA_TARKAN:
-            return self.movimentar_tarkan()
-        elif self.mapa == PathFinder.MAPA_ICARUS:
-            return self.movimentar_icarus()
-        elif self.mapa == PathFinder.MAPA_KALIMA:
-            return self.movimentar_kalima()
-        elif self.mapa == PathFinder.MAPA_NORIA:
-            return self.movimentar_noria()
-
-    def movimentar_noria(self):
-        return self.mover_spot_util.movimentar_noria(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_k1_k2(self):
-        return self.mover_spot_util.movimentar_kanturu_1_2(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_K3(self):
-        return self.mover_spot_util.movimentar_kanturu_3(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_icarus(self):
-        return self.mover_spot_util.movimentar_icarus(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_kalima(self):
-        return self.mover_spot_util.movimentar_kalima(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_aida(self):
-        return self.mover_spot_util.movimentar_aida(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_land(self):
-        return self.mover_spot_util.movimentar_land(
-            self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
-            verficar_se_movimentou=True,
-            max_tempo=180,
-            movimentacao_proxima=True
-        )
-
-    def movimentar_tarkan(self):
-        return self.mover_spot_util.movimentar_tarkan(
+        return self.mover_spot_util.movimentar(
             self.coord_spot_atual,
             limpar_spot_se_necessario=True,
             verficar_se_movimentou=True,

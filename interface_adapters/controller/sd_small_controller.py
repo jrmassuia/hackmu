@@ -20,7 +20,7 @@ class SdSmallController:
 
     def _iniciar_processo(self):
         while True:
-            MoverSpotUtil(self.handle).movimentar_noria((181, 102))
+            MoverSpotUtil(self.handle).movimentar((181, 102))
             self._combinar_hp()
             self._agrupar_sd()
             self._guardar_no_bau()
@@ -194,7 +194,7 @@ class SdSmallController:
             screenshot_cm, confidence_=0.80)
 
     def _guardar_no_bau(self):
-        MoverSpotUtil(self.handle).movimentar_noria((172, 95))
+        MoverSpotUtil(self.handle).movimentar((172, 95))
         self._mover_sd_bau()
 
     def _mover_sd_bau(self):
@@ -226,7 +226,7 @@ class SdSmallController:
         acao_menu_util.clicar_inventario(self.handle)
 
     def _comprar_hp(self):
-        MoverSpotUtil(self.handle).movimentar_noria((173, 123))
+        MoverSpotUtil(self.handle).movimentar((173, 123))
         mouse_util.left_clique(self.handle, 450, 150)
         mouse_util.mover(self.handle, 1, 1)
         time.sleep(1)

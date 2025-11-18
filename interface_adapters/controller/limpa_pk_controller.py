@@ -23,8 +23,8 @@ class LimpaPkController:
         print('Coordenada protegida iniciada! ' + self.tela)
         while True:
             mouse_util.ativar_click_direito(self.handle)
-            self.mover_spot_util.movimentar_stadium((coody, coodx),
-                                                    verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar((coody, coodx),
+                                            verficar_se_movimentou=True)
             mouse_util.mover(self.handle, mousex, mousey)
             time.sleep(3)
 

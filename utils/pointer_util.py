@@ -57,6 +57,9 @@ class Pointers:
             #
             self.SITUACAO_INFO_POINTER = self.get_pointer(self.CLIENT + 0x0422D16C, offsets=[0x4])
             #
+            # QUANDO PESQUISAR O POINTER VALIDOR O CODIGO DE TODOS OS MAPAS. A PESQUISA FAÇA PELO CODIGO QUE ESTA EM PATHFINDER
+            self.MAPA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001842B8, offsets=[0xAC4])
+            #
             # pointer_base = self.CLIENT + 0x035245EC
             # if pointer_base:
             #     print(f"Dump da estrutura em 0x{pointer_base:08X}:")
@@ -162,6 +165,7 @@ class Pointers:
         print('PK SELECIONADO:' + str(self.get_char_pk_selecionado()))
         print('MOSTRA DESC ITEM:' + str(self.get_mostrar_desc_item()))
         print('SALA ATUAL:' + str(self.get_sala_atual()))
+        print('MAPA ATUAL:' + str(self.get_mapa_atual()))
         print('SITUACAO INFO:' + str(self.get_situacao_info()))
 
     def get_cood_x(self):
@@ -227,17 +231,14 @@ class Pointers:
     def get_sala_atual(self):
         return self.read_value(self.SALA_ATUAL_POINTER, data_type="int")
 
+    def get_mapa_atual(self):
+        return self.read_value(self.MAPA_ATUAL_POINTER, data_type="int")
+
     def get_situacao_info(self):
         situacao = self.read_value(self.SITUACAO_INFO_POINTER, data_type="int")
         if situacao == 1:
             return True
         return False
-
-    def get_mapa_atual(self):
-        # mapa = self.read_value(self.MAPA_ATUAL_POINTER, data_type="string")
-        # if mapa:
-        #     mapa = mapa.replace('p ', '')
-        return None
 
     def get_item_pick(self):
         # return self.read_value(self.ITEM_PICK_POINTER, data_type="string")

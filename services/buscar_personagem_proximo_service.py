@@ -57,7 +57,9 @@ class BuscarPersoangemProximoService:
         'Persona', 'Canon Trap', 'Dreadfear',
         # KALIMA
         'Hero Mutant', 'Lizard Warrior', 'Rogue Centurion', 'Death Angel', 'Sea Worm', 'Necron',
-        'Death Centurion', 'Schriker', 'Blood Soldier', 'Aegis'
+        'Death Centurion', 'Schriker', 'Blood Soldier', 'Aegis',
+        # lixo de interface, ignorar sempre
+        'data\\interf',
     }
 
     # ---- Ordens MSB pré-calculadas ----
@@ -390,7 +392,13 @@ class BuscarPersoangemProximoService:
             if f_ini and f_fim and f_ini < f_fim:
                 res = self._scan_range_core(f_ini, f_fim, padrao, bloco_leitura, name_delta, name_max, xy_max)
                 if res:
-                    return res
+                    if res[0].get("nome") == "data\\interf":
+                        print("[SCAN] Range fixo retornou apenas 'data\\\\interf', ignorando e continuando busca...")
+                        # opcional: descartar o range fixo, pra não ficar batendo nele sempre
+                        with self._fixed_lock:
+                            self._fixed_ranges.pop(self._fixed_key(padrao), None)
+                    else:
+                        return res
 
         # 2) GERA ORDEM MSB (rápida)
         msb_order = self._build_msb_order(charset="0-9A-Z", start_hints=tuple(start_hints))
@@ -463,7 +471,7 @@ class BuscarPersoangemProximoService:
                 # mesmo com cache, se não deu resultado, conta como miss
                 consecutive_misses += 1
                 if consecutive_misses >= MAX_MISSES:
-                    # print(f"[SCAN] Abortado após {MAX_MISSES} misses consecutivos (resto)")
+                    print(f"[SCAN] Abortado após {MAX_MISSES} misses consecutivos (resto)")
                     break
                 continue
 
@@ -493,7 +501,7 @@ class BuscarPersoangemProximoService:
             else:
                 consecutive_misses += 1
                 if consecutive_misses >= MAX_MISSES:
-                    # print(f"[SCAN] Abortado após {MAX_MISSES} misses consecutivos (resto)")
+                    print(f"[SCAN] Abortado após {MAX_MISSES} misses consecutivos (resto)")
                     break
 
         print("[SCAN] Nenhum resultado.")

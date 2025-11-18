@@ -18,7 +18,7 @@ class SdMediaController:
 
     def _iniciar_processo(self):
         """Inicia o processo de combinar itens e mover SDs."""
-        MoverSpotUtil(self.handle).movimentar_noria((181, 102))
+        MoverSpotUtil(self.handle).movimentar((181, 102))
         self._combinar_complex()
         self._agrupar_sd()
         exit()

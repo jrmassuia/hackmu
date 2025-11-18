@@ -76,8 +76,8 @@ def fora_land(handle):
 
 
 def sair_da_safe_atlans(moverSpotUtil):
-    moverSpotUtil.movimentar_atlans((20, 31), movimentacao_proxima=True)
+    moverSpotUtil.movimentar((20, 31), movimentacao_proxima=True)
 
 
 def sair_da_safe_k3(moverSpotUtil):
-    moverSpotUtil.movimentar_kanturu_3((94, 105), movimentacao_proxima=True)
+    moverSpotUtil.movimentar((94, 105), movimentacao_proxima=True)

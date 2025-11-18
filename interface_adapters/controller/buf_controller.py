@@ -222,27 +222,10 @@ class BufController:
 
         tempo_max_movimento = 120
         while True:
-            movimentou = False
-            if BufController.MAPA_DEVIAS_1 in bp.mapa:
-                movimentou = self.mover_spot_util.movimentar_devias((bp.coordy, bp.coordx),
-                                                                    max_tempo=tempo_max_movimento,
-                                                                    verficar_se_movimentou=True,
-                                                                    limpar_spot_se_necessario=True)
-            elif BufController.MAPA_DUNGEON_1 in bp.mapa:
-                movimentou = self.mover_spot_util.movimentar_dungeon((bp.coordy, bp.coordx),
-                                                                     max_tempo=tempo_max_movimento,
-                                                                     verficar_se_movimentou=True,
-                                                                     limpar_spot_se_necessario=True)
-            elif BufController.MAPA_ATLANS_1 in bp.mapa:
-                movimentou = self.mover_spot_util.movimentar_atlans((bp.coordy, bp.coordx),
-                                                                    max_tempo=tempo_max_movimento,
-                                                                    verficar_se_movimentou=True,
-                                                                    limpar_spot_se_necessario=True)
-            elif BufController.MAPA_LOSTTOWER_1 in bp.mapa:
-                movimentou = self.mover_spot_util.movimentar_losttower((bp.coordy, bp.coordx),
-                                                                       max_tempo=tempo_max_movimento,
-                                                                       verficar_se_movimentou=True,
-                                                                       limpar_spot_se_necessario=True)
+            movimentou = self.mover_spot_util.movimentar((bp.coordy, bp.coordx),
+                                                         max_tempo=tempo_max_movimento,
+                                                         verficar_se_movimentou=True,
+                                                         limpar_spot_se_necessario=True)
 
             time.sleep(1)
 

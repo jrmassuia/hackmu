@@ -80,7 +80,7 @@ class UpK2UseCase:
             self.up_liberado = False
 
     def _buscar_spots_k2(self):
-        spots = spot_util.buscar_spots_k1_k2()
+        spots = spot_util.buscar_todos_spots_k1_k2()
         return spots
 
     def limpar_mob_ao_redor(self):
@@ -92,6 +92,6 @@ class UpK2UseCase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_kanturu_1_2(self.coord_spot_atual,
+            self.mover_spot_util.movimentar(self.coord_spot_atual,
                                                         verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)

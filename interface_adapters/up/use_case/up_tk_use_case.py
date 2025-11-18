@@ -6,7 +6,6 @@ from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import buscar_coordenada_util, mouse_util, spot_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
-from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
 
@@ -50,7 +49,7 @@ class UpTarkanUseCase:
         destino = (104, 137)
         tempo_maximo = 300
 
-        movimentou = self.mover_spot_util.movimentar_tarkan(
+        movimentou = self.mover_spot_util.movimentar(
             destino,
             max_tempo=tempo_maximo,
             limpar_spot_se_necessario=True,
@@ -65,8 +64,7 @@ class UpTarkanUseCase:
 
     def _posicionar_char_spot(self):
         spots = spot_util.buscar_spots_tk2()
-        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe, None, spots,
-                                              PathFinder.MAPA_TARKAN)
+        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe, None, spots)
         poscionar.posicionar_bot_up()
 
         if poscionar.get_coord_mouse() is None or poscionar.get_coord_spot() is None:
@@ -82,7 +80,7 @@ class UpTarkanUseCase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_tarkan(self.coord_spot_atual, verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar(self.coord_spot_atual, verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def limpar_mob_ao_redor(self):

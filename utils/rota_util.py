@@ -23,10 +23,29 @@ class PathFinder:
     MAPA_KANTURU_1_E_2 = "38"
     MAPA_KANTURU_3 = "39"
 
+    mapas = [
+        ('MAPA_LORENCIA', '1', 1126694912),
+        ('MAPA_DUNGEON', '2', 1128562688),
+        ('MAPA_DEVIAS', '3', 1129054208),
+        ('MAPA_NORIA', '4', 1128464384),
+        ('MAPA_LOSTTOWER', '5', 1129447424),
+        ('MAPA_STADIUM', '7', 1130332160),
+        ('MAPA_ATLANS', '8', 1130233856),
+        ('MAPA_TARKAN', '9', 1125613568),
+        ('MAPA_ICARUS', '11', 1133412352),
+        ('MAPA_KALIMA', '25', 1131413504),
+        ('MAPA_LOREN', '31', 1130430464),
+        ('MAPA_LAND', '32', 0), #FALTA IFORMAR O CODIGO DO MAPA
+        ('MAPA_AIDA', '34', 1131511808),
+        ('MAPA_KANTURU_1_E_2', '38', 1133215744),
+        ('MAPA_KANTURU_3', '39', 1126793216),
+    ]
+
     def __init__(self, num_mapa):
         self.file_path = "C:/Program Files (x86)/MUCABRASIL/Data/World" + num_mapa + "/EncTerrain" + num_mapa + ".att"
         self.grid = self._load_grid()
-        self.MAP_NAME = num_mapa
+        self.MAPA_CODIGO = num_mapa
+        self.MAPA_NOME = {codigo: nome for nome, codigo, _ in self.mapas}[num_mapa]
 
     def _decode_file(self, data: bytes) -> bytes:
         xor_keys = [
@@ -117,7 +136,6 @@ class PathFinder:
             for x in range(256):
                 if x < margem or x >= 256 - margem or y < margem or y >= 256 - margem:
                     self.grid[y][x] = 0  # Não caminhável
-
 
 # Exemplo de uso
 # for a in range(80):

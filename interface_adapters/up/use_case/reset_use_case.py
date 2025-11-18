@@ -49,8 +49,8 @@ class ResetUseCase:
     def _resetar_lorencia_desafio(self):
         self.teclado_util.escrever_texto("/move lorencia")
         time.sleep(2)
-        MoverSpotUtil(self.handle).movimentar_lorencia((103, 127))
-        MoverSpotUtil(self.handle).movimentar_lorencia((91, 127))
+        MoverSpotUtil(self.handle).movimentar((103, 127))
+        MoverSpotUtil(self.handle).movimentar((91, 127))
         self._move_coordenada_reset(desafio=True)
         mouse_util.left_clique(self.handle, 396, 160)  # CLICA NO NPC RESET
 
@@ -60,15 +60,15 @@ class ResetUseCase:
             if desafio:
                 y_coord_reset = 77
                 x_coord_reset = 149
-                MoverSpotUtil(self.handle).movimentar_lorencia((y_coord_reset, x_coord_reset))
+                MoverSpotUtil(self.handle).movimentar((y_coord_reset, x_coord_reset))
             elif self.classe == 'EF':
                 y_coord_reset = 187
                 x_coord_reset = 124
-                MoverSpotUtil(self.handle).movimentar_noria((y_coord_reset, x_coord_reset))
+                MoverSpotUtil(self.handle).movimentar((y_coord_reset, x_coord_reset))
             else:
                 y_coord_reset = 124
                 x_coord_reset = 125
-                MoverSpotUtil(self.handle).movimentar_lorencia((y_coord_reset, x_coord_reset))
+                MoverSpotUtil(self.handle).movimentar((y_coord_reset, x_coord_reset))
 
             time.sleep(.5)
             if y_coord_reset == pointer.get_cood_y() and x_coord_reset == pointer.get_cood_x():

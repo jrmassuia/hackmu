@@ -191,35 +191,53 @@ class PkBase(ABC):
             self.alternar_sala.selecionar_sala(sala)
 
     def mover_para_spot_vazio(self):
-        self.teclado.selecionar_skill_1()
-        self._sair_da_safe()
+        if not self.verficar_se_char_ja_esta_spot():
 
-        if self.mapa == PathFinder.MAPA_AIDA:
-            spots = spot_util.buscar_spots_aida_2()
-        elif self.mapa == PathFinder.MAPA_TARKAN:
-            spots = spot_util.buscar_todos_spots_tk(nao_ignorar_spot_pk=True)
-        elif self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
-            self.mapa = PathFinder.MAPA_TARKAN
-            spots = spot_util.buscar_todos_spots_tk()
-        else:
-            spots = []
+            self.teclado.selecionar_skill_1()
+            self._sair_da_safe()
 
-        posicionador = PosicionamentoSpotService(
+            if self.mapa == PathFinder.MAPA_AIDA:
+                spots = spot_util.buscar_spots_aida_2()
+            elif self.mapa == PathFinder.MAPA_TARKAN:
+                spots = spot_util.buscar_todos_spots_tk(nao_ignorar_spot_pk=True)
+            elif self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
+                self.mapa = PathFinder.MAPA_TARKAN
+                spots = spot_util.buscar_todos_spots_tk()
+            else:
+                spots = []
+
+            posicionador = PosicionamentoSpotService(
+                self.handle,
+                self.pointer,
+                self.mover_spot,
+                self.classe_personagem,
+                None,
+                spots,
+                self.mapa
+            )
+
+            achou = posicionador.posicionar_bot_up()
+            if achou:
+                self.coord_mouse_atual = posicionador.get_coord_mouse()
+                self.coord_spot_atual = posicionador.get_coord_spot()
+
+            self.morreu = bool(self.mover_spot.esta_na_safe)
+
+    def verficar_se_char_ja_esta_spot(self):
+        posiconamento_service = PosicionamentoSpotService(
             self.handle,
             self.pointer,
             self.mover_spot,
-            self.classe_personagem,
             None,
-            spots,
-            self.mapa
+            None,
+            spot_util.buscar_todos_spots_aida()
         )
 
-        achou = posicionador.posicionar_bot_up()
-        if achou:
-            self.coord_mouse_atual = posicionador.get_coord_mouse()
-            self.coord_spot_atual = posicionador.get_coord_spot()
-
-        self.morreu = bool(self.mover_spot.esta_na_safe)
+        if posiconamento_service.verficar_se_char_ja_esta_spot():
+            self.coord_mouse_atual = posiconamento_service.get_coord_mouse()
+            self.coord_spot_atual = posiconamento_service.get_coord_spot()
+            return True
+        return False
 
     def _executar_pk(self, spots: Sequence[Sequence]):
         try:

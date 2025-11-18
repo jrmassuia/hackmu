@@ -6,7 +6,7 @@ from interface_adapters.helpers.session_manager_new import Sessao, GenericoField
 from interface_adapters.up.up_util.up_util import Up_util
 from interface_adapters.up.use_case import (
     reset_use_case,
-    up_aida_use_case_novo,
+    up_aida_use_case,
     up_atlans_use_case,
     up_icarus_use_case,
     up_land_use_case,
@@ -240,7 +240,7 @@ class UpController:
             'land': up_land_use_case.UpLandUseCase(self.handle, self.conexao_arduino),
             'k2': up_k2_use_case.UpK2UseCase(self.handle, self.conexao_arduino),
             'k3': up_k3_use_case.UpK3UseCase(self.handle, self.conexao_arduino),
-            'aida': up_aida_use_case_novo.UpAidaUseCaseNovo(self.handle, self.conexao_arduino),
+            'aida': up_aida_use_case.UpAidaUseCaseNovo(self.handle, self.conexao_arduino),
             'kalima6': up_k6_use_case.UpK6UseCase(self.handle, self.conexao_arduino),
             'kalima7': up_k7_use_case.UpK7UseCase(self.handle, self.conexao_arduino),
             'reset': reset_use_case.ResetUseCase(self.handle, self.conexao_arduino, self.pointer.get_nome_char(),

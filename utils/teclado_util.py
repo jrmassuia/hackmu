@@ -69,6 +69,10 @@ class Teclado_util:
         if self.arduino.conexao_arduino:
             self.tap_tecla('3')
 
+    def selecionar_skill_4(self):
+        if self.arduino.conexao_arduino:
+            self.tap_tecla('4')
+
     def pressionar_zoon(self):
         if self.arduino.conexao_arduino:
             with self.foco_mutex.focar_mutex():

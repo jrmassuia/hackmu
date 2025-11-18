@@ -72,7 +72,8 @@ class PkAidaUseCase(PkBase):
 
     def iniciar_pk(self):
 
-        salas = [7, 3, 8, 9]
+        # salas = [7, 3, 8, 9] # NECESSARIO VERIFICAR O PK ATIVO QUANDO FOR MUDAR DE SALA
+        salas = [7]
         self.morreu = False
 
         for sala in salas:
@@ -165,7 +166,7 @@ class PkAidaUseCase(PkBase):
     def _sair_da_safe(self):
         if safe_util.aida(self.handle):
             self._desbugar_goblin()
-            saiu = self.mover_spot.movimentar_aida(
+            saiu = self.mover_spot.movimentar(
                 (115, 13),
                 max_tempo=60,
                 movimentacao_proxima=True
@@ -185,14 +186,14 @@ class PkAidaUseCase(PkBase):
     # ---------- correção de coordenadas / movimentação ----------
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot.movimentar_aida(
+            self.mover_spot.movimentar(
                 self.coord_spot_atual,
                 verficar_se_movimentou=True
             )
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot.movimentar_aida(
+        return self.mover_spot.movimentar(
             coordenadas,
             max_tempo=600,
             verficar_se_movimentou=True,
@@ -201,7 +202,7 @@ class PkAidaUseCase(PkBase):
         )
 
     def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
-        return self.mover_spot.movimentar_aida(
+        return self.mover_spot.movimentar(
             (y, x),
             verficar_se_movimentou=True,
             posicionar_mouse_coordenada=True,

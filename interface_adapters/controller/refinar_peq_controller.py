@@ -88,8 +88,8 @@ class RefinarPequenaController:
         acao_menu_util.clicar_inventario(self.handle)
 
     def _mover_para_aida(self):
-        self.mover_spot_util.movimentar_noria((161, 77))
-        self.mover_spot_util.movimentar_noria((222, 44))
+        self.mover_spot_util.movimentar((161, 77))
+        self.mover_spot_util.movimentar((222, 44))
         self._mover_coordenada(222, 36)  # move para portal
         mouse_util.left_clique(self.handle, 125, 441)
         time.sleep(3)
@@ -97,9 +97,9 @@ class RefinarPequenaController:
     def _mover_coordenada(self, y, x, mapa='noria'):
         while True:
             if mapa == 'noria':
-                self.mover_spot_util.movimentar_noria((y, x), max_tempo=160)
+                self.mover_spot_util.movimentar((y, x), max_tempo=160)
             else:
-                self.mover_spot_util.movimentar_noria((y, x), max_tempo=160)
+                self.mover_spot_util.movimentar((y, x), max_tempo=160)
             time.sleep(.5)
             if x == self.pointer.get_cood_x() and y == self.pointer.get_cood_y():
                 time.sleep(.5)

@@ -22,7 +22,7 @@ class RefinarGemstoneController:
         self._iniciar_processo()
 
     def _iniciar_processo(self):
-        # MoverSpotUtil(self.handle).movimentar_kanturu_3((75, 177))
+        # MoverSpotUtil(self.handle).movimentar((75, 177))
         self.refinar()
 
     def refinar(self):

@@ -9,7 +9,6 @@ from utils.buscar_item_util import BuscarItemUtil
 from utils.json_file_manager_util import JsonFileManager
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
-from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
 
@@ -72,34 +71,34 @@ class RecrutarUseCase:
         time.sleep(4)
         self.enviar_carta_personagem_proximo()
         spots = spot_util.buscar_todos_spots_tk()
-        self.ir_para_spot(spots, PathFinder.MAPA_TARKAN)
+        self.ir_para_spot(spots)
 
     def _mover_para_stadium(self):
         self.teclado.escrever_texto('/move stadium')
         spots = spot_util.buscar_todos_spots_tk()
-        self.ir_para_spot(spots, PathFinder.MAPA_STADIUM)
+        self.ir_para_spot(spots)
 
     def _mover_para_icarus(self):
         self.teclado.escrever_texto('/move icarus')
         time.sleep(4)
         spots = spot_util.buscar_spots_icarus(qtd_resets=0)
-        self.ir_para_spot(spots, PathFinder.MAPA_ICARUS)
+        self.ir_para_spot(spots)
 
     def _mover_para_aida(self):
         self.teclado.escrever_texto('/move aida')
         time.sleep(4)
         self.enviar_carta_personagem_proximo()
         spots = spot_util.buscar_todos_spots_aida()
-        self.ir_para_spot(spots, PathFinder.MAPA_AIDA)
+        self.ir_para_spot(spots)
 
     def _mover_para_kanturu(self):
         self.teclado.escrever_texto('/move kanturu')
         time.sleep(4)
         self.enviar_carta_personagem_proximo()
         spots = spot_util.buscar_spots_k1()
-        self.ir_para_spot(spots, PathFinder.MAPA_KANTURU_1_E_2)
+        self.ir_para_spot(spots)
 
-    def ir_para_spot(self, spots, path):
+    def ir_para_spot(self, spots):
         for indice_spot, grupo_de_spots in enumerate(spots):
             for grupo in grupo_de_spots:
                 classes, coordenadas_spot, coordenada_mouse = grupo
@@ -108,7 +107,7 @@ class RecrutarUseCase:
                     continue
 
                 coordenadas = coordenadas_spot[0]
-                movimentou = self._movimentar_char_spot(coordenadas, path)
+                movimentou = self._movimentar_char_spot(coordenadas)
                 if not movimentou:
                     print('Morreu enquanto procurava player - falha movimentação')
                     return
@@ -126,33 +125,11 @@ class RecrutarUseCase:
             if self._verificar_se_esta_sem_guild(nome):
                 self._enviar_carta(nome)
 
-    def _movimentar_char_spot(self, coordenadas, path):
-        if path == PathFinder.MAPA_TARKAN:
-            return self.mover_spot.movimentar_tarkan(
-                coordenadas,
-                movimentacao_proxima=True,
-                limpar_spot_se_necessario=True)
-        elif path == PathFinder.MAPA_ICARUS:
-            return self.mover_spot.movimentar_icarus(
-                coordenadas,
-                movimentacao_proxima=True,
-                limpar_spot_se_necessario=True)
-        elif path == PathFinder.MAPA_STADIUM:
-            return self.mover_spot.movimentar_stadium(
-                coordenadas,
-                movimentacao_proxima=True,
-                limpar_spot_se_necessario=True)
-        elif path == PathFinder.MAPA_AIDA:
-            return self.mover_spot.movimentar_aida(
-                coordenadas,
-                movimentacao_proxima=True,
-                limpar_spot_se_necessario=True
-            )
-        elif path == PathFinder.MAPA_KANTURU_1_E_2:
-            return self.mover_spot.movimentar_kanturu_1_2(
-                coordenadas,
-                movimentacao_proxima=True,
-                limpar_spot_se_necessario=True)
+    def _movimentar_char_spot(self, coordenadas):
+        return self.mover_spot.movimentar(
+            coordenadas,
+            movimentacao_proxima=True,
+            limpar_spot_se_necessario=True)
 
     def _verificar_se_esta_sem_guild(self, nome):
         return self.verificador_imagem_usebar.verificar_pasta(nome, "./static/usebar/semguild/")

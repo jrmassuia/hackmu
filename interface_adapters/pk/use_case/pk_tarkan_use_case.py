@@ -47,7 +47,7 @@ class PktarkanUseCase(PkBase):
 
     def _sair_da_safe(self):
         if safe_util.tk(self.handle):
-            saiu_safe = self.mover_spot.movimentar_tarkan((205, 100), movimentacao_proxima=True)
+            saiu_safe = self.mover_spot.movimentar((205, 100), movimentacao_proxima=True)
             if not saiu_safe:
                 self.morreu = True
 
@@ -66,14 +66,14 @@ class PktarkanUseCase(PkBase):
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot.movimentar_tarkan(
+            self.mover_spot.movimentar(
                 self.coord_spot_atual,
                 verficar_se_movimentou=True
             )
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot.movimentar_tarkan(
+        return self.mover_spot.movimentar(
             coordenadas,
             max_tempo=600,
             verficar_se_movimentou=True,
@@ -82,7 +82,7 @@ class PktarkanUseCase(PkBase):
         )
 
     def _posicionar_char_pklizar(self, x, y):
-        return self.mover_spot.movimentar_tarkan(
+        return self.mover_spot.movimentar(
             (y, x),
             verficar_se_movimentou=True,
             posicionar_mouse_coordenada=True,
@@ -97,7 +97,7 @@ class PktarkanUseCase(PkBase):
             return
 
         while True:
-            movimentou = self.mover_spot.movimentar_tarkan(
+            movimentou = self.mover_spot.movimentar(
                 (12, 200),
                 verficar_se_movimentou=True,
                 limpar_spot_se_necessario=True,
@@ -107,7 +107,7 @@ class PktarkanUseCase(PkBase):
 
             if movimentou:
                 limpar_mob_ao_redor_util.limpar_mob_ao_redor(self.handle)
-                movimentou = self.mover_spot.movimentar_tarkan((12, 200), verficar_se_movimentou=True, max_tempo=240)
+                movimentou = self.mover_spot.movimentar((12, 200), verficar_se_movimentou=True, max_tempo=240)
 
             if movimentou:
                 mouse_util.left_clique(self.handle, 158, 139)

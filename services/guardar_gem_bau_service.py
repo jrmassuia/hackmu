@@ -14,7 +14,7 @@ class GuardaGemstoneService:
         """Guarda gemstones no baú."""
 
         # Movimenta para spot específico Kanturu
-        self.mover_spot_util.movimentar_kanturu_1_2((27, 217), max_tempo=10)
+        self.mover_spot_util.movimentar((27, 217), max_tempo=10)
         time.sleep(1)
 
         # Clica no baú na coordenada especificada

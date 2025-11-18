@@ -194,11 +194,11 @@ def buscar_spots_aida_1(ignorar_spot_pk=False):
     coordenadas = []
     coordenadas.extend([
 
-        # [
-        #     [['SM', 'MG'], [(190, 19)], (398, 240)],  # 0
-        #     [['DL'], [(188, 18)], (561, 370)],
-        #     [['EF'], [(198, 17)], (356, 233)]
-        # ],
+        [
+            [['SM', 'MG'], [(190, 19)], (398, 240)],  # 0
+            [['DL'], [(188, 18)], (561, 370)],
+            [['EF'], [(198, 17)], (356, 233)]
+        ],
         [
             [['SM', 'MG'], [(176, 16)], (398, 240)],  # 1
             [['DL'], [(171, 16)], (573, 412)],
@@ -220,7 +220,7 @@ def buscar_spots_aida_1(ignorar_spot_pk=False):
 
         [
             [['SM', 'MG'], [(152, 38)], (398, 240)],  # 4
-            [['DL'], [(147, 34)], (238, 161)]  # FALTA CORRIGIR COORDENADA MOUSE
+            [['DL'], [(148, 34)], (595, 250)]  # FALTA CORRIGIR COORDENADA MOUSE
         ],
 
         [
@@ -467,7 +467,7 @@ def buscar_spots_knv():
     return coordenadas
 
 
-def buscar_spots_k1_k2():
+def buscar_todos_spots_k1_k2():
     coordenadas = []
     coordenadas.extend(buscar_spots_k1())
     coordenadas.extend(buscar_spots_k2())
@@ -478,10 +478,10 @@ def buscar_spots_k1():
     coordenadas = []
     coordenadas.extend([
         # VERIFICAR COMO MATAR SOMENTE O BOT NO PRIMEIRO SPOT K1
-        # [
-        #     [['SM', 'MG', 'BK'], [(42, 233)], (398, 240)],  # 0
-        #     [['DL'], [(45, 233)], (258, 136)]
-        # ],
+        [
+            [['SM', 'MG', 'BK'], [(42, 233)], (398, 240)],  # 0
+            [['DL'], [(45, 233)], (258, 136)]
+        ],
         [
             [['SM', 'MG', 'BK'], [(84, 236)], (398, 240)],  # 1
             [['DL'], [(78, 235)], (427, 288)]
@@ -584,6 +584,14 @@ def buscar_spots_k2():
         [
             [['SM', 'MG', 'BK'], [(43, 49)], (398, 240)],  # 24
             [['DL'], [(46, 49)], (275, 201)]
+        ],
+        [
+            [['SM', 'MG', 'BK'], [(37, 74)], (398, 240)],  # 25
+            [['DL'], [(46, 49)], (275, 201)] #falta configurar
+        ],
+        [
+            [['SM', 'MG', 'BK'], [(45, 94)], (398, 240)],  # 26
+            [['DL'], [(46, 49)], (275, 201)] #falta configurar
         ]
     ])
     return coordenadas

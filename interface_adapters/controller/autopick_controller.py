@@ -67,18 +67,19 @@ class AutopickController:
                 self.iniciou_autopick = True
 
             self._sair_da_safe_aida()
+            coordenada = None
+
             if '[1/3]' in self.tela:
-                self.mover_spot_util.movimentar_aida((226, 12),
-                                                     max_tempo=180,
-                                                     limpar_spot_se_necessario=True,
-                                                     movimentacao_proxima=True,
-                                                     verficar_se_movimentou=True)
+                coordenada = (226, 12)
+
             elif '[2/3]' in self.tela:
-                self.mover_spot_util.movimentar_aida((151, 37),
-                                                     max_tempo=180,
-                                                     limpar_spot_se_necessario=True,
-                                                     movimentacao_proxima=True,
-                                                     verficar_se_movimentou=True)
+                coordenada = (151, 37)
+
+            self.mover_spot_util.movimentar(coordenada,
+                                            max_tempo=180,
+                                            limpar_spot_se_necessario=True,
+                                            movimentacao_proxima=True,
+                                            verficar_se_movimentou=True)
 
     def _mover_para_spot_k3(self):
         if self.iniciou_autopick:
@@ -88,30 +89,23 @@ class AutopickController:
 
         safe_util.sair_da_safe_k3(self.mover_spot_util)
         if '[1/3]' in self.tela:
-            self.mover_spot_util.movimentar_kanturu_3((167, 94),
-                                                      max_tempo=180,
-                                                      limpar_spot_se_necessario=True,
-                                                      movimentacao_proxima=True,
-                                                      verficar_se_movimentou=True)
-
+            coordenada = (167, 94)
         elif '[2/3]' in self.tela:
-            self.mover_spot_util.movimentar_kanturu_3((108, 143),
-                                                      max_tempo=180,
-                                                      limpar_spot_se_necessario=True,
-                                                      movimentacao_proxima=True,
-                                                      verficar_se_movimentou=True)
+            coordenada = (108, 143)
         else:
-            self.mover_spot_util.movimentar_kanturu_3((165, 129),
-                                                      max_tempo=180,
-                                                      limpar_spot_se_necessario=True,
-                                                      movimentacao_proxima=True,
-                                                      verficar_se_movimentou=True)
+            coordenada = (165, 129)
+   
+        self.mover_spot_util.movimentar(coordenada,
+                                        max_tempo=180,
+                                        limpar_spot_se_necessario=True,
+                                        movimentacao_proxima=True,
+                                        verficar_se_movimentou=True)
 
     def _voltar_para_k3_se_necessario(self):
         ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
         if (xcood and ycood) and ((85 <= xcood <= 95) and (80 <= ycood <= 90)):
             while True:
-                chegou = MoverSpotUtil(self.handle).movimentar_kanturu_1_2((82, 91), max_tempo=600,
+                chegou = MoverSpotUtil(self.handle).movimentar((82, 91), max_tempo=600,
                                                                            movimentacao_proxima=True,
                                                                            limpar_spot_se_necessario=True)
                 if chegou:
@@ -124,7 +118,7 @@ class AutopickController:
     def _mover_para_spot_atlans(self):
         time.sleep(300)
         safe_util.sair_da_safe_atlans(self.mover_spot_util)
-        self.mover_spot_util.movimentar_atlans((self.y_coordenda_autal, self.x_coordenda_autal),
+        self.mover_spot_util.movimentar((self.y_coordenda_autal, self.x_coordenda_autal),
                                                limpar_spot_se_necessario=True,
                                                movimentacao_proxima=True)
 
@@ -137,4 +131,4 @@ class AutopickController:
         return (xcood and ycood) and ((100 <= xcood <= 110) and (70 <= ycood <= 77))
 
     def _sair_da_safe_aida(self):
-        self.mover_spot_util.movimentar_aida((100, 10), movimentacao_proxima=True)
+        self.mover_spot_util.movimentar((100, 10), movimentacao_proxima=True)

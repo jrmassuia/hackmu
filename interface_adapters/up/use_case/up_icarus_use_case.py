@@ -52,7 +52,7 @@ class UpIcarusUseCase:
             while True:
                 y_coord = 170
                 x_coord = 119
-                self.mover_spot_util.movimentar_noria((y_coord, x_coord))
+                self.mover_spot_util.movimentar((y_coord, x_coord))
                 if y_coord == self.pointer.get_cood_y() and x_coord == self.pointer.get_cood_x():
                     break
 
@@ -68,12 +68,11 @@ class UpIcarusUseCase:
         spots = spot_util.buscar_spots_icarus()
         poscionar = PosicionamentoSpotService(
             self.handle,
+            self.pointer,
             self.mover_spot_util,
             self.classe,
             None,
-            spots,
-            PathFinder.MAPA_ICARUS
-        )
+            spots)
 
         achou_spot = poscionar.posicionar_bot_up()
 
@@ -89,6 +88,6 @@ class UpIcarusUseCase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_icarus(self.coord_spot_atual,
-                                                   verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar(self.coord_spot_atual,
+                                            verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)

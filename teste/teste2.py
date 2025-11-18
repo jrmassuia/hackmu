@@ -147,7 +147,7 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle).teste_pointer_necessarios()
 
-    # movimentou = MoverSpotUtil(handle).movimentar_kanturu_1_2((130, 118))
+    # movimentou = MoverSpotUtil(handle).movimentar((130, 118))
     # mouse_util.left_clique(handle, 482, 25)
 
     # spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)
@@ -208,7 +208,7 @@ def _mover_lost7_para_icarus(handle, pointer):
 
 def _posicionar_mover_pelo_portal(handle, pointer, y, x):
     while True:
-        MoverSpotUtil(handle).movimentar_losttower((y, x), max_tempo=100000)
+        MoverSpotUtil(handle).movimentar((y, x), max_tempo=100000)
         time.sleep(.5)
         if x == pointer.get_cood_x() and y == pointer.get_cood_y():
             time.sleep(.5)

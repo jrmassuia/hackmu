@@ -42,8 +42,8 @@ class UpLandUseCase:
             self.teclado_util.escrever_texto('/move loren')
             time.sleep(2)
             self.ja_moveu_para_loren = True
-            self.mover_spot_util.movimentar_loren((93, 49))
-            self.mover_spot_util.movimentar_loren((93, 89), movimentacao_proxima=True)
+            self.mover_spot_util.movimentar((93, 49))
+            self.mover_spot_util.movimentar((93, 89), movimentacao_proxima=True)
             self._entrar_em_land()
 
             entrada_nao_permitida = self._entrada_nao_permitida()
@@ -61,12 +61,12 @@ class UpLandUseCase:
         return self.up_liberado
 
     def _entrar_em_land(self):
-        movimentou = self.mover_spot_util.movimentar_loren((140, 94), verficar_se_movimentou=True)
+        movimentou = self.mover_spot_util.movimentar((140, 94), verficar_se_movimentou=True)
         if movimentou:
             mouse_util.left_clique(self.handle, 597, 55)  # clica guarda
             time.sleep(3)
         else:
-            movimentou = self.mover_spot_util.movimentar_loren((145, 95), verficar_se_movimentou=True)
+            movimentou = self.mover_spot_util.movimentar((145, 95), verficar_se_movimentou=True)
             if movimentou:
                 mouse_util.left_clique(self.handle, 377, 18)  # clica guarda
                 time.sleep(5)
@@ -88,7 +88,7 @@ class UpLandUseCase:
         return self._posicionar_em_spot_adequado()
 
     def _ir_ate_inicio_up(self):
-        movimentou = self.mover_spot_util.movimentar_land(
+        movimentou = self.mover_spot_util.movimentar(
             (92, 82),
             max_tempo=300,
             limpar_spot_se_necessario=True,
@@ -104,8 +104,7 @@ class UpLandUseCase:
 
     def _posicionar_em_spot_adequado(self):
         spots = spot_util.buscar_spots_land()
-        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe, None, spots,
-                                              PathFinder.MAPA_LAND)
+        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe, None, spots)
 
         achou = poscionar.posicionar_bot_up()
         if achou:
@@ -135,7 +134,7 @@ class UpLandUseCase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_land(self.coord_spot_atual,
+            self.mover_spot_util.movimentar(self.coord_spot_atual,
                                                  verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 

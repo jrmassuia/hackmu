@@ -8,7 +8,7 @@ from utils.mover_spot_util import MoverSpotUtil
 
 def _mover_k3(handle):
     while True:
-        chegou = MoverSpotUtil(handle).movimentar_kanturu_1_2((82, 91), max_tempo=600, movimentacao_proxima=True,
+        chegou = MoverSpotUtil(handle).movimentar((82, 91), max_tempo=600, movimentacao_proxima=True,
                                                               limpar_spot_se_necessario=True)
         if chegou:
             break

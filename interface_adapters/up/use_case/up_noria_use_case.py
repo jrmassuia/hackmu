@@ -6,7 +6,6 @@ from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import mouse_util, buscar_coordenada_util, spot_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
-from utils.rota_util import PathFinder
 
 
 class UpNoriasUseCase:
@@ -46,7 +45,7 @@ class UpNoriasUseCase:
             while True:
                 y_coord = 170
                 x_coord = 119
-                self.mover_spot_util.movimentar_noria((y_coord, x_coord))
+                self.mover_spot_util.movimentar((y_coord, x_coord))
                 time.sleep(1)
                 if y_coord == self.pointer.get_cood_y() and x_coord == self.pointer.get_cood_x():
                     break
@@ -56,7 +55,7 @@ class UpNoriasUseCase:
             mouse_util.left_clique(self.handle, 399, 225)  # clica no ok se tiver grandinho
 
     def _posicionar_char_spot(self):
-        self.mover_spot_util.movimentar_noria((208, 129), movimentacao_proxima=True)
+        self.mover_spot_util.movimentar((208, 129), movimentacao_proxima=True)
 
         spots = spot_util.buscar_spots_noria()
         poscionar = PosicionamentoSpotService(
@@ -65,9 +64,7 @@ class UpNoriasUseCase:
             self.mover_spot_util,
             self.classe,
             None,
-            spots,
-            PathFinder.MAPA_NORIA
-        )
+            spots)
 
         poscionar.posicionar_bot_up(verificar_spot_livre=False)
 
@@ -87,6 +84,6 @@ class UpNoriasUseCase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_icarus(self.coord_spot_atual,
-                                                   verficar_se_movimentou=True)
+            self.mover_spot_util.movimentar(self.coord_spot_atual,
+                                            verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)

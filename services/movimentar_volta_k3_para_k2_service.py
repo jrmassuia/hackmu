@@ -16,8 +16,8 @@ class MovimentacaoVotaK3ParaK2Service:
 
         if safe_util.tk(self.handle):
             while True:
-                self.mover_spot_util.movimentar_tarkan((157, 58))
-                movimentou = self.mover_spot_util.movimentar_tarkan((8, 199), verficar_se_movimentou=True,
+                self.mover_spot_util.movimentar((157, 58))
+                movimentou = self.mover_spot_util.movimentar((8, 199), verficar_se_movimentou=True,
                                                                     limpar_spot_se_necessario=True,
                                                                     max_tempo=240)
                 if movimentou:
@@ -38,8 +38,8 @@ class MovimentacaoVotaK3ParaK2Service:
         self._movimentar_dentro_k3()
 
     def _mover_ate_porta_k3(self):
-        self.mover_spot_util.movimentar_kanturu_1_2((48, 227), movimentacao_proxima=True)
-        return self.mover_spot_util.movimentar_kanturu_1_2(
+        self.mover_spot_util.movimentar((48, 227), movimentacao_proxima=True)
+        return self.mover_spot_util.movimentar(
             (82, 91),
             verficar_se_movimentou=True,
             limpar_spot_se_necessario=True,
@@ -51,7 +51,7 @@ class MovimentacaoVotaK3ParaK2Service:
         coordenadas = [((68, 95), (53, 100))]
 
         for coord in coordenadas:
-            movimentou = self.mover_spot_util.movimentar_kanturu_1_2(
+            movimentou = self.mover_spot_util.movimentar(
                 coord,
                 verficar_se_movimentou=True,
                 movimentacao_proxima=True

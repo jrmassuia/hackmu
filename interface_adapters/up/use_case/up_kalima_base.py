@@ -47,7 +47,6 @@ class UpKalimaBase:
                 self._posicionar_char_spot()
             self.ja_moveu_para_kalima = True
 
-
         if self.up_liberado:
             if safe_util.devias(self.handle):
                 if self.tentativa_up > 3:
@@ -69,7 +68,7 @@ class UpKalimaBase:
         self.teclado_util.escrever_texto('/move Devias4')
         time.sleep(2)
 
-        moveu = self.mover_spot_util.movimentar_devias(
+        moveu = self.mover_spot_util.movimentar(
             (92, 156),
             limpar_spot_se_necessario=True,
             movimentacao_proxima=True
@@ -157,10 +156,14 @@ class UpKalimaBase:
             PathFinder.MAPA_KALIMA
         )
 
-        return posiconamento_service.verficar_se_char_ja_esta_spot()
+        if posiconamento_service.verficar_se_char_ja_esta_spot():
+            self.coord_mouse_atual = posiconamento_service.get_coord_mouse()
+            self.coord_spot_atual = posiconamento_service.get_coord_spot()
+            return True
+        return False
 
     def _posicionar_char_spot(self):
-        self.mover_spot_util.movimentar_kalima((102, 20), movimentacao_proxima=True)
+        self.mover_spot_util.movimentar((102, 20), movimentacao_proxima=True)
 
         spots = spot_util.buscar_spots_kalima()
         poscionar = PosicionamentoSpotService(
@@ -169,8 +172,7 @@ class UpKalimaBase:
             self.mover_spot_util,
             self.classe,
             None,
-            spots,
-            PathFinder.MAPA_KALIMA
+            spots
         )
 
         achou_spot = poscionar.posicionar_bot_up()
@@ -192,7 +194,7 @@ class UpKalimaBase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_kalima(
+            self.mover_spot_util.movimentar(
                 self.coord_spot_atual,
                 verficar_se_movimentou=True
             )

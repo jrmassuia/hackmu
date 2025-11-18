@@ -19,48 +19,18 @@ class MoverSpotUtil:
         self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
 
     def movimentar(self, coords, **kwargs):
-        pathfinder = ''
-        if self.pointer.get_mapa_atual() in 'Stadium':
-            pathfinder = PathFinder.MAPA_STADIUM
-        elif self.pointer.get_mapa_atual() in 'Lorencia':
-            pathfinder = PathFinder.MAPA_LORENCIA
-        elif self.pointer.get_mapa_atual() in 'Noria':
-            pathfinder = PathFinder.MAPA_NORIA
-        elif self.pointer.get_mapa_atual() in 'Devias':
-            pathfinder = PathFinder.MAPA_DEVIAS
-        elif self.pointer.get_mapa_atual() in 'Dungeon':
-            pathfinder = PathFinder.MAPA_DUNGEON
-        elif self.pointer.get_mapa_atual() in 'Atlans':
-            pathfinder = PathFinder.MAPA_ATLANS
-        elif self.pointer.get_mapa_atual() in 'LostTower':
-            pathfinder = PathFinder.MAPA_LOSTTOWER
-        elif self.pointer.get_mapa_atual() in 'Tarkan':
-            pathfinder = PathFinder.MAPA_TARKAN
-        elif self.pointer.get_mapa_atual() in 'Loren':
-            pathfinder = PathFinder.MAPA_LOREN
-        elif self.pointer.get_mapa_atual() in 'Aida':
-            pathfinder = PathFinder.MAPA_AIDA
-        elif self.pointer.get_mapa_atual() in 'Kanturu3':
-            pathfinder = PathFinder.MAPA_KANTURU_3
-        elif self.pointer.get_mapa_atual() in 'Kanturu' or self.pointer.get_mapa_atual() in 'Kanturu2':
-            pathfinder = PathFinder.MAPA_KANTURU_1_E_2
-        elif self.pointer.get_mapa_atual() in 'Land':
-            pathfinder = PathFinder.MAPA_LAND
-        elif self.pointer.get_mapa_atual() in 'Crywolf':
-            pathfinder = ''
+        mapas = {valor: codigo for _, codigo, valor in PathFinder.mapas}
+        self.pathfinder = PathFinder(mapas[self.pointer.get_mapa_atual()])
+        return self._movimentar_para(coords, **kwargs)
 
-        return self._movimentar_para(coords, pathfinder, **kwargs)
-
-    def _movimentar_para(self, coords, mapa,
+    def _movimentar_para(self, coords,
                          max_tempo=60,
                          verficar_se_movimentou=False,
                          limpar_spot_se_necessario=False,
                          movimentacao_proxima=False,
                          posicionar_mouse_coordenada=False):
-        self.pathfinder = PathFinder(mapa)
         return self._movimentar(
             [coords],
-            mapa,
             max_tempo=max_tempo,
             verficar_se_movimentou=verficar_se_movimentou,
             limpar_spot_se_necessario=limpar_spot_se_necessario,
@@ -68,62 +38,14 @@ class MoverSpotUtil:
             posicionar_mouse_coordenada=posicionar_mouse_coordenada
         )
 
-    # Métodos para cada mapa
-    def movimentar_lorencia(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_LORENCIA, **kwargs)
-
-    def movimentar_noria(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_NORIA, **kwargs)
-
-    def movimentar_devias(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_DEVIAS, **kwargs)
-
-    def movimentar_dungeon(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_DUNGEON, **kwargs)
-
-    def movimentar_atlans(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_ATLANS, **kwargs)
-
-    def movimentar_losttower(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_LOSTTOWER, **kwargs)
-
-    def movimentar_stadium(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_STADIUM, **kwargs)
-
-    def movimentar_icarus(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_ICARUS, **kwargs)
-
-    def movimentar_kalima(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_KALIMA, **kwargs)
-
-    def movimentar_tarkan(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_TARKAN, **kwargs)
-
-    def movimentar_aida(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_AIDA, **kwargs)
-
-    def movimentar_kanturu_1_2(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_KANTURU_1_E_2, **kwargs)
-
-    def movimentar_kanturu_3(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_KANTURU_3, **kwargs)
-
-    def movimentar_loren(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_LOREN, **kwargs)
-
-    def movimentar_land(self, coords, **kwargs):
-        return self._movimentar_para(coords, PathFinder.MAPA_LAND, **kwargs)
-
-    def _movimentar(self, destino, mapa,
+    def _movimentar(self, destino,
                     max_tempo=60,
                     verficar_se_movimentou=False,
                     limpar_spot_se_necessario=False,
                     movimentacao_proxima=False,
                     posicionar_mouse_coordenada=False):
         try:
-
             destino_y, destino_x = destino[0]
-
             tempo_inicio = time.time()
             x_ant, y_ant, hora_inicial = None, None, None
             self.esta_na_safe = False
@@ -132,10 +54,11 @@ class MoverSpotUtil:
                 while True:
                     if self._tempo_excedido(tempo_inicio, max_tempo):
                         print(
-                            'Tempo máximo atingido para movimentação com o char ' + self.pointer.get_nome_char() + ' no mapa ' + mapa)
+                            'Tempo máximo atingido para movimentação com o char ' + self.pointer.get_nome_char() + ' no mapa ' + self.pathfinder.MAPA_NOME)
                         return True
 
-                    if self._verificar_se_morreu() or (verficar_se_movimentou and self._checar_safe_zone(mapa)):
+                    if self._verificar_se_morreu() or (
+                            verficar_se_movimentou and self._checar_safe_zone(self.pathfinder.MAPA_CODIGO)):
                         self.esta_na_safe = True
                         mouse_util.desativar_click_esquerdo(self.handle)
                         return False
@@ -170,7 +93,8 @@ class MoverSpotUtil:
                         )
 
         except Exception as e:
-            print("Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " + mapa + f" : {e}")
+            print(
+                "Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " + self.pathfinder.MAPA_NOME + f" : {e}")
 
     def _checar_safe_zone(self, mapa):
         if mapa == PathFinder.MAPA_KANTURU_1_E_2:
@@ -248,7 +172,7 @@ class MoverSpotUtil:
             if 2 < len(caminho) <= 8 and self.classe in ['BK', 'MG']:
                 ultimas_posicoes = [caminho[-2]]
             elif 4 < len(caminho) <= 8:
-                ultimas_posicoes = [caminho[-4]] # 164 224
+                ultimas_posicoes = [caminho[-4]]  # 164 224
 
             if ultimas_posicoes:
                 prox_posicao = self._obter_proxima_posicao(ultimas_posicoes, self.pointer.get_cood_y(),

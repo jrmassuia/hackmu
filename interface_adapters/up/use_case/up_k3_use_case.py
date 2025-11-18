@@ -9,7 +9,6 @@ from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import buscar_coordenada_util, spot_util, mouse_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
-from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
 
@@ -56,7 +55,7 @@ class UpK3UseCase:
         return self.up_liberado
 
     def _sair_da_safe_k3(self):
-        self.mover_spot_util.movimentar_kanturu_3((94, 105), movimentacao_proxima=True)
+        self.mover_spot_util.movimentar((94, 105), movimentacao_proxima=True)
 
     def _esta_na_safe(self):
         ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
@@ -66,12 +65,11 @@ class UpK3UseCase:
         spots = spot_util.buscar_spots_k3()
         poscionar = PosicionamentoSpotService(
             self.handle,
+            self.pointer,
             self.mover_spot_util,
             self.classe,
             None,
-            spots,
-            PathFinder.MAPA_KANTURU_3
-        )
+            spots)
 
         achou_spot = poscionar.posicionar_bot_up()
 
@@ -91,6 +89,6 @@ class UpK3UseCase:
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot_util.movimentar_kanturu_3(self.coord_spot_atual,
+            self.mover_spot_util.movimentar(self.coord_spot_atual,
                                                       verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
