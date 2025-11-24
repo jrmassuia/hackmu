@@ -9,7 +9,7 @@ class GemNoSpotUtil:
     def __init__(self, handle, conexao_arduino, tempo_inicial_gem):
         self.handle = handle
         self.tempo_inicial_gem = tempo_inicial_gem
-        self.up_util = Up_util(self.handle)
+        self.up_util = Up_util()
 
     def verificar_gem(self):
         if (time.time() - self.tempo_inicial_gem) > 120:

@@ -544,7 +544,7 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointer = Pointers(handle)
+    pointer = Pointers()
     # hits = scan_padrao_sem_filtro(pointer.pm)
     resultados = listar_nomes_e_coords_por_padrao(pointer.pm)
     ordenar_proximos(pointer, resultados, limite=5)

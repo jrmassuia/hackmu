@@ -1,21 +1,23 @@
 import socket
 
+from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.pk.use_case.pk_aida_use_case import PkAidaUseCase
 from interface_adapters.pk.use_case.pk_cavalada_kanturu_use_case import PkCavaladaKanturuUseCase
 from interface_adapters.pk.use_case.pk_k3_use_case import PkK3UseCase
 from interface_adapters.pk.use_case.pk_kanturu_use_case import PkKanturuUseCase
 from interface_adapters.pk.use_case.pk_knv_use_case import PkKnvUseCase
 from interface_adapters.pk.use_case.pk_tarkan_use_case import PktarkanUseCase
+from sessao_handle import get_handle_atual
 from utils import safe_util
 from utils.rota_util import PathFinder
 
 
-class PKController:
+class PKController(BaseController):
 
-    def __init__(self, handle):
-        self.handle = handle
+    def _prepare(self):
+        self.handle = get_handle_atual()
 
-    def execute(self):
+    def _run(self):
 
         if 'PC1' in socket.gethostname():
             if safe_util.k3(self.handle):

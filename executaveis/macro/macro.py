@@ -46,7 +46,7 @@ def find_window_handle_by_partial_title(partial_title):
 
 window_title = "[1/3] MUCABRASIL"
 handle = find_window_handle_by_partial_title(window_title)
-pointers = Pointers(handle)
+pointers = Pointers()
 ponto_sd = None
 ponto_hp = None
 limite_sd_95 = 0

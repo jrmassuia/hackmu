@@ -9,12 +9,12 @@ from utils.teclado_util import Teclado_util
 
 
 class UpTarkanUseCase:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
         self.mover_spot_util = MoverSpotUtil(handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.pointer = Pointers()
+        self.up_util = Up_util()
+        self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
 
         self.tempo_inicial_corrigir_coord = 0
@@ -62,7 +62,7 @@ class UpTarkanUseCase:
 
     def _posicionar_char_spot(self):
         spots = spot_util.buscar_spots_tk2()
-        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, None, spots)
+        poscionar = PosicionamentoSpotService(self.handle, self.mover_spot_util, None, spots)
         poscionar.posicionar_bot_up()
 
         if poscionar.get_coord_mouse() is None or poscionar.get_coord_spot() is None:

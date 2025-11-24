@@ -13,14 +13,14 @@ from utils.teclado_util import Teclado_util
 
 
 class UpKalimaBase:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.mover_spot_util = MoverSpotUtil(self.handle)
+        self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
+        self.pointer = Pointers()
+        self.up_util = Up_util()
         self.auto_pick = PegarItemUseCase(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
 
         self.tempo_inicial_limpar_mob_ao_redor = 0
@@ -148,7 +148,6 @@ class UpKalimaBase:
     def verficar_se_char_ja_esta_spot(self):
         posiconamento_service = PosicionamentoSpotService(
             self.handle,
-            self.pointer,
             self.mover_spot_util,
             None,
             spot_util.buscar_spots_kalima(),
@@ -166,7 +165,6 @@ class UpKalimaBase:
         spots = spot_util.buscar_spots_kalima()
         poscionar = PosicionamentoSpotService(
             self.handle,
-            self.pointer,
             self.mover_spot_util,
             None,
             spots

@@ -33,7 +33,7 @@ def main():
     # corpo = corpo + 'Em caso de dúvidas, fale comigo no WhatsApp: (67) 99674-3107\n\n'
 
     qtd = 0
-    teclado = Teclado_util(handle)
+    teclado = Teclado_util()
     for nome in nomes:
         mouse_util.left_clique(handle, 510, 520)  # clica no escrever
         teclado.digitar_texto_email(nome.replace(" ", ""), titulo, corpo)

@@ -24,7 +24,6 @@ HTCLIENT = 1  # Hit-test no cliente da janela
 MK_LBUTTON = 0x0001  # Botão esquerdo pressionado
 MK_RBUTTON = 0x0002  # Botão direito pressionado
 
-
 def make_lparam(x: int, y: int) -> LPARAM:
     return LPARAM(y << 16 | x & 0xFFFF)
 

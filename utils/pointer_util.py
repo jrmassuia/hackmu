@@ -1,4 +1,3 @@
-
 import ctypes
 import threading
 import time
@@ -6,27 +5,59 @@ from ctypes import wintypes
 
 import pymem
 
+from sessao_handle import get_handle_atual
+
 user32 = ctypes.WinDLL("user32", use_last_error=True)
 
 
 class Pointers:
-
     _instancias: dict[int, "Pointers"] = {}
     _lock = threading.Lock()
 
-    def __new__(cls, hwnd, *args, **kwargs):
+    def __new__(cls, hwnd=None, *args, **kwargs):
         """
-        Multiton: uma instância de Pointers por hwnd,
-        uso igual Arduino(): Pointers(hwnd)
+        Multiton: uma instância de Pointers por hwnd.
+
+        - Se hwnd for None, tenta descobrir via get_handle_atual()
+          (handle associado à thread atual).
         """
+        if hwnd is None:
+            hwnd = get_handle_atual()
+
+        if hwnd is None:
+            raise RuntimeError(
+                "Pointers: hwnd não informado e nenhum handle atual na thread. "
+                "Passe o hwnd ou chame set_handle_atual(handle) antes."
+            )
+
         with cls._lock:
             inst = cls._instancias.get(hwnd)
             if inst is None:
                 inst = super().__new__(cls)
                 cls._instancias[hwnd] = inst
+                inst._inicializado = False
+                inst._hwnd = hwnd  # guarda o hwnd interno
             return inst
 
-    def __init__(self, hwnd, max_retries=3, retry_delay=1.0):
+    def __init__(self, hwnd=None, max_retries=3, retry_delay=1.0):
+        """
+        Atenção: __init__ pode ser chamado mais de uma vez para a mesma instância
+        (por causa do multiton). Usamos self._inicializado para não repetir.
+        """
+        if getattr(self, "_inicializado", False):
+            return
+
+        # Garante que temos um hwnd válido (ou do parâmetro ou do thread-local)
+        if hwnd is None:
+            hwnd = getattr(self, "_hwnd", None)
+        if hwnd is None:
+            hwnd = get_handle_atual()
+
+        if hwnd is None:
+            raise RuntimeError(
+                "Pointers.__init__: hwnd não informado e nenhum handle atual na thread."
+            )
+
         self.pm = None
         self.MODULE_NAME = "mucabrasil.exe"  # Nome do módulo do jogo
 

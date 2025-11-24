@@ -7,8 +7,10 @@ import time
 import win32gui
 
 from interface_adapters.bean.BpConfig import BpConfig
+from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.controller.DiscordBotController import DiscordBotController
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
+from sessao_handle import get_handle_atual
 from utils import mouse_util, buscar_coordenada_util, screenshot_util, safe_util, \
     acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
@@ -18,7 +20,7 @@ from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
-class BufController:
+class BufController(BaseController):
     CLASSE_BK = 'BK'
     CLASSE_SM = 'SM'
     CLASSE_EF = 'EF'
@@ -41,14 +43,14 @@ class BufController:
     MAPA_LOSTTOWER_6 = 'LostTower6'
     MAPA_LOSTTOWER_7 = 'LostTower7'
 
-    def __init__(self, handle):
-        self.handle = handle
+    def _prepare(self):
+        self.handle = get_handle_atual()
         self.tela = win32gui.GetWindowText(self.handle)
         self.sessao = Sessao(self.handle)
         self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
-        self.pointers = Pointers(handle)
-        self.teclado_util = Teclado_util(self.handle)
-        self.mover_spot_util = MoverSpotUtil(self.handle)
+        self.pointers = Pointers()
+        self.teclado_util = Teclado_util()
+        self.mover_spot_util = MoverSpotUtil()
         self.buscar_imagem = BuscarItemUtil(self.handle)
         self.channel_id_sl_bp = 1272950663466324008
         self.channel_id_sl_terminal = 1397939857443000371
@@ -61,7 +63,7 @@ class BufController:
         self.ultimo_mapa = ''
         self.teste = False
 
-    def execute(self):
+    def _run(self):
         self.teclado_util.escrever_texto("/re off")
         self.selecionar_skill()
         self.start_discord_bot()

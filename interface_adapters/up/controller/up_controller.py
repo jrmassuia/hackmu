@@ -2,7 +2,7 @@ import time
 
 import win32gui
 
-from domain.arduino_teclado import Arduino
+from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.up.up_util.up_util import Up_util
 from interface_adapters.up.use_case import (
     reset_use_case,
@@ -13,20 +13,21 @@ from interface_adapters.up.use_case import (
     up_lorencia_use_case,
     up_tk_use_case, up_noria_use_case, up_k3_use_case, up_k2_use_case, up_k6_use_case, up_k7_use_case
 )
+from sessao_handle import get_handle_atual
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
-class UpController:
+class UpController(BaseController):
 
-    def __init__(self, handle):
-        self.handle = handle
-        self.pointer = Pointers(handle)
-        self.up_util = Up_util(self.handle)
+    def _prepare(self):
+        self.handle = get_handle_atual()
+        self.pointer = Pointers()
+        self.up_util = Up_util()
         self.classe = self.pointer.get_classe()
-        self.tela = win32gui.GetWindowText(handle)
-        self.teclado_util = Teclado_util(self.handle)
-        self.conexao_arduino = Arduino()
+        self.tela = win32gui.GetWindowText(self.handle)
+        self.teclado_util = Teclado_util()
+        #
         self.eh_char_noob = None
         self.lvl_reset = None
         self.casos_uso = None
@@ -39,8 +40,7 @@ class UpController:
         self.up_em_land_liberado = None
         self.acc_free = None
 
-    def execute(self):
-
+    def _run(self):
         self.casos_uso = self._inicializar_use_cases()
         self.eh_char_noob = self.pointer.get_reset() <= 30
         self._enviar_comandos_iniciais()
@@ -231,19 +231,18 @@ class UpController:
 
     def _inicializar_use_cases(self):
         return {
-            'lorencia': up_lorencia_use_case.UpLorenciaUseCase(self.handle, self.eh_char_noob, self.conexao_arduino),
-            'noria': up_noria_use_case.UpNoriasUseCase(self.handle, self.conexao_arduino),
+            'lorencia': up_lorencia_use_case.UpLorenciaUseCase(self.handle, self.eh_char_noob),
+            'noria': up_noria_use_case.UpNoriasUseCase(self.handle),
             'atlans': up_atlans_use_case.UpAtlansUseCase(self.handle),
-            'tarkan': up_tk_use_case.UpTarkanUseCase(self.handle, self.conexao_arduino),
-            'icarus': up_icarus_use_case.UpIcarusUseCase(self.handle, self.conexao_arduino),
-            'land': up_land_use_case.UpLandUseCase(self.handle, self.conexao_arduino),
-            'k2': up_k2_use_case.UpK2UseCase(self.handle, self.conexao_arduino),
-            'k3': up_k3_use_case.UpK3UseCase(self.handle, self.conexao_arduino),
-            'aida': up_aida_use_case.UpAidaUseCaseNovo(self.handle, self.conexao_arduino),
-            'kalima6': up_k6_use_case.UpK6UseCase(self.handle, self.conexao_arduino),
-            'kalima7': up_k7_use_case.UpK7UseCase(self.handle, self.conexao_arduino),
-            'reset': reset_use_case.ResetUseCase(self.handle, self.conexao_arduino, self.pointer.get_nome_char(),
-                                                 self.pointer.get_reset())
+            'tarkan': up_tk_use_case.UpTarkanUseCase(self.handle),
+            'icarus': up_icarus_use_case.UpIcarusUseCase(self.handle),
+            'land': up_land_use_case.UpLandUseCase(self.handle),
+            'k2': up_k2_use_case.UpK2UseCase(self.handle),
+            'k3': up_k3_use_case.UpK3UseCase(self.handle),
+            'aida': up_aida_use_case.UpAidaUseCaseNovo(self.handle),
+            'kalima6': up_k6_use_case.UpK6UseCase(self.handle),
+            'kalima7': up_k7_use_case.UpK7UseCase(self.handle),
+            'reset': reset_use_case.ResetUseCase(self.handle, self.pointer.get_nome_char(), self.pointer.get_reset())
         }
 
     def _enviar_comandos_iniciais(self):

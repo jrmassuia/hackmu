@@ -8,12 +8,12 @@ from utils.pointer_util import Pointers
 
 class UpLorenciaUseCase:
 
-    def __init__(self, handle, eh_char_noob, conexao_arduino):
+    def __init__(self, handle, eh_char_noob):
         self.handle = handle
         self.eh_char_noob = eh_char_noob
-        self.pointer = Pointers(handle)
+        self.pointer = Pointers()
         self.classe = self.pointer.get_classe()
-        self.up_util = Up_util(self.handle)
+        self.up_util = Up_util()
         self.tempo_inicial_ativar_skill = 0
 
     def executar(self):
@@ -22,7 +22,7 @@ class UpLorenciaUseCase:
     def _mover_lorencia(self):
         if safe_util.lorencia(self.handle):
             self._pegar_buf()
-            MoverSpotUtil(self.handle).movimentar((139, 221),
+            MoverSpotUtil().movimentar((139, 221),
                                                            max_tempo=120,
                                                            limpar_spot_se_necessario=True,
                                                            verficar_se_movimentou=True,
@@ -37,7 +37,7 @@ class UpLorenciaUseCase:
 
     def _pegar_buf(self):
         if self.eh_char_noob:
-            MoverSpotUtil(self.handle).movimentar((170, 129), max_tempo=120)
+            MoverSpotUtil().movimentar((170, 129), max_tempo=120)
             mouse_util.left_clique(self.handle, 539, 310)
             time.sleep(3)
             mouse_util.left_clique(self.handle, 399, 225)  # clica no ok se tiver grandinho
@@ -49,7 +49,7 @@ class UpLorenciaUseCase:
             self._posicionar_sm()
 
     def _posicionar_dl(self):
-        MoverSpotUtil(self.handle).movimentar((143, 221))
+        MoverSpotUtil().movimentar((143, 221))
         mouse_util.mover(self.handle, 250, 180)
 
     def _posicionar_sm(self):

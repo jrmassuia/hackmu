@@ -12,7 +12,7 @@
 #         self.verificacao_ativa = False
 #         self.window_title = "[1/3] MUCABRASIL"
 #         self.handle = self._find_window_handle()
-#         self.pointers = Pointers(self.handle)
+#         self.pointers = Pointers()
 #         self.numero_de_potes = 4
 #         self.total_interacoes = self.numero_de_potes * 2
 #         self.delay_tecla = 0.05
@@ -209,8 +209,8 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointers = Pointers(handle)
-    teclado = Teclado_util(handle)
+    pointers = Pointers()
+    teclado = Teclado_util()
 
     numero_de_potes = 4
     total_interacoes = numero_de_potes * 2

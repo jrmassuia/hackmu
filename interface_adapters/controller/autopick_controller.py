@@ -2,36 +2,37 @@ import time
 
 import win32gui
 
-from interface_adapters.helpers.session_manager_new import *
+from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.up.up_util.up_util import Up_util
+from menu import Menu
+from sessao_menu import obter_menu
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import buscar_coordenada_util, mouse_util, safe_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
+class AutopickController(BaseController):
 
-class AutopickController:
-
-    def __init__(self, handle):
+    def __init__(self, handle: int):
+        super().__init__(handle)
         self.handle = handle
 
-        self.sessao = Sessao(handle=handle)
-        self.mover_spot_util = MoverSpotUtil(self.handle)
+        self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
         self.auto_pick = PegarItemUseCase(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.pointer = Pointers()
+        self.up_util = Up_util()
+        self.teclado_util = Teclado_util()
 
         self.executando = True  # Variável de controle para o loop
         self.iniciou_autopick = False
         self.x_coordenda_autal = self.pointer.get_cood_x()
         self.y_coordenda_autal = self.pointer.get_cood_y()
 
-    def execute(self):
+    def _run(self):
         try:
-            if self.sessao.ler_menu(MenuFields.ATIVO) == 1:
+            if obter_menu(self.handle).get(Menu.ATIVO) == 1:
                 self._processar_autopick_geral()
             else:
                 print(f"AutoPick desativado para a tela {self.handle}.")
@@ -94,7 +95,7 @@ class AutopickController:
             coordenada = (108, 143)
         else:
             coordenada = (165, 129)
-   
+
         self.mover_spot_util.movimentar(coordenada,
                                         max_tempo=180,
                                         limpar_spot_se_necessario=True,
@@ -105,9 +106,9 @@ class AutopickController:
         ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
         if (xcood and ycood) and ((85 <= xcood <= 95) and (80 <= ycood <= 90)):
             while True:
-                chegou = MoverSpotUtil(self.handle).movimentar((82, 91), max_tempo=600,
-                                                                           movimentacao_proxima=True,
-                                                                           limpar_spot_se_necessario=True)
+                chegou = MoverSpotUtil().movimentar((82, 91), max_tempo=600,
+                                                               movimentacao_proxima=True,
+                                                               limpar_spot_se_necessario=True)
                 if chegou:
                     break
             mouse_util.mover(self.handle, 490, 338)
@@ -119,8 +120,8 @@ class AutopickController:
         time.sleep(300)
         safe_util.sair_da_safe_atlans(self.mover_spot_util)
         self.mover_spot_util.movimentar((self.y_coordenda_autal, self.x_coordenda_autal),
-                                               limpar_spot_se_necessario=True,
-                                               movimentacao_proxima=True)
+                                        limpar_spot_se_necessario=True,
+                                        movimentacao_proxima=True)
 
     def _esta_na_safe_aida(self):
         ycood, xcood = buscar_coordenada_util.coordernada(self.handle)

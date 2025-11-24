@@ -14,10 +14,10 @@ class PegarItemUseCase:
 
     def __init__(self, handle):
         self.handle = handle
-        self.up_util = Up_util(self.handle)
-        self.pointer = Pointers(handle)
+        self.up_util = Up_util()
+        self.pointer = Pointers()
         self.buscar_item = BuscarItemUtil(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
 
     def execute(self):

@@ -5,12 +5,11 @@ from utils.teclado_util import Teclado_util
 
 
 def pressionar_painel_comando(handle):
-    Teclado_util(handle).tap_tecla('D')
+    Teclado_util().tap_tecla('D')
 
 
 def pressionar_painel_inventario(handle):
-    Teclado_util(handle).tap_tecla('V')
-
+    Teclado_util().tap_tecla('V')
 
 def clicar_inventario(handle):
     mouse_util.left_clique(handle, 525, 580)

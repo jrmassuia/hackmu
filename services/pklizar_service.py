@@ -16,15 +16,15 @@ class PklizarService:
 
     def __init__(self, handle, mapa):
         self.handle = handle
-        self.pointer = Pointers(handle)
+        self.pointer = Pointers()
         self.mapa = mapa
 
         self.classe = self.pointer.get_classe()
         self.titulo_janela = win32gui.GetWindowText(handle)
-        self.up_util = Up_util(self.handle)
+        self.up_util = Up_util()
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-        self.teclado = Teclado_util(self.handle)
-        self.mover_spot = MoverSpotUtil(self.handle)
+        self.teclado = Teclado_util()
+        self.mover_spot = MoverSpotUtil()
 
         self.lista_player_tohell = None
         self.lista_player_suicide = None

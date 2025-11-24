@@ -2,6 +2,7 @@ import random
 import time
 from datetime import datetime
 
+from sessao_handle import get_handle_atual
 from utils import mouse_util, safe_util
 from utils.pointer_util import Pointers
 from utils.rota_util import PathFinder
@@ -9,9 +10,9 @@ from utils.rota_util import PathFinder
 
 class MoverSpotUtil:
 
-    def __init__(self, handle):
-        self.handle = handle
-        self.pointer = Pointers(handle)
+    def __init__(self):
+        self.handle = get_handle_atual()
+        self.pointer = Pointers()
         self.pathfinder = None
         self.esta_na_safe = False
         self.classe = self.pointer.get_classe()

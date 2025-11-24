@@ -11,10 +11,10 @@ class UpAtlansUseCase:
 
     def __init__(self, handle):
         self.handle = handle
-        self.mover_spot_util = MoverSpotUtil(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.mover_spot_util = MoverSpotUtil()
+        self.pointer = Pointers()
+        self.up_util = Up_util()
+        self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
 
         self.ja_moveu_para_atlans = False

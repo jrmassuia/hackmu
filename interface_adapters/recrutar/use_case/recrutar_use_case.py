@@ -17,10 +17,10 @@ class RecrutarUseCase:
 
     def __init__(self, handle):
         self.handle = handle
-        self.pointer = Pointers(handle)
+        self.pointer = Pointers()
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-        self.teclado = Teclado_util(self.handle)
-        self.mover_spot = MoverSpotUtil(self.handle)
+        self.teclado = Teclado_util()
+        self.mover_spot = MoverSpotUtil()
         self.verificador_imagem_usebar = VerificadorImagemUseBar()
         self.json = JsonFileManager("./data/recrutamento.json")
         senha = 'is4b3ll20'

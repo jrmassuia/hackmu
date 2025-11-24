@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import win32gui
 
 from domain.arduino_teclado import Arduino
+from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.up.up_util.up_util import Up_util
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from services.guardar_gem_bau_service import GuardaGemstoneService
@@ -13,6 +14,7 @@ from services.movimentar_inicial_bot_k1_k2 import MovimentacaoInicialBotK1k2Serv
 from services.movimentar_volta_k3_para_k2_service import MovimentacaoVotaK3ParaK2Service
 from services.pklizar_service import PklizarService
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import mouse_util, spot_util, safe_util, limpar_mob_ao_redor_util
 from utils.gem_no_spot_util import GemNoSpotUtil
@@ -23,18 +25,19 @@ from utils.selecionar_char_util import SelecionarCharUtil
 from utils.teclado_util import Teclado_util
 
 
-class PickKanturuUseCase:
-    def __init__(self, handle):
+class PickKanturuUseCase(BaseController):
+
+    def _prepare(self):
         # Inicialização de atributos básicos
-        self.handle = handle
+        self.handle = get_handle_atual()
         self.arduino = Arduino()
-        self.teclado_util = Teclado_util(self.handle)
+        self.teclado_util = Teclado_util()
         self.tela = win32gui.GetWindowText(self.handle)
 
         # Utilitários relacionados ao movimento e apontadores
-        self.mover_spot_util = MoverSpotUtil(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
+        self.mover_spot_util = MoverSpotUtil()
+        self.pointer = Pointers()
+        self.up_util = Up_util()
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.pklizar = PklizarService(self.handle, PathFinder.MAPA_KANTURU_1_E_2)
         self.classe = self.pointer.get_classe()
@@ -61,7 +64,7 @@ class PickKanturuUseCase:
         # Definir spot de up inicial
         self.spot_up = self._definir_spot_up()
 
-    def execute(self):
+    def _run(self):
         self._definir_comando_inicial()
         auto_pick = PegarItemUseCase(self.handle)
 
@@ -243,7 +246,7 @@ class PickKanturuUseCase:
     def _posicionar_char_spot(self):
         if not self.verficar_se_char_ja_esta_spot():
             spots = spot_util.buscar_todos_spots_k1_k2()
-            poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.spot_up, spots)
+            poscionar = PosicionamentoSpotService(self.handle, self.mover_spot_util, self.spot_up, spots)
             poscionar.posicionar_bot_farm()
             self.chegou_spot = poscionar.get_chegou_ao_spot()
             self.coord_mouse_atual = poscionar.get_coord_mouse()
@@ -255,7 +258,6 @@ class PickKanturuUseCase:
     def verficar_se_char_ja_esta_spot(self):
         posiconamento_service = PosicionamentoSpotService(
             self.handle,
-            self.pointer,
             self.mover_spot_util,
             None,
             spot_util.buscar_todos_spots_k1_k2()
@@ -271,7 +273,7 @@ class PickKanturuUseCase:
         if self.arduino.conexao_arduino:
             gem_spot = GemNoSpotUtil(self.handle, self.arduino, self.tempo_inicial_gem)
             if gem_spot.verificar_gem():
-                SelecionarCharUtil(self.handle, self.arduino).reiniciar_char()
+                SelecionarCharUtil(self.handle).reiniciar_char()
                 GuardaGemstoneService(self.handle, self.mover_spot_util, self.up_util).guardar_gemstone_no_bau()
                 self.iniciou_up = False
             self.tempo_inicial_gem = gem_spot.tempo_inicial_gem

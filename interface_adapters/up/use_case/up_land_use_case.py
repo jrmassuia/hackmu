@@ -11,14 +11,14 @@ from utils.teclado_util import Teclado_util
 
 
 class UpLandUseCase:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
         self.auto_pick = PegarItemUseCase(self.handle)
-        self.pointer = Pointers(self.handle)
+        self.pointer = Pointers()
         self.mover_spot_util = MoverSpotUtil(handle)
-        self.up_util = Up_util(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
-        self.classe =self.pointer.get_classe()
+        self.up_util = Up_util()
+        self.teclado_util = Teclado_util()
+        self.classe = self.pointer.get_classe()
         self.ja_moveu_para_loren = False
         self.coord_spot_atual = None
         self.coord_mouse_atual = None
@@ -101,7 +101,7 @@ class UpLandUseCase:
 
     def _posicionar_em_spot_adequado(self):
         spots = spot_util.buscar_spots_land()
-        poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, None, spots)
+        poscionar = PosicionamentoSpotService(self.handle, self.mover_spot_util, None, spots)
 
         achou = poscionar.posicionar_bot_up()
         if achou:
@@ -112,7 +112,7 @@ class UpLandUseCase:
             if self.pointer.get_nome_char() == 'DL_DoMall':
                 self.teclado_util.escrever_texto("/autodc 23:00 ROMUALDO JUNIOR 400")
             elif self.pointer.get_nome_char() == 'ReiDav1':
-                self.teclado_util.escrever_texto("/autodc 23:00 Vinny Rocha TH 400")
+                self.teclado_util.escrever_texto("/autodc 23:00 ROMUALDO JUNIOR 400")
             else:
                 self.teclado_util.escrever_texto("/autodc 23:00 Romualdo JUNIOR 400")
 
@@ -132,7 +132,7 @@ class UpLandUseCase:
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
             self.mover_spot_util.movimentar(self.coord_spot_atual,
-                                                 verficar_se_movimentou=True)
+                                            verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def limpar_mob_ao_redor(self):

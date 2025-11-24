@@ -7,9 +7,9 @@ from utils.teclado_util import Teclado_util
 
 
 class SelecionarCharUtil:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.teclado_util = Teclado_util(self.handle)
+        self.teclado_util = Teclado_util()
 
     def reiniciar_char(self):
         self.teclado_util.tap_esc()

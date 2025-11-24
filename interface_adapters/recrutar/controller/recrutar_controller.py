@@ -1,10 +1,12 @@
+from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.recrutar.use_case.recrutar_use_case import RecrutarUseCase
+from sessao_handle import get_handle_atual
 
 
-class RecrutarController:
+class RecrutarController(BaseController):
 
-    def __init__(self, handle):
-        self.handle = handle
+    def _prepare(self):
+        self.handle = get_handle_atual()
 
-    def execute(self):
+    def _run(self):
         RecrutarUseCase(self.handle).execute()

@@ -4,21 +4,24 @@ import time
 import win32api
 from PIL import Image
 
+from interface_adapters.controller.BaseController import BaseController
+from sessao_handle import get_handle_atual
 from utils import mouse_util, buscar_item_util, screenshot_util, acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
 
 
-class SdMediaController:
-    def __init__(self, handle):
-        self.handle = handle
+class SdMediaController(BaseController):
 
-    def execute(self):
+    def _prepare(self):
+        self.handle = get_handle_atual()
+
+    def _run(self):
         self._iniciar_processo()
 
     def _iniciar_processo(self):
         """Inicia o processo de combinar itens e mover SDs."""
-        MoverSpotUtil(self.handle).movimentar((181, 102))
+        MoverSpotUtil().movimentar((181, 102))
         self._combinar_complex()
         self._agrupar_sd()
         exit()
@@ -92,7 +95,6 @@ class SdMediaController:
                     count += 1
                     if count == n:
                         return image[0], image[1]
-
 
     def _clicar_na_opcao_processar(self):
         self.clicar_na_imagem_ou_fallback('./static/inventario/combinar.png', None)

@@ -1,5 +1,5 @@
 from utils.pointer_util import Pointers
 
 def coordernada(handle):
-    pointer = Pointers(handle)
+    pointer = Pointers()
     return pointer.get_cood_y(), pointer.get_cood_x()

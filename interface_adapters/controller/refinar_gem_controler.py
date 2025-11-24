@@ -13,8 +13,8 @@ class RefinarGemstoneController:
     def __init__(self, handle):
         self.handle = handle
         self.conexao_arduino = Arduino()
-        self.teclado_util = Teclado_util(self.handle)
-        self.pointers = Pointers(handle)
+        self.teclado_util = Teclado_util()
+        self.pointers = Pointers()
         self.tempo = .5
         self.pos_y_ultima_joh = 0
         self.pos_x_ultima_joh = 0
@@ -25,7 +25,7 @@ class RefinarGemstoneController:
         self._iniciar_processo()
 
     def _iniciar_processo(self):
-        # MoverSpotUtil(self.handle).movimentar((75, 177))
+        # MoverSpotUtil().movimentar((75, 177))
         self.refinar()
 
     def refinar(self):

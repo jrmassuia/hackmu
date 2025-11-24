@@ -145,7 +145,7 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    pointer = Pointers(handle).teste_pointer_necessarios()
+    pointer = Pointers().teste_pointer_necessarios()
 
     # mouse_util.left_clique(handle, 482, 25)
 

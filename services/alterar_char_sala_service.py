@@ -16,9 +16,9 @@ class AlterarCharSalaService:
         self.handle = handle
         self.senha = senha
         self.char = char
-        self.up_util = Up_util(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.up_util = Up_util()
+        self.pointer = Pointers()
+        self.teclado_util = Teclado_util()
         self.titulo_janela = win32gui.GetWindowText(handle)
         self.buscar_imagem = BuscarItemUtil(self.handle)
 

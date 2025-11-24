@@ -25,16 +25,15 @@ class PkBase(ABC):
 
     def __init__(self, handle, mapa):
         self.handle = handle
-        self.pointer = Pointers(handle)
+        self.pointer = Pointers()
+        self.up_util = Up_util()
         self.classe = self.pointer.get_classe()
         self.titulo_janela = win32gui.GetWindowText(handle)
-        self.up_util = Up_util(self.handle)
         self.mapa = mapa
 
         # utilitários
-        self.teclado = Teclado_util(self.handle)
-        self.mover_spot = MoverSpotUtil(self.handle)
-        self.up = Up_util(self.handle)
+        self.teclado = Teclado_util()
+        self.mover_spot = MoverSpotUtil()
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.buscar_imagem = BuscarItemUtil(self.handle)
         self.pklizar = PklizarService(self.handle, self.mapa)
@@ -156,7 +155,7 @@ class PkBase(ABC):
         self.mover_para_sala(2)
         self.pklizar.desativar_pk()
         self.teclado.escrever_texto('/re off')
-        self.up.ativar_desc_item_spot()
+        self.up_util.ativar_desc_item_spot()
         self.mover_para_spot_vazio()
 
         ultimo_check_up = time.time()
@@ -164,7 +163,7 @@ class PkBase(ABC):
 
         while True:
             if time.time() - ultimo_check_up >= 0.5:
-                self.up.ativar_up()
+                self.up_util.ativar_up()
                 ultimo_check_up = time.time()
 
             if self._esta_na_safe():
@@ -208,7 +207,6 @@ class PkBase(ABC):
 
             posicionador = PosicionamentoSpotService(
                 self.handle,
-                self.pointer,
                 self.mover_spot,
                 None,
                 spots,
@@ -224,7 +222,6 @@ class PkBase(ABC):
     def verficar_se_char_ja_esta_spot(self):
         posiconamento_service = PosicionamentoSpotService(
             self.handle,
-            self.pointer,
             self.mover_spot,
             None,
             spot_util.buscar_todos_spots_aida()

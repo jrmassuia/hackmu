@@ -7,6 +7,7 @@ import win32gui
 
 from domain.arduino_teclado import Arduino
 from services.foco_mutex_service import FocoMutexService
+from sessao_handle import get_handle_atual
 
 kernel32 = ctypes.windll.kernel32
 usuario32 = ctypes.windll.user32
@@ -16,8 +17,8 @@ TENTATIVAS_PADRAO = 10
 
 class Teclado_util:
 
-    def __init__(self, handle):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.arduino = Arduino()
         self.foco_mutex = FocoMutexService()
 

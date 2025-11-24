@@ -9,11 +9,11 @@ from utils.pointer_util import Pointers
 
 class UpNoriasUseCase:
 
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.mover_spot_util = MoverSpotUtil(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
+        self.mover_spot_util = MoverSpotUtil()
+        self.pointer = Pointers()
+        self.up_util = Up_util()
         self.classe = self.pointer.get_classe()
 
         self.ja_moveu_para_noria = False
@@ -59,7 +59,6 @@ class UpNoriasUseCase:
         spots = spot_util.buscar_spots_noria()
         poscionar = PosicionamentoSpotService(
             self.handle,
-            self.pointer,
             self.mover_spot_util,
             None,
             spots)

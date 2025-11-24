@@ -12,14 +12,14 @@ from utils.teclado_util import Teclado_util
 
 
 class UpK3UseCase:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.mover_spot_util = MoverSpotUtil(self.handle)
+        self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle)
+        self.pointer = Pointers()
+        self.up_util = Up_util()
         self.auto_pick = PegarItemUseCase(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+        self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
 
 
@@ -64,7 +64,6 @@ class UpK3UseCase:
         spots = spot_util.buscar_spots_k3()
         poscionar = PosicionamentoSpotService(
             self.handle,
-            self.pointer,
             self.mover_spot_util,
             None,
             spots)

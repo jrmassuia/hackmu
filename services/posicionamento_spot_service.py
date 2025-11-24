@@ -4,17 +4,18 @@ from interface_adapters.up.up_util.up_util import Up_util
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from utils import mouse_util
 from utils.buscar_item_util import BuscarItemUtil
+from utils.pointer_util import Pointers
 
 
 class PosicionamentoSpotService:
-    def __init__(self, handle, pointer, mover_spot_util, spot_up, spots, conexao_arduino=None):
+    def __init__(self, handle, mover_spot_util, spot_up, spots):
         self.handle = handle
-        self.pointer = pointer
+        self.pointer = Pointers()
         self.mover_spot_util = mover_spot_util
         self.spot_up = spot_up
         self.spots = spots
         #
-        self.up_util = Up_util(self.handle)
+        self.up_util = Up_util()
         self.buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.classe = self.pointer.get_classe()
         #

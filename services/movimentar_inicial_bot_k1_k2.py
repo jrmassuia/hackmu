@@ -7,7 +7,7 @@ class MovimentacaoInicialBotK1k2Service:
         self.mover_spot_util = mover_spot_util
         self.spot_up = spot_up
         self.subir_lateral = False
-        self.up_util = Up_util(self.handle)
+        self.up_util = Up_util()
 
     def executar_movimentacao_inicial(self):
         self.mover_spot_util.movimentar(

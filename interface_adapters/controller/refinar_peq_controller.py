@@ -4,6 +4,8 @@ import time
 import win32con
 import win32gui
 
+from interface_adapters.controller.BaseController import BaseController
+from sessao_handle import get_handle_atual
 from utils import mouse_util, buscar_item_util, acao_menu_util, screenshot_util, buscar_coordenada_util, \
     safe_util
 from utils.buscar_item_util import BuscarItemUtil
@@ -21,14 +23,15 @@ def send_text(handle_np, text):
         win32gui.SendMessage(handle_np, win32con.WM_CHAR, ord(char), 0)
 
 
-class RefinarPequenaController:
-    def __init__(self, handle):
-        self.handle = handle
-        self.mover_spot_util = MoverSpotUtil(self.handle)
-        self.pointer = Pointers(self.handle)
-        self.teclado_util = Teclado_util(self.handle)
+class RefinarPequenaController(BaseController):
 
-    def execute(self):
+    def _prepare(self):
+        self.handle = get_handle_atual()
+        self.mover_spot_util = MoverSpotUtil()
+        self.pointer = Pointers()
+        self.teclado_util = Teclado_util()
+
+    def _run(self):
 
         while True:
             self._mover_noria()

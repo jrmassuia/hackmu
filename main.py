@@ -53,7 +53,7 @@ class MainApp:
 
     def _inicializar_managers(self, handle):
         FocoMutexService().inativar_foco()
-        Teclado_util(handle).pressionar_zoon()
+        Teclado_util().pressionar_zoon()
 
     def _obter_handles_por_titulo(self, titulo_parcial):
         handles = []
