@@ -22,11 +22,11 @@ def send_text(handle_np, text):
 
 
 class RefinarPequenaController:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.pointer = Pointers(self.handle)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.teclado_util = Teclado_util(self.handle)
 
     def execute(self):
 

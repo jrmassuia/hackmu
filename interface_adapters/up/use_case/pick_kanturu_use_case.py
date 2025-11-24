@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import win32gui
 
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
+from domain.arduino_teclado import Arduino
 from interface_adapters.up.up_util.up_util import Up_util
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
 from services.guardar_gem_bau_service import GuardaGemstoneService
@@ -24,23 +24,20 @@ from utils.teclado_util import Teclado_util
 
 
 class PickKanturuUseCase:
-    def __init__(self, handle, arduino):
+    def __init__(self, handle):
         # Inicialização de atributos básicos
         self.handle = handle
-        self.arduino = arduino
-        self.teclado_util = Teclado_util(self.handle, arduino)
+        self.arduino = Arduino()
+        self.teclado_util = Teclado_util(self.handle)
         self.tela = win32gui.GetWindowText(self.handle)
-
-        # Sessão e dados do personagem
-        self.sessao = Sessao(handle=handle)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
 
         # Utilitários relacionados ao movimento e apontadores
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
+        self.up_util = Up_util(self.handle)
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-        self.pklizar = PklizarService(self.handle, self.arduino, PathFinder.MAPA_KANTURU_1_E_2)
+        self.pklizar = PklizarService(self.handle, PathFinder.MAPA_KANTURU_1_E_2)
+        self.classe = self.pointer.get_classe()
 
         # Tempos iniciais para controles diversos
         self.tempo_inicial_gem = time.time()
@@ -66,7 +63,7 @@ class PickKanturuUseCase:
 
     def execute(self):
         self._definir_comando_inicial()
-        auto_pick = PegarItemUseCase(self.handle, self.arduino)
+        auto_pick = PegarItemUseCase(self.handle)
 
         print('PC - ' + socket.gethostname() + f' - Iniciando bot - {self.tela}')
         self.verficar_se_char_ja_esta_spot()  # Força a corrigir coordenadas se necessário
@@ -84,7 +81,8 @@ class PickKanturuUseCase:
 
     def _definir_spot_up(self):
         if 'PC1' in socket.gethostname():
-            spots_por_tela = [['[1/3]', 24, ''], ['[2/3]', 15, ''], ['[3/3]', 14, '']]
+            # spots_por_tela = [['[1/3]', 24, ''], ['[2/3]', 15, ''], ['[3/3]', 14, '']]
+            spots_por_tela = [['[1/3]', 1, ''], ['[2/3]', 15, ''], ['[3/3]', 14, '']]
         elif 'PC2' in socket.gethostname():
             spots_por_tela = [['[1/3]', 21, ''], ['[2/3]', 22, ''], ['[3/3]', 26, '']]
         elif 'PC3' in socket.gethostname():
@@ -245,8 +243,7 @@ class PickKanturuUseCase:
     def _posicionar_char_spot(self):
         if not self.verficar_se_char_ja_esta_spot():
             spots = spot_util.buscar_todos_spots_k1_k2()
-            poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.classe,
-                                                  self.spot_up, spots)
+            poscionar = PosicionamentoSpotService(self.handle, self.pointer, self.mover_spot_util, self.spot_up, spots)
             poscionar.posicionar_bot_farm()
             self.chegou_spot = poscionar.get_chegou_ao_spot()
             self.coord_mouse_atual = poscionar.get_coord_mouse()
@@ -260,7 +257,6 @@ class PickKanturuUseCase:
             self.handle,
             self.pointer,
             self.mover_spot_util,
-            None,
             None,
             spot_util.buscar_todos_spots_k1_k2()
         )

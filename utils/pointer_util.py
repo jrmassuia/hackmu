@@ -1,4 +1,6 @@
+
 import ctypes
+import threading
 import time
 from ctypes import wintypes
 
@@ -8,6 +10,21 @@ user32 = ctypes.WinDLL("user32", use_last_error=True)
 
 
 class Pointers:
+
+    _instancias: dict[int, "Pointers"] = {}
+    _lock = threading.Lock()
+
+    def __new__(cls, hwnd, *args, **kwargs):
+        """
+        Multiton: uma instância de Pointers por hwnd,
+        uso igual Arduino(): Pointers(hwnd)
+        """
+        with cls._lock:
+            inst = cls._instancias.get(hwnd)
+            if inst is None:
+                inst = super().__new__(cls)
+                cls._instancias[hwnd] = inst
+            return inst
 
     def __init__(self, hwnd, max_retries=3, retry_delay=1.0):
         self.pm = None
@@ -57,8 +74,10 @@ class Pointers:
             #
             self.SITUACAO_INFO_POINTER = self.get_pointer(self.CLIENT + 0x0422D16C, offsets=[0x4])
             #
+            self.CLASSE_POINTER = self.get_pointer(self.CLIENT + 0x0422CA78, offsets=[0x4C])
+            #
             # QUANDO PESQUISAR O POINTER VALIDOR O CODIGO DE TODOS OS MAPAS. A PESQUISA FAÇA PELO CODIGO QUE ESTA EM PATHFINDER
-            self.MAPA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001842B8, offsets=[0xAC4])
+            self.MAPA_ATUAL_POINTER = self.CLIENT + 0x36D1B3C
             #
             # pointer_base = self.CLIENT + 0x035245EC
             # if pointer_base:
@@ -167,6 +186,7 @@ class Pointers:
         print('SALA ATUAL:' + str(self.get_sala_atual()))
         print('MAPA ATUAL:' + str(self.get_mapa_atual()))
         print('SITUACAO INFO:' + str(self.get_situacao_info()))
+        print('CLASSE INFO:' + str(self.get_classe()))
 
     def get_cood_x(self):
         return self.read_value(self.X_POINTER, data_type="int")
@@ -239,6 +259,22 @@ class Pointers:
         if situacao == 1:
             return True
         return False
+
+    def get_classe(self):
+        classe = self.read_value(self.CLASSE_POINTER, data_type="int")
+        if classe == 0:
+            return 'SM'
+        elif classe == 1:
+            return 'BK'
+        elif classe == 2:
+            return 'EF'
+        elif classe == 3:
+            return 'MG'
+        elif classe == 4:
+            return 'DL'
+        else:
+            print('NAO ENCONTROU NENHUMA CLASSE')
+        return 'ERRO'
 
     def get_item_pick(self):
         # return self.read_value(self.ITEM_PICK_POINTER, data_type="string")

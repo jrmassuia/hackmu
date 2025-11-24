@@ -13,16 +13,16 @@ from utils.teclado_util import Teclado_util
 
 class AutopickController:
 
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
 
         self.sessao = Sessao(handle=handle)
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.tela = win32gui.GetWindowText(self.handle)
-        self.auto_pick = PegarItemUseCase(self.handle, conexao_arduino)
+        self.auto_pick = PegarItemUseCase(self.handle)
         self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.up_util = Up_util(self.handle)
+        self.teclado_util = Teclado_util(self.handle)
 
         self.executando = True  # Variável de controle para o loop
         self.iniciou_autopick = False

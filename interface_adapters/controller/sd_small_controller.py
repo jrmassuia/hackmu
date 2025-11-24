@@ -8,9 +8,9 @@ from utils.teclado_util import Teclado_util
 
 
 class SdSmallController:
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.teclado_util = Teclado_util(self.handle)
         self.bau = 15
         self.execute()
 

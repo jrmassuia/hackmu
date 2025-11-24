@@ -7,16 +7,17 @@ from utils.buscar_item_util import BuscarItemUtil
 
 
 class PosicionamentoSpotService:
-    def __init__(self, handle, pointer, mover_spot_util, classe, spot_up, spots, conexao_arduino=None):
+    def __init__(self, handle, pointer, mover_spot_util, spot_up, spots, conexao_arduino=None):
         self.handle = handle
         self.pointer = pointer
         self.mover_spot_util = mover_spot_util
-        self.classe = classe
         self.spot_up = spot_up
         self.spots = spots
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
+        #
+        self.up_util = Up_util(self.handle)
         self.buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-
+        self.classe = self.pointer.get_classe()
+        #
         self.coord_spot_atual = None
         self.coord_mouse_atual = None
         self.chegou_spot = False

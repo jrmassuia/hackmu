@@ -60,6 +60,6 @@ class MovimentacaoVotaK3ParaK2Service:
                 break
 
     def _selicionar_sala(self, sala=None):
-        alterar_sala = AlterarCharSalaService(self.handle, self.senha, self.arduino)
+        alterar_sala = AlterarCharSalaService(self.handle, self.senha)
         alterar_sala.selecionar_sala(sala)
         self.iniciou_up = True

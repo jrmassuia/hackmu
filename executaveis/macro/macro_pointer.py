@@ -111,7 +111,6 @@ import win32api
 import win32con
 import win32gui
 
-from domain.arduino_teclado import Arduino
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
@@ -211,7 +210,7 @@ def main():
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
     pointers = Pointers(handle)
-    teclado = Teclado_util(handle, Arduino())
+    teclado = Teclado_util(handle)
 
     numero_de_potes = 4
     total_interacoes = numero_de_potes * 2

@@ -12,14 +12,13 @@ from utils.teclado_util import Teclado_util
 
 
 class AlterarCharSalaService:
-    def __init__(self, handle, senha, arduino, char=None):
+    def __init__(self, handle, senha, char=None):
         self.handle = handle
         self.senha = senha
-        self.arduino = arduino
         self.char = char
-        self.up_util = Up_util(self.handle, conexao_arduino=arduino)
+        self.up_util = Up_util(self.handle)
         self.pointer = Pointers(self.handle)
-        self.teclado_util = Teclado_util(self.handle, arduino)
+        self.teclado_util = Teclado_util(self.handle)
         self.titulo_janela = win32gui.GetWindowText(handle)
         self.buscar_imagem = BuscarItemUtil(self.handle)
 

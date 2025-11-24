@@ -2,8 +2,10 @@ import ctypes
 import os
 import time
 
+from domain.arduino_teclado import Arduino
 from utils import mouse_util, screenshot_util, limpar_mob_ao_redor_util
 from utils.buscar_item_util import BuscarItemUtil
+from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 usuario32 = ctypes.windll.user32
@@ -12,11 +14,11 @@ kernel32 = ctypes.windll.kernel32
 
 class Up_util:
 
-    def __init__(self, handle, pointer=None, conexao_arduino=None):
+    def __init__(self, handle):
         self.handle = handle
-        self.pointer = pointer
-        self.arduino = conexao_arduino
-        self.teclado_util = Teclado_util(self.handle, self.arduino)
+        self.pointer = Pointers(handle)
+        self.arduino = Arduino()
+        self.teclado_util = Teclado_util(self.handle)
 
     def acao_painel_personagem(self, tecla, abrir=True):
         while True:

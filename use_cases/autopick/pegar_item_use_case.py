@@ -2,20 +2,23 @@ import time
 
 from interface_adapters.helpers.session_manager_new import *
 from interface_adapters.up.up_util.up_util import Up_util
+from menu import Menu
+from sessao_menu import obter_menu
 from utils import mouse_util, screenshot_util
 from utils.buscar_item_util import BuscarItemUtil
+from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
 class PegarItemUseCase:
 
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.sessao = Sessao(handle=handle)
-        self.up_util = Up_util(self.handle, conexao_arduino=conexao_arduino)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
+        self.up_util = Up_util(self.handle)
+        self.pointer = Pointers(handle)
         self.buscar_item = BuscarItemUtil(self.handle)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.teclado_util = Teclado_util(self.handle)
+        self.classe = self.pointer.get_classe()
 
     def execute(self):
         self._ativar_up()
@@ -38,14 +41,14 @@ class PegarItemUseCase:
         return x, y, item
 
     def _buscar_item_especifico(self, item_especifico):
+        if 'gemstone' in item_especifico:
+            eh_geno = self.buscar_item.buscar_item_simples('./static/img/genocider.png')
+            if eh_geno:
+                return None, None, None
+
         x, y, item = self.buscar_item.buscar_item_especifico_autopick(item_especifico)
         x, y = self._calibrar(x, y, item)
         return x, y, item
-
-    # if 'gemstone' in item and screenshot_util.is_image_in_region('./static/img/genocider.png',
-    #                                                              item,
-    #                                                              threshold=.8):
-    #     return
 
     def _processar_item(self, x, y, item):
         time.sleep(0.5)  # Tempo para o item cair no chão
@@ -86,7 +89,7 @@ class PegarItemUseCase:
         return achou_item
 
     def _achou_item_zen(self, item, x, y):
-        if self.sessao.ler_menu(MenuFields.UPAR) == 1:
+        if obter_menu(self.handle).get(Menu.UPAR) == 1:
             x = int(x)
             y = int(y)
             if 'zen' in item:
@@ -104,8 +107,8 @@ class PegarItemUseCase:
         if item is None:
             return None, None
 
-        if self.sessao.ler_menu(MenuFields.JOIAS) == 1 or self.sessao.ler_menu(
-                MenuFields.UPAR) == 1 or self.sessao.ler_menu(MenuFields.PICKKANTURU) == 1:
+        if obter_menu(self.handle).get(Menu.JOIAS) == 1 or obter_menu(self.handle).get(Menu.UPAR) == 1 or obter_menu(
+                self.handle).get(Menu.PICKKANTURU) == 1:
             if 'gemstone' in item:
                 return self._calibrar_comum(x, y)
             # elif 'joia' in item:
@@ -113,7 +116,7 @@ class PegarItemUseCase:
             # elif 'key' in item:c
             # elif 'kalima' in item and self.sessao.ler_menu(MenuFields.UPAR) == 1 and self.classe != 'EF':
             #     return self._calibrar_comum(x, y)
-            elif 'zen' in item and self.sessao.ler_menu(MenuFields.UPAR) == 1:
+            elif 'zen' in item and obter_menu(self.handle).get(Menu.UPAR) == 1:
                 return self._calibrar_zen(x, y)
         else:
             if 'gemsto ne' in item:

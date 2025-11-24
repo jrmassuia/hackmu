@@ -2,7 +2,7 @@ import time
 
 import win32gui
 
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
+from domain.arduino_teclado import Arduino
 from interface_adapters.up.up_util.up_util import Up_util
 from interface_adapters.up.use_case import (
     reset_use_case,
@@ -19,15 +19,14 @@ from utils.teclado_util import Teclado_util
 
 class UpController:
 
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.sessao = Sessao(handle=handle)
         self.pointer = Pointers(handle)
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
+        self.up_util = Up_util(self.handle)
+        self.classe = self.pointer.get_classe()
         self.tela = win32gui.GetWindowText(handle)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
-        self.conexao_arduino = conexao_arduino
+        self.teclado_util = Teclado_util(self.handle)
+        self.conexao_arduino = Arduino()
         self.eh_char_noob = None
         self.lvl_reset = None
         self.casos_uso = None
@@ -234,7 +233,7 @@ class UpController:
         return {
             'lorencia': up_lorencia_use_case.UpLorenciaUseCase(self.handle, self.eh_char_noob, self.conexao_arduino),
             'noria': up_noria_use_case.UpNoriasUseCase(self.handle, self.conexao_arduino),
-            'atlans': up_atlans_use_case.UpAtlansUseCase(self.handle, self.conexao_arduino),
+            'atlans': up_atlans_use_case.UpAtlansUseCase(self.handle),
             'tarkan': up_tk_use_case.UpTarkanUseCase(self.handle, self.conexao_arduino),
             'icarus': up_icarus_use_case.UpIcarusUseCase(self.handle, self.conexao_arduino),
             'land': up_land_use_case.UpLandUseCase(self.handle, self.conexao_arduino),

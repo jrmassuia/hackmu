@@ -6,10 +6,6 @@ from utils import safe_util, spot_util, mouse_util, limpar_mob_ao_redor_util
 
 
 class PktarkanUseCase(PkBase):
-    """
-    Implementação PK para Tarkan.
-    Mantive a assinatura dos métodos públicos e a lógica principal, mas renomeei e documentei.
-    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

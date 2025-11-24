@@ -1,17 +1,20 @@
 import random
 import time
 
+from domain.arduino_teclado import Arduino
 from utils import mouse_util, buscar_item_util, screenshot_util, acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
+from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
 class RefinarGemstoneController:
 
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.conexao_arduino = conexao_arduino
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.conexao_arduino = Arduino()
+        self.teclado_util = Teclado_util(self.handle)
+        self.pointers = Pointers(handle)
         self.tempo = .5
         self.pos_y_ultima_joh = 0
         self.pos_x_ultima_joh = 0
@@ -26,11 +29,10 @@ class RefinarGemstoneController:
         self.refinar()
 
     def refinar(self):
-        """Combina itens enquanto houver itens para combinar."""
         while True:
             if not self._preparar_combinar():
-                acao_menu_util.pressionar_painel_inventario(self.handle, self.conexao_arduino)
-                # self.teclado_util.escrever_texto('/move noria')
+                acao_menu_util.pressionar_painel_inventario(self.handle)
+                self.teclado_util.escrever_texto('/move noria')
                 exit()
 
     def _preparar_combinar(self):
@@ -42,9 +44,12 @@ class RefinarGemstoneController:
         return self._mover_gemstone_para_cm()
 
     def _clicar_na_elpis(self):
-        self._mover_click(450, 250) # 75, 177
-        # self._mover_click(480, 240)  # 75 176
-        # self._mover_click(490, 200)  # 77 174
+        if self.pointers.get_cood_y() == 75 and self.pointers.get_cood_x() == 176:
+            self._mover_click(490, 243)  # 75 176
+        elif self.pointers.get_cood_y() == 75 and self.pointers.get_cood_x() == 177:
+            self._mover_click(487, 242)  # 75, 177
+        elif self.pointers.get_cood_y() == 77 and self.pointers.get_cood_x() == 174:
+            self._mover_click(490, 200)  # 77 174
 
     def _clicar_na_opcao_refinar_gemstone(self):
         self._mover_click(450, 350)
@@ -116,7 +121,7 @@ class RefinarGemstoneController:
 
             conta += 0.1
 
-        acao_menu_util.pressionar_painel_inventario(self.handle, self.conexao_arduino)
+        acao_menu_util.pressionar_painel_inventario(self.handle)
 
     def _mover_para_inventario(self, screenshot_cm):
         image_positions = buscar_item_util.buscar_posicoes_item_epecifico(

@@ -9,7 +9,7 @@ import win32gui
 from interface_adapters.bean.BpConfig import BpConfig
 from interface_adapters.controller.DiscordBotController import DiscordBotController
 from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
-from utils import mouse_util, buscar_coordenada_util, buscar_item_util, screenshot_util, safe_util, \
+from utils import mouse_util, buscar_coordenada_util, screenshot_util, safe_util, \
     acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.json_file_manager_util import JsonFileManager
@@ -41,14 +41,13 @@ class BufController:
     MAPA_LOSTTOWER_6 = 'LostTower6'
     MAPA_LOSTTOWER_7 = 'LostTower7'
 
-    def __init__(self, handle, conexao_arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.conexao_arduino = conexao_arduino
         self.tela = win32gui.GetWindowText(self.handle)
         self.sessao = Sessao(self.handle)
         self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
         self.pointers = Pointers(handle)
-        self.teclado_util = Teclado_util(self.handle, self.conexao_arduino)
+        self.teclado_util = Teclado_util(self.handle)
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.buscar_imagem = BuscarItemUtil(self.handle)
         self.channel_id_sl_bp = 1272950663466324008
@@ -246,7 +245,7 @@ class BufController:
 
                 if achou_btn_fechar is None:
 
-                    acao_menu_util.pressionar_painel_comando(self.handle, self.conexao_arduino)
+                    acao_menu_util.pressionar_painel_comando(self.handle)
                     time.sleep(.5)
 
                     screenshot = screenshot_util.capture_window(self.handle)

@@ -4,12 +4,12 @@ from utils import mouse_util, screenshot_util, buscar_item_util
 from utils.teclado_util import Teclado_util
 
 
-def pressionar_painel_comando(handle, conexao_arduino):
-    Teclado_util(handle, conexao_arduino).tap_tecla('D')
+def pressionar_painel_comando(handle):
+    Teclado_util(handle).tap_tecla('D')
 
 
-def pressionar_painel_inventario(handle, conexao_arduino):
-    Teclado_util(handle, conexao_arduino).tap_tecla('V')
+def pressionar_painel_inventario(handle):
+    Teclado_util(handle).tap_tecla('V')
 
 
 def clicar_inventario(handle):

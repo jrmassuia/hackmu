@@ -15,17 +15,16 @@ from utils.teclado_util import Teclado_util
 class RecrutarUseCase:
     COOLDOWN_DIAS = 7
 
-    def __init__(self, handle, arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.arduino = arduino
         self.pointer = Pointers(handle)
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-        self.teclado = Teclado_util(self.handle, arduino)
+        self.teclado = Teclado_util(self.handle)
         self.mover_spot = MoverSpotUtil(self.handle)
         self.verificador_imagem_usebar = VerificadorImagemUseBar()
         self.json = JsonFileManager("./data/recrutamento.json")
         senha = 'is4b3ll20'
-        self.alternar_sala = AlterarCharSalaService(self.handle, senha, self.arduino, self.pointer.get_nome_char())
+        self.alternar_sala = AlterarCharSalaService(self.handle, senha, self.pointer.get_nome_char())
 
     def execute(self):
         self.mover_sala()

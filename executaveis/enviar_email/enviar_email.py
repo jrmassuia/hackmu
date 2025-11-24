@@ -2,7 +2,6 @@ import time
 
 import win32gui
 
-from domain.arduino_teclado import Arduino
 from utils import mouse_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.teclado_util import Teclado_util
@@ -34,8 +33,7 @@ def main():
     # corpo = corpo + 'Em caso de dúvidas, fale comigo no WhatsApp: (67) 99674-3107\n\n'
 
     qtd = 0
-    arduino = Arduino()
-    teclado = Teclado_util(handle, arduino)
+    teclado = Teclado_util(handle)
     for nome in nomes:
         mouse_util.left_clique(handle, 510, 520)  # clica no escrever
         teclado.digitar_texto_email(nome.replace(" ", ""), titulo, corpo)

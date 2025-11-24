@@ -1,104 +1,107 @@
 import tkinter as tk
-from tkinter import messagebox
-from PIL import Image, ImageTk  # Biblioteca para manipular imagens
+from tkinter import messagebox, ttk
 
-class MenuGUI:
+class Menu:
+
+    AUTOPICK = "autopick"
+    SD = "sd"
+    UPAR = "upar"
+    ATIVO = "ativo"
+    JOIAS = "joias"
+    LIMPAPK = "limpa_pk"
+    PICKKANTURU = "pickKanturu"
+    ATLANS = 'atlans'
+    SD_SMALL = "sd_small"
+    SD_MEDIA = "sd_media"
+    REF_GEM = "ref_gem"
+    REF_PEQ = "ref_peq"
+    BUF = "buf"
+    PKLIZAR = "pk"
+    RECRUTAR = "recrutar"
+
+
     def __init__(self, app):
         self.app = app
         self.root = tk.Tk()
-        self.root.title("Menu")
-        self.root.geometry("250x300")  # Reduzir a resolução da janela
-        self.root.minsize(250, 370)  # Tamanho mínimo da janela
-        self.root.configure(bg="#f0f0f0")  # Cor de fundo
-
-        # Variável para armazenar a opção geral selecionada
-        self.opcao_geral = tk.StringVar(value='autopick')
+        self.root.title("Menu Interativo")
+        self.root.geometry("350x500")
+        # self.root.minsize(600, 500)
+        self.root.configure(bg="#2b2b2b")
 
         self.autopick_telas = None
         self._criar_interface()
 
     def _criar_interface(self):
-        frame_hack = tk.Frame(self.root, bg="#f0f0f0")
-        frame_hack.pack(pady=5, fill='x')  # Reduzir o espaçamento
+        self.root.rowconfigure(1, weight=1)
+        self.root.columnconfigure(0, weight=1)
 
-        tk.Label(frame_hack, text="Escolha um hack:", bg="#f0f0f0", font=("Arial", 9)).grid(row=0, column=0, columnspan=3, sticky='w')
+        titulo = tk.Label(self.root, text="Menu de Configuração", font=("Helvetica", 16, "bold"), fg="white", bg="#2b2b2b")
+        titulo.grid(row=0, column=0, pady=10, sticky="n")
 
-        opcoes_menu_geral = [
-            ('Pick(1)', 'autopick'),
-            ('SD(2)', 'sd'),
-            ('Refinar(3)', 'refinar'),
-            ('Upar(4)', 'upar'),
-            ('Pote(5)', 'pote')
-        ]
+        estilo_frame = ttk.Style()
+        estilo_frame.configure("Custom.TLabelframe", background="#3c3f41", foreground="white")
+        estilo_frame.configure("Custom.TLabelframe.Label", font=("Arial", 10, "bold"))
 
-        # Ajustar para que apenas três Radiobuttons fiquem por linha
-        for idx, (texto, valor) in enumerate(opcoes_menu_geral):
-            row = idx // 3  # Divisão inteira para controlar a linha (3 por linha)
-            col = idx % 3   # Alternar entre coluna 0, 1 e 2
-            tk.Radiobutton(frame_hack, text=texto, variable=self.opcao_geral, value=valor, font=("Arial", 8)).grid(row=row+1, column=col, padx=5, pady=2)
+        self.frame_autopick = ttk.LabelFrame(self.root, text="Configurações por Tela", style="Custom.TLabelframe")
+        self.frame_autopick.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.frame_autopick = tk.Frame(self.root)
         self._criar_opcoes_menu(self.frame_autopick)
-        self.frame_autopick.pack(pady=5, fill='both', expand=True)
 
-        self.botao_confirmar = tk.Button(self.root, text="Iniciar", command=self._confirmar_selecao, bg="#4CAF50", fg="white", font=("Arial", 10))
-        self.botao_confirmar.pack(pady=10)
-
-        self.root.grid_rowconfigure(1, weight=1)
-        self.root.grid_columnconfigure(0, weight=1)
+        self.botao_confirmar = tk.Button(self.root, text="Iniciar", command=self._confirmar_selecao,
+                                         bg="#4CAF50", fg="white", font=("Arial", 12, "bold"))
+        self.botao_confirmar.grid(row=2, column=0, pady=(0, 10))
 
     def _criar_opcoes_menu(self, parent):
         self.autopick_telas = {}
-        tk.Label(parent, text="Opções:", font=("Arial", 9)).grid(row=0, column=0, columnspan=1, sticky='w')
-
         telas = [('Tela 1', {}), ('Tela 2', {}), ('Tela 3', {})]
+        opcoes = [
+            ('joias', 'Pick Joias'),
+            ('limpa_pk', 'Limpar PK'),
+            ('pickKanturu', 'Pick Kant.'),
+            ('atlans', 'Pick Atlans'),
+            ('sd_small', 'SD Small'),
+            ('sd_media', 'SD Media'),
+            ('ref_gem', 'Ref. Gem'),
+            ('ref_peq', 'Ref. Peq'),
+            ('upar', 'AutoUp'),
+            ('buf', 'Buf'),
+            ('pk', 'Pklizar'),
+            ('recrutar', 'Recrutar')
+        ]
 
-        for idx, (tela_nome, tela_vars) in enumerate(telas):
-            self.autopick_telas[tela_nome] = {
-                'ativo': tk.IntVar(),
-                'joias': tk.IntVar(),
-                'limpa_pk': tk.IntVar(),
-                'k3': tk.IntVar(),
-                'atlans': tk.IntVar(),
-                'sd_small': tk.IntVar(),
-                'sd_media': tk.IntVar(),
-                'ref_gem': tk.IntVar(),
-                'ref_peq': tk.IntVar()
-            }
-            tk.Label(parent, text=tela_nome, font=("Arial", 8)).grid(row=1, column=idx, padx=5, sticky='w')
+        for idx, (tela_nome, _) in enumerate(telas):
+            frame_tela = tk.Frame(parent, bg="#3c3f41")
+            frame_tela.grid(row=0, column=idx, padx=10, pady=5, sticky="n")
+            tk.Label(frame_tela, text=tela_nome, font=("Arial", 10, "bold"), bg="#3c3f41", fg="white").pack()
 
-            tk.Checkbutton(parent, text='Ativar', variable=self.autopick_telas[tela_nome]['ativo'], font=("Arial", 7)).grid(row=2, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='Joias', variable=self.autopick_telas[tela_nome]['joias'], font=("Arial", 7)).grid(row=3, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='Limpa PK', variable=self.autopick_telas[tela_nome]['limpa_pk'], font=("Arial", 7)).grid(row=4, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='K3', variable=self.autopick_telas[tela_nome]['k3'], font=("Arial", 7)).grid(row=5, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='Atlans', variable=self.autopick_telas[tela_nome]['atlans'], font=("Arial", 7)).grid(row=6, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='SD Small', variable=self.autopick_telas[tela_nome]['sd_small'], font=("Arial", 7)).grid(row=7, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='SD Media', variable=self.autopick_telas[tela_nome]['sd_media'], font=("Arial", 7)).grid(row=8, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='Ref. Gem', variable=self.autopick_telas[tela_nome]['ref_gem'], font=("Arial", 7)).grid(row=9, column=idx, padx=5, sticky='w')
-            tk.Checkbutton(parent, text='Ref. Peq', variable=self.autopick_telas[tela_nome]['ref_peq'], font=("Arial", 7)).grid(row=10, column=idx, padx=5, sticky='w')
+            self.autopick_telas[tela_nome] = {k: tk.IntVar() for k, _ in [('ativo', 'Ativo')] + opcoes}
+
+            def gerar_callback(tela):
+                return lambda *_: self.autopick_telas[tela]['ativo'].set(1)
+
+            tk.Checkbutton(frame_tela, text='Ativo', variable=self.autopick_telas[tela_nome]['ativo'],
+                           font=("Arial", 8), bg="#3c3f41", fg="white", selectcolor="#4CAF50",
+                           command=gerar_callback(tela_nome)).pack(anchor='w')
+
+            for var_name, label in opcoes:
+                cb = tk.Checkbutton(frame_tela, text=label, variable=self.autopick_telas[tela_nome][var_name],
+                                    font=("Arial", 8), bg="#3c3f41", fg="white", selectcolor="#4CAF50",
+                                    command=gerar_callback(tela_nome))
+                cb.pack(anchor='w')
 
     def _confirmar_selecao(self):
-        opcao_geral = self.opcao_geral.get()
-
-        if opcao_geral == '':
-            messagebox.showwarning("Seleção Inválida", "Por favor, selecione uma opção.")
-            return
-
-        # if opcao_geral == 'autopick':
         autopick_selecionado = {
             '[1/3] MUCABRASIL': self._get_autopick_selecoes(self.autopick_telas['Tela 1']),
             '[2/3] MUCABRASIL': self._get_autopick_selecoes(self.autopick_telas['Tela 2']),
             '[3/3] MUCABRASIL': self._get_autopick_selecoes(self.autopick_telas['Tela 3'])
         }
-        if all(not selecionado['ativo'] for selecionado in autopick_selecionado.values()):
-            messagebox.showwarning("Seleção Inválida", "Por favor, ative pelo menos uma tela para o Autopick.")
+
+        if all(not tela['ativo'] for tela in autopick_selecionado.values()):
+            messagebox.showwarning("Seleção Inválida", "Ative pelo menos uma tela.")
             return
 
         self.app.menu_autopick = autopick_selecionado
-        # else:
-        #     self.app.menu_autopick = {}
-
-        self.app.menu_geral = opcao_geral
+        print("Configuração aplicada com sucesso.")
         self.root.quit()
 
     def _get_autopick_selecoes(self, tela_vars):
@@ -106,12 +109,16 @@ class MenuGUI:
             'ativo': tela_vars['ativo'].get(),
             'joias': tela_vars['joias'].get(),
             'limpa_pk': tela_vars['limpa_pk'].get(),
-            'k3': tela_vars['k3'].get(),
+            'pickKanturu': tela_vars['pickKanturu'].get(),
             'atlans': tela_vars['atlans'].get(),
             'sd_small': tela_vars['sd_small'].get(),
             'sd_media': tela_vars['sd_media'].get(),
             'ref_gem': tela_vars['ref_gem'].get(),
-            'ref_peq': tela_vars['ref_peq'].get()
+            'ref_peq': tela_vars['ref_peq'].get(),
+            'upar': tela_vars['upar'].get(),
+            'buf': tela_vars['buf'].get(),
+            'pk': tela_vars['pk'].get(),
+            'recrutar': tela_vars['recrutar'].get()
         }
 
     def run(self):

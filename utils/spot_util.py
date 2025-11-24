@@ -587,11 +587,11 @@ def buscar_spots_k2():
         ],
         [
             [['SM', 'MG', 'BK'], [(37, 74)], (398, 240)],  # 25
-            [['DL'], [(46, 49)], (275, 201)] #falta configurar
+            [['DL'], [(37, 74)], (275, 201)] #falta configurar
         ],
         [
             [['SM', 'MG', 'BK'], [(45, 94)], (398, 240)],  # 26
-            [['DL'], [(46, 49)], (275, 201)] #falta configurar
+            [['DL'], [(45, 94)], (275, 201)] #falta configurar
         ]
     ])
     return coordenadas

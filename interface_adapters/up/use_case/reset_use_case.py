@@ -14,11 +14,10 @@ class ResetUseCase:
         self.handle = handle
         self.char_nome = char_nome
         self.resets = resets
-        self.sessao = Sessao(handle=handle)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
         self.pointer = Pointers(handle)
         self.conexao_arduino = conexao_arduino
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.teclado_util = Teclado_util(self.handle)
+        self.classe = self.pointer.get_classe()
 
     def executar(self):
         if self.resets >= 250:
@@ -101,7 +100,7 @@ class ResetUseCase:
             self.teclado_util.escrever_texto("/v 3000")
             self.teclado_util.escrever_texto("/e 32485")
         elif self.char_nome == 'ReiDav1':
-            self.teclado_util.escrever_texto("/f 500")
+            self.teclado_util.escrever_texto("/f 9000")
             self.teclado_util.escrever_texto("/a 12000")
             self.teclado_util.escrever_texto("/v 500")
             self.teclado_util.escrever_texto("/e 20000")

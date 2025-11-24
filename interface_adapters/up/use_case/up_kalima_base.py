@@ -1,6 +1,7 @@
 import time
+
 import win32gui
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
+
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
@@ -8,21 +9,19 @@ from utils import mouse_util, acao_menu_util, safe_util, spot_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
-from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
 
 class UpKalimaBase:
     def __init__(self, handle, conexao_arduino):
         self.handle = handle
-        self.sessao = Sessao(handle=handle)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.tela = win32gui.GetWindowText(self.handle)
         self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
-        self.auto_pick = PegarItemUseCase(self.handle, conexao_arduino)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.up_util = Up_util(self.handle)
+        self.auto_pick = PegarItemUseCase(self.handle)
+        self.teclado_util = Teclado_util(self.handle)
+        self.classe = self.pointer.get_classe()
 
         self.tempo_inicial_limpar_mob_ao_redor = 0
         self.tempo_inicial_ativar_skill = 0
@@ -33,14 +32,15 @@ class UpKalimaBase:
         self.tentativa_up = 0
 
     def executar(self):
-        esta_no_spot = self.verficar_se_char_ja_esta_spot()
 
-        if not esta_no_spot or self.classe == 'EF' or (
+        if self.classe == 'EF' or (
                 self.ja_moveu_para_kalima is False and self._possui_convite() is False):
             return False
 
         if not self.ja_moveu_para_kalima:
-            if not esta_no_spot:
+            if self.pointer.get_mapa_atual() == 1131413504:
+                self._posicionar_char_spot()
+            elif not self.verficar_se_char_ja_esta_spot():
                 moveu = self._mover_e_abrir_portal()
                 if not moveu:
                     return False
@@ -150,10 +150,8 @@ class UpKalimaBase:
             self.handle,
             self.pointer,
             self.mover_spot_util,
-            self.classe,
             None,
             spot_util.buscar_spots_kalima(),
-            PathFinder.MAPA_KALIMA
         )
 
         if posiconamento_service.verficar_se_char_ja_esta_spot():
@@ -170,7 +168,6 @@ class UpKalimaBase:
             self.handle,
             self.pointer,
             self.mover_spot_util,
-            self.classe,
             None,
             spots
         )

@@ -1,12 +1,10 @@
 import time
 
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import buscar_coordenada_util, mouse_util, spot_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
-from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
 
@@ -14,12 +12,11 @@ class UpIcarusUseCase:
 
     def __init__(self, handle, conexao_arduino):
         self.handle = handle
-        self.sessao = Sessao(handle=handle)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
         self.mover_spot_util = MoverSpotUtil(self.handle)
         self.pointer = Pointers(self.handle)
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=conexao_arduino)
-        self.teclado_util = Teclado_util(self.handle, conexao_arduino)
+        self.up_util = Up_util(self.handle)
+        self.teclado_util = Teclado_util(self.handle)
+        self.classe = self.pointer.get_classe()
         #
         self.ja_moveu_para_icarus = False
         self.tempo_inicial_limpar_mob_ao_redor = 0
@@ -70,7 +67,6 @@ class UpIcarusUseCase:
             self.handle,
             self.pointer,
             self.mover_spot_util,
-            self.classe,
             None,
             spots)
 

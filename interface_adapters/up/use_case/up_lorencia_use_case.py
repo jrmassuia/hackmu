@@ -1,9 +1,9 @@
 import time
 
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.up.up_util.up_util import Up_util
 from utils import mouse_util, safe_util
 from utils.mover_spot_util import MoverSpotUtil
+from utils.pointer_util import Pointers
 
 
 class UpLorenciaUseCase:
@@ -11,9 +11,9 @@ class UpLorenciaUseCase:
     def __init__(self, handle, eh_char_noob, conexao_arduino):
         self.handle = handle
         self.eh_char_noob = eh_char_noob
-        self.sessao = Sessao(handle=handle)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
-        self.up_util = Up_util(self.handle, conexao_arduino=conexao_arduino)
+        self.pointer = Pointers(handle)
+        self.classe = self.pointer.get_classe()
+        self.up_util = Up_util(self.handle)
         self.tempo_inicial_ativar_skill = 0
 
     def executar(self):

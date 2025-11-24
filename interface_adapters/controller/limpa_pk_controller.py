@@ -26,7 +26,7 @@ class LimpaPkController:
             self.mover_spot_util.movimentar((coody, coodx),
                                             verficar_se_movimentou=True)
             mouse_util.mover(self.handle, mousex, mousey)
-            time.sleep(3)
+            time.sleep(60)
 
     def _localizar_mouse(self):
         while True:

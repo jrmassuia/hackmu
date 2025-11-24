@@ -147,7 +147,6 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     pointer = Pointers(handle).teste_pointer_necessarios()
 
-    # movimentou = MoverSpotUtil(handle).movimentar((130, 118))
     # mouse_util.left_clique(handle, 482, 25)
 
     # spots = spot_util.buscar_spots_aida_volta_final(ignorar_spot_pk=True)

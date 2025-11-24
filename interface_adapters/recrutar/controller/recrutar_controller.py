@@ -3,9 +3,8 @@ from interface_adapters.recrutar.use_case.recrutar_use_case import RecrutarUseCa
 
 class RecrutarController:
 
-    def __init__(self, handle, arduino):
+    def __init__(self, handle):
         self.handle = handle
-        self.arduino = arduino
 
     def execute(self):
-        RecrutarUseCase(self.handle, self.arduino).execute()
+        RecrutarUseCase(self.handle).execute()

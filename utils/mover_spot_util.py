@@ -2,7 +2,6 @@ import random
 import time
 from datetime import datetime
 
-from interface_adapters.helpers.session_manager_new import *
 from utils import mouse_util, safe_util
 from utils.pointer_util import Pointers
 from utils.rota_util import PathFinder
@@ -12,11 +11,10 @@ class MoverSpotUtil:
 
     def __init__(self, handle):
         self.handle = handle
-        self.sessao = Sessao(handle=handle)
         self.pointer = Pointers(handle)
         self.pathfinder = None
         self.esta_na_safe = False
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
+        self.classe = self.pointer.get_classe()
 
     def movimentar(self, coords, **kwargs):
         mapas = {valor: codigo for _, codigo, valor in PathFinder.mapas}

@@ -24,13 +24,14 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     while True:
         try:
+            # client_x, client_y, _, _ = get_window_rect_by_handle(handle)
             client_x, client_y, _, _ = get_client_rect_by_handle(handle)
             mouse_x, mouse_y = pyautogui.position()
             relative_x = mouse_x - client_x
             relative_y = mouse_y - client_y
 
             print(f"Posição do Mouse na Área Cliente da Janela: X={relative_x}, Y={relative_y}")
-            time.sleep(0.8)  # Pequeno delay para evitar uso excessivo de CPU
+            time.sleep(0.8)  # Pequeno delay para evitar uso excessivo de CPU y=311
         except KeyboardInterrupt:
             print("Monitoramento encerrado.")
             break
@@ -55,6 +56,14 @@ def get_client_rect_by_handle(hwnd):
     x, y = point
     width, height = rect[2], rect[3]
     return x, y, width, height  # Retorna a posição e tamanho da área cliente da janela
+
+
+def get_window_rect_by_handle(hwnd):
+    # Retorna toda a área da janela (com bordas e barra de título)
+    left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+    width = right - left
+    height = bottom - top
+    return left, top, width, height
 
 
 if __name__ == "__main__":

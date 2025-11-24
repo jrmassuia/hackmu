@@ -1,135 +1,59 @@
 import threading
 import time
 
-from domain.arduino_teclado import Arduino
 from interface_adapters.controller.autopick_controller import AutopickController
 from interface_adapters.controller.buf_controller import BufController
 from interface_adapters.controller.limpa_pk_controller import LimpaPkController
-from interface_adapters.controller.macro_controller import ArduinoMacro
 from interface_adapters.controller.refinar_gem_controler import RefinarGemstoneController
 from interface_adapters.controller.refinar_peq_controller import RefinarPequenaController
 from interface_adapters.controller.sd_media_controler import SdMediaController
 from interface_adapters.controller.sd_small_controller import SdSmallController
 from interface_adapters.helpers.session_manager import *
-from interface_adapters.helpers.session_manager_new import *
 from interface_adapters.pk.controller.pk_controller import PKController
 from interface_adapters.recrutar.controller.recrutar_controller import RecrutarController
 from interface_adapters.up.controller.up_controller import UpController
 from interface_adapters.up.use_case.pick_kanturu_use_case import PickKanturuUseCase
-from menu2 import MenuGUI
+from menu import Menu
 from services.foco_mutex_service import FocoMutexService
-from utils import encontrar_handle_util, mouse_util
-from utils.pointer_util import Pointers
+from sessao_menu import atualizar_menu, obter_menu
 from utils.teclado_util import Teclado_util
 
 
 class MainApp:
-    def __init__(self):
-        self.conexao_arduino = Arduino()
 
-        self.menu_geral = None
+    def __init__(self):
         self.menu_autopick = None
-        self.sessao = None
         self.telas = []
         self.threads_ativas = []
 
-    def configurar_sessao(self):
+    def configurar_menu(self):
         for tela, opcoes in self.menu_autopick.items():
-            handle = self._obter_handles_por_titulo(tela)
-            if len(handle) == 0:
+
+            handle_list = self._obter_handles_por_titulo(tela)
+            if len(handle_list) == 0:
                 tela = tela.replace("/3] MUCABRASIL", "/2] MUCABRASIL")
-                handle = self._obter_handles_por_titulo(tela)
+                handle_list = self._obter_handles_por_titulo(tela)
+
+            if len(handle_list) == 0:
+                continue
+
+            handle = handle_list[0]
             ativo = False
-            if len(handle) > 0:
-                handle = handle[0]
-                self.sessao = Sessao(handle=handle)
-                for opcao, valor in opcoes.items():
-                    self.sessao.atualizar_menu(opcao, valor)
-                    if opcao == 'ativo' and valor == 1:
-                        self.telas.append(handle)
-                        ativo = True
-                if ativo:
-                    self._inicializar_managers(handle)
+
+            # 🔥 registra o menu dessa tela na seção global
+            atualizar_menu(handle, opcoes.copy())
+
+            # controla as telas ativas
+            if opcoes.get(Menu.ATIVO, 0) == 1:
+                self.telas.append(handle)
+                ativo = True
+
+            if ativo:
+                self._inicializar_managers(handle)
 
     def _inicializar_managers(self, handle):
-        self.sessao.atualizar_generico(GenericoFields.HANDLEDIALOGO,
-                                       encontrar_handle_util.encontrar_handle_dialgo(handle))
-
-        sessao = Sessao(handle=handle)
-        if sessao.ler_menu(MenuFields.LIMPAPK) == 1:
-            return
-
-        self.sessao.atualizar_generico(GenericoFields.CLASSE_PERSONAGEM, self._verifica_classe_personagem(handle))
-        self.sessao.atualizar_bau(BauFields.BAU_ATUAL, "bau 1")
-        self.sessao.atualizar_autopick(AutopickFields.INICIOU_AUTOPICK, "NAO")
-        self.sessao.atualizar_inventario(InventarioFields.DATA_HORA_ORGANIZA_COMPLEX, datetime.now().isoformat())
-        self.sessao.atualizar_inventario(InventarioFields.DATA_HORA_LIMPAR_INVENTARIO, datetime.now().isoformat())
-        self.sessao.atualizar_inventario(InventarioFields.DATA_HORA_GUARDOU_ITEM_NO_BAU, datetime.now().isoformat())
-        self.sessao.atualizar_inventario(InventarioFields.VISUALIZAR, "NAO")
         FocoMutexService().inativar_foco()
-
-        Teclado_util(handle, self.conexao_arduino).pressionar_zoon()
-
-    def _verifica_classe_personagem(self, handle):
-        classes_por_nome = {
-            'MG': ['TOROUVC', 'Vampiro', 'Energumeno'],
-            'DL': ['DL_DoMall', 'Narukami', 'BlacK_WinG', 'Omale_DL', 'ReiDav1', 'LAZLU', '_Offensive', 'DL_JirayA',
-                   'Heisemberg'],
-            'SM': ['SisteMatyc', 'INFECTRIX', 'BLEKALT_SM', 'CaFeTaoO', 'SM_Troyer'],
-            'EF': ['Layna_', '_Striper_', 'omale_ME'],
-            'BK': ['PitterPark', 'Omale_BK', 'BLEKALTINO']
-        }
-
-        pointers = Pointers(handle)
-        nome_char = pointers.get_nome_char()
-
-        for classe, nomes in classes_por_nome.items():
-            if any(nome in nome_char for nome in nomes):
-                return classe
-
-        print('NÃO ACHOU O CHAR ADICIONE AO MAIN: ' + nome_char)
-
-        skills = {
-            "SM": [
-                "Energy Ball", "Fire Ball", "Power Wave", "Lightning", "Teleport",
-                "Meteorite", "Ice", "Poison", "Twister", "Evil Spirit", "Hellfire",
-                "Aqua Beam", "Cometfall", "Inferno", "Teleport Ally", "Soul Barrier",
-                "Decay", "Nova", "Ice Storm"
-            ],
-            "BK": [
-                "Slash", "Uppercut", "Cyclone", "Lunge", "Twisting Slash",
-                "Death Stab", "Greater Fortitude", "Rageful Blow", "Impale",
-                "Crescent Moon Slash"
-            ],
-            "EF": [
-                "Heal", "Greater Defense", "Greater Damage", "Triple Shot",
-                "Penetration", "Ice Arrow", "Multi-Shot",
-                "Summon Goblin", "Summon Stone Golem", "Summon Assassin",
-                "Summon Elite Yeti", "Summon Dark Knight", "Summon Bali",
-                "Summon Soldier", "Starfall"
-            ],
-            "MG": [
-                "Power Slash", "Flame Strike", "Fire Slash", "Twisting Slash",
-                "Death Stab", "Inferno", "Evil Spirit", "Hellfire", "Cometfall",
-                "Fire Ball", "Power Wave", "Lightning", "Teleport", "Meteorite",
-                "Ice", "Poison", "Twister", "Aqua Beam", "Cometfall", "Inferno",
-                "Decay", "Nova", "Ice Storm", "Spiral Slash"
-            ],
-            "DL": [
-                "Force", "Force Wave", "Fire Burst", "Earthquake", "Summon", "Critical Damage",
-                "Electric Spark", "Fire Scream"
-            ]
-        }
-
-        mouse_util.mover(handle, 400, 578)
-        time.sleep(.5)
-
-        magia = pointers.get_magia()
-
-        for personagem, magias in skills.items():
-            if magia in magias:
-                return personagem
-        print('Nao achou a magia: ' + magia)
+        Teclado_util(handle).pressionar_zoon()
 
     def _obter_handles_por_titulo(self, titulo_parcial):
         handles = []
@@ -141,29 +65,29 @@ class MainApp:
     def _executar_autopick(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.AUTOPICK)
+        self.rodar_em_thread(handle, Menu.AUTOPICK)
         time.sleep(2)
 
-    def rodar_em_thread(self, handle, tipoHack):
+    def rodar_em_thread(self, handle, menu):
         obj = None
-        if tipoHack == MenuFields.AUTOPICK:
-            obj = AutopickController(handle, self.conexao_arduino)
-        elif tipoHack == MenuFields.UPAR:
-            obj = UpController(handle, self.conexao_arduino)
-        elif tipoHack == MenuFields.BUF:
-            obj = BufController(handle, self.conexao_arduino)
-        elif tipoHack == MenuFields.REF_PEQ:
-            obj = RefinarPequenaController(handle, self.conexao_arduino)
-        elif tipoHack == MenuFields.SD_MEDIA:
+        if menu == Menu.AUTOPICK:
+            obj = AutopickController(handle)
+        elif menu == Menu.UPAR:
+            obj = UpController(handle)
+        elif menu == Menu.BUF:
+            obj = BufController(handle)
+        elif menu == Menu.REF_PEQ:
+            obj = RefinarPequenaController(handle)
+        elif menu == Menu.SD_MEDIA:
             obj = SdMediaController(handle)
-        elif tipoHack == MenuFields.LIMPAPK:
+        elif menu == Menu.LIMPAPK:
             obj = LimpaPkController(handle)
-        elif tipoHack == MenuFields.PICKKANTURU:
-            obj = PickKanturuUseCase(handle, self.conexao_arduino)
-        elif tipoHack == MenuFields.PKLIZAR:
-            obj = PKController(handle, self.conexao_arduino)
-        elif tipoHack == MenuFields.RECRUTAR:
-            obj = RecrutarController(handle, self.conexao_arduino)
+        elif menu == Menu.PICKKANTURU:
+            obj = PickKanturuUseCase(handle)
+        elif menu == Menu.PKLIZAR:
+            obj = PKController(handle)
+        elif menu == Menu.RECRUTAR:
+            obj = RecrutarController(handle)
 
         thread = threading.Thread(target=obj.execute)
         self.threads_ativas.append((obj, thread))  # Armazena o objeto e a thread
@@ -186,95 +110,94 @@ class MainApp:
             thread.join()  # Aguarda a thread terminar
 
     def executar_opcao_menu(self):
-
         for handle in self.telas:
-            sessao = Sessao(handle=handle)
+            sessao = obter_menu(handle)
 
-            if sessao.ler_menu(MenuFields.UPAR) == 1:
-                self._executar_upar(handle)
-            elif sessao.ler_menu(MenuFields.REF_GEM) == 1:
-                self._executar_refinar_gem(handle)
-            elif sessao.ler_menu(MenuFields.REF_PEQ) == 1:
-                self._executar_refinar_stone(handle)
-            elif sessao.ler_menu(MenuFields.SD_MEDIA) == 1:
-                self._executar_sd_media(handle)
-            elif sessao.ler_menu(MenuFields.SD_SMALL) == 1:
-                self._executar_sd_small(handle)
-            elif sessao.ler_menu(MenuFields.BUF) == 1:
-                self._executar_buf(handle)
-            elif sessao.ler_menu(MenuFields.LIMPAPK) == 1:
-                self._executar_limpa_pk(handle)
-            elif sessao.ler_menu(MenuFields.PICKKANTURU) == 1:
-                self._executar_pick_kanturu(handle)
-            elif sessao.ler_menu(MenuFields.PKLIZAR) == 1:
-                self._executar_pklizar(handle)
-            elif sessao.ler_menu(MenuFields.RECRUTAR) == 1:
-                self._executar_recrutar(handle)
+            if not sessao:
+                self._executar_autopick(handle)
+                continue
+
+            actions = {
+                Menu.UPAR: self._executar_upar,
+                Menu.REF_GEM: self._executar_refinar_gem,
+                Menu.REF_PEQ: self._executar_refinar_stone,
+                Menu.SD_MEDIA: self._executar_sd_media,
+                Menu.SD_SMALL: self._executar_sd_small,
+                Menu.BUF: self._executar_buf,
+                Menu.LIMPAPK: self._executar_limpa_pk,
+                Menu.PICKKANTURU: self._executar_pick_kanturu,
+                Menu.PKLIZAR: self._executar_pklizar,
+                Menu.RECRUTAR: self._executar_recrutar,
+            }
+
+            # Procura a primeira opção ativa (== 1) e executa
+            for key, action in actions.items():
+                if sessao.get(key) == 1:
+                    action(handle)
+                    break
             else:
+                # Nenhuma opção marcada → executa autopick
                 self._executar_autopick(handle)
 
     def _executar_pick_kanturu(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.PICKKANTURU)
+        self.rodar_em_thread(handle, Menu.PICKKANTURU)
         time.sleep(2)
 
     def _executar_limpa_pk(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.LIMPAPK)
+        self.rodar_em_thread(handle, Menu.LIMPAPK)
         time.sleep(2)
 
     def _executar_buf(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.BUF)
+        self.rodar_em_thread(handle, Menu.BUF)
         time.sleep(2)
 
     def _executar_sd_small(self, handle):
-        SdSmallController(handle, self.conexao_arduino)
+        SdSmallController(handle)
 
     def _executar_sd_media(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.SD_MEDIA)
+        self.rodar_em_thread(handle, Menu.SD_MEDIA)
         time.sleep(2)
 
     def _executar_refinar_gem(self, handle):
-        RefinarGemstoneController(handle, self.conexao_arduino)
+        RefinarGemstoneController(handle)
 
     def _executar_refinar_stone(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.REF_PEQ)
+        self.rodar_em_thread(handle, Menu.REF_PEQ)
         time.sleep(2)
 
     def _executar_upar(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.UPAR)
+        self.rodar_em_thread(handle, Menu.UPAR)
         time.sleep(2)
 
     def _executar_pklizar(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.PKLIZAR)
+        self.rodar_em_thread(handle, Menu.PKLIZAR)
         time.sleep(2)
 
     def _executar_recrutar(self, handle):
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, MenuFields.RECRUTAR)
+        self.rodar_em_thread(handle, Menu.RECRUTAR)
         time.sleep(2)
-
-    def _executar_macro(self):
-        ArduinoMacro(self.telas[0])
 
     def finalizar_autopick(self):
         exit()
 
     def iniciar(self):
-        menu_gui = MenuGUI(self)
+        menu_gui = Menu(self)
         menu_gui.run()
 
 
@@ -286,12 +209,11 @@ if __name__ == "__main__":
     #     exit()
 
     # Remove todos os arquivos json
-    Sessao.limpar_sessao()
 
     # Inicializa a aplicação
     app = MainApp()
     app.iniciar()
-    app.configurar_sessao()
+    app.configurar_menu()
     app.executar_opcao_menu()
 
     try:

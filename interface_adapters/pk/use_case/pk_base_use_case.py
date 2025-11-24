@@ -8,7 +8,6 @@ from typing import Tuple, Callable, List
 import requests
 import win32gui
 
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from interface_adapters.up.up_util.up_util import Up_util
 from services.alterar_char_sala_service import AlterarCharSalaService
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
@@ -24,23 +23,21 @@ from utils.teclado_util import Teclado_util
 
 class PkBase(ABC):
 
-    def __init__(self, handle, arduino, mapa):
-        # contexto e dependências
+    def __init__(self, handle, mapa):
         self.handle = handle
-        self.sessao = Sessao(handle=handle)
         self.pointer = Pointers(handle)
-        self.classe_personagem = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
+        self.classe = self.pointer.get_classe()
         self.titulo_janela = win32gui.GetWindowText(handle)
-        self.up_util = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
+        self.up_util = Up_util(self.handle)
         self.mapa = mapa
 
         # utilitários
-        self.teclado = Teclado_util(self.handle, arduino)
+        self.teclado = Teclado_util(self.handle)
         self.mover_spot = MoverSpotUtil(self.handle)
-        self.up = Up_util(self.handle, pointer=self.pointer, conexao_arduino=arduino)
+        self.up = Up_util(self.handle)
         self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
         self.buscar_imagem = BuscarItemUtil(self.handle)
-        self.pklizar = PklizarService(self.handle, arduino, self.mapa)
+        self.pklizar = PklizarService(self.handle, self.mapa)
 
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
@@ -57,7 +54,7 @@ class PkBase(ABC):
 
         # definir tipo e senha (subclasse)
         senha = self._definir_tipo_pk_e_senha()
-        self.alternar_sala = AlterarCharSalaService(handle, senha, arduino)
+        self.alternar_sala = AlterarCharSalaService(handle, senha)
 
     def execute(self):
         while True:
@@ -132,8 +129,11 @@ class PkBase(ABC):
             if self.morreu or not self.verificar_se_pode_continuar_com_pk():
                 return False
             else:
-                self.up_util.limpar_mob_ao_redor(None, None)
+                self.limpar_mob_ao_redor()
         return True
+
+    def limpar_mob_ao_redor(self):
+        self.up_util.limpar_mob_ao_redor(None, None)
 
     def _verificar_se_limpou(self) -> Optional[bool]:
         nivel_pk = self.pointer.get_nivel_pk()
@@ -210,10 +210,8 @@ class PkBase(ABC):
                 self.handle,
                 self.pointer,
                 self.mover_spot,
-                self.classe_personagem,
                 None,
                 spots,
-                self.mapa
             )
 
             achou = posicionador.posicionar_bot_up()
@@ -228,7 +226,6 @@ class PkBase(ABC):
             self.handle,
             self.pointer,
             self.mover_spot,
-            None,
             None,
             spot_util.buscar_todos_spots_aida()
         )
