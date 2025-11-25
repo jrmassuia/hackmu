@@ -13,9 +13,9 @@ class MoverSpotUtil:
     def __init__(self):
         self.handle = get_handle_atual()
         self.pointer = Pointers()
+        self.classe = self.pointer.get_classe()
         self.pathfinder = None
         self.esta_na_safe = False
-        self.classe = self.pointer.get_classe()
 
     def movimentar(self, coords, **kwargs):
         mapas = {valor: codigo for _, codigo, valor in PathFinder.mapas}

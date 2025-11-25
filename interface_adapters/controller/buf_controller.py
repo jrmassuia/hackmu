@@ -9,7 +9,6 @@ import win32gui
 from interface_adapters.bean.BpConfig import BpConfig
 from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.controller.DiscordBotController import DiscordBotController
-from interface_adapters.helpers.session_manager_new import Sessao, GenericoFields
 from sessao_handle import get_handle_atual
 from utils import mouse_util, buscar_coordenada_util, screenshot_util, safe_util, \
     acao_menu_util
@@ -46,12 +45,12 @@ class BufController(BaseController):
     def _prepare(self):
         self.handle = get_handle_atual()
         self.tela = win32gui.GetWindowText(self.handle)
-        self.sessao = Sessao(self.handle)
-        self.classe = self.sessao.ler_generico(GenericoFields.CLASSE_PERSONAGEM)
         self.pointers = Pointers()
         self.teclado_util = Teclado_util()
         self.mover_spot_util = MoverSpotUtil()
-        self.buscar_imagem = BuscarItemUtil(self.handle)
+        self.buscar_imagem = BuscarItemUtil()
+        #
+        self.classe = self.pointers.get_classe()
         self.channel_id_sl_bp = 1272950663466324008
         self.channel_id_sl_terminal = 1397939857443000371
         self.arquivo_json = "./data/autobuf.json"

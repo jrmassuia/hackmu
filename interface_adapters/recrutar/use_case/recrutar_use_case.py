@@ -18,7 +18,7 @@ class RecrutarUseCase:
     def __init__(self, handle):
         self.handle = handle
         self.pointer = Pointers()
-        self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
+        self.servico_buscar_personagem = BuscarPersoangemProximoService()
         self.teclado = Teclado_util()
         self.mover_spot = MoverSpotUtil()
         self.verificador_imagem_usebar = VerificadorImagemUseBar()
@@ -155,7 +155,7 @@ class RecrutarUseCase:
         self.teclado.digitar_texto_email(nome.replace(" ", ""), titulo, corpo)
         mouse_util.left_clique(self.handle, 170, 370)  # clica no botao enviar
         time.sleep(.2)
-        achou = BuscarItemUtil(self.handle).buscar_item_simples('./static/img/botaookcarta.png')
+        achou = BuscarItemUtil().buscar_item_simples('./static/img/botaookcarta.png')
         if achou:
             print('Player não enviado: ' + nome)
             x, y = achou

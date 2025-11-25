@@ -20,7 +20,7 @@ class AlterarCharSalaService:
         self.pointer = Pointers()
         self.teclado_util = Teclado_util()
         self.titulo_janela = win32gui.GetWindowText(handle)
-        self.buscar_imagem = BuscarItemUtil(self.handle)
+        self.buscar_imagem = BuscarItemUtil()
 
     def selecionar_sala(self, sala=None):
         mouse_util.desativar_click_esquerdo(self.handle)

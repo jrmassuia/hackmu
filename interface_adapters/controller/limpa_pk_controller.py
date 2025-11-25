@@ -34,7 +34,7 @@ class LimpaPkController(BaseController):
         while True:
             screenshot = screenshot_util.capture_window(self.handle)
             # image_position = find_image_in_window(screenshot, './static/img/mouse_mu.png', confidence_threshold=.70)
-            image_position = BuscarItemUtil(self.handle).buscar_imagem_na_janela(screenshot,
+            image_position = BuscarItemUtil().buscar_imagem_na_janela(screenshot,
                                                                                  './static/img/mouse_mu.png',
                                                                                  precisao=.70)
             if image_position:

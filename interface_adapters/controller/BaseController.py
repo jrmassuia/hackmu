@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
+
 from sessao_handle import set_handle_atual, limpar_handle_atual
+from utils.teclado_util import Teclado_util
 
 
 class BaseController(ABC):
+
     def __init__(self, handle: int):
         self.handle = handle
         self._prepared = False
@@ -16,10 +19,14 @@ class BaseController(ABC):
 
         try:
             if not self._prepared:
-                self._prepare()     # "construtor de thread"
+                Teclado_util().selecionar_skill_1()
+                Teclado_util().pressionar_zoon()
+                Teclado_util().escrever_texto('/re off')
+                #
+                self._prepare()  # "construtor de thread"
                 self._prepared = True
 
-            self._run()            # lógica principal do controller
+            self._run()  # lógica principal do controller
 
         finally:
             limpar_handle_atual()
@@ -39,7 +46,4 @@ class BaseController(ABC):
 
     def parar(self):
         """Opcional: pode ser sobrescrito."""
-        pass
-
-    def parar(self):
         pass

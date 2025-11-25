@@ -15,7 +15,7 @@ class GemNoSpotUtil:
         if (time.time() - self.tempo_inicial_gem) > 120:
             self.tempo_inicial_gem = time.time()
             self.up_util.acao_painel_personagem("v")  # ABRIR
-            achou = BuscarItemUtil(self.handle).buscar_item_simples('./static/inventario/gemstone.png')
+            achou = BuscarItemUtil().buscar_item_simples('./static/inventario/gemstone.png')
             self.up_util.acao_painel_personagem("v", abrir=False)  # FECHAR
             return achou is not None
         return False

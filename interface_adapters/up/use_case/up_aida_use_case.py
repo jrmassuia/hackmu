@@ -4,6 +4,7 @@ import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import mouse_util, spot_util, safe_util
 from utils.mover_spot_util import MoverSpotUtil
@@ -12,8 +13,8 @@ from utils.teclado_util import Teclado_util
 
 
 class UpAidaUseCaseNovo:
-    def __init__(self, handle):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
         self.pointer = Pointers()
@@ -51,13 +52,7 @@ class UpAidaUseCaseNovo:
         return self.up_liberado
 
     def verficar_se_char_ja_esta_spot(self):
-        posiconamento_service = PosicionamentoSpotService(
-            self.handle,
-            self.pointer,
-            self.mover_spot_util,
-            None,
-            spot_util.buscar_todos_spots_aida()
-        )
+        posiconamento_service = PosicionamentoSpotService(spot_util.buscar_todos_spots_aida())
 
         if posiconamento_service.verficar_se_char_ja_esta_spot():
             self.coord_mouse_atual = posiconamento_service.get_coord_mouse()
@@ -71,11 +66,7 @@ class UpAidaUseCaseNovo:
         else:
             spots = spot_util.buscar_spots_aida_1()
 
-        poscionar = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot_util,
-            None,
-            spots)
+        poscionar = PosicionamentoSpotService(spots)
 
         achou_spot = poscionar.posicionar_bot_up()
 

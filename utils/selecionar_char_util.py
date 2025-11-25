@@ -49,12 +49,13 @@ class SelecionarCharUtil:
                             print('Achou personagem ao selecionar no launcher: ' + filename)
                             self.teclado_util.selecionar_skill_1()
                             self.teclado_util.pressionar_zoon()
+                            self.teclado_util.escrever_texto('/re off')
                             return True
 
     def verifica_se_personagem_esta_na_tela(self, folder_path, filename):
         template_image_path = os.path.join(folder_path, filename)
         screenshot = screenshot_util.capture_window(self.handle)
-        image_position = BuscarItemUtil(self.handle).buscar_imagem_na_janela(screenshot,
+        image_position = BuscarItemUtil().buscar_imagem_na_janela(screenshot,
                                                                              template_image_path,
                                                                              precisao=.80)
         return image_position
@@ -64,7 +65,7 @@ class SelecionarCharUtil:
         start_time = time.time()
         while time.time() - start_time < timeout:
             # posicao = buscar_item_util.buscar_item_especifico(self.handle, imagem_path)
-            posicao = BuscarItemUtil(self.handle).buscar_item_simples(imagem_path)
+            posicao = BuscarItemUtil().buscar_item_simples(imagem_path)
             if posicao:
                 mouse_util.left_clique(self.handle, posicao[0], posicao[1])
                 return True

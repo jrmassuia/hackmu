@@ -4,6 +4,7 @@ import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import buscar_coordenada_util, spot_util, mouse_util
 from utils.mover_spot_util import MoverSpotUtil
@@ -12,8 +13,8 @@ from utils.teclado_util import Teclado_util
 
 
 class UpK3UseCase:
-    def __init__(self, handle):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
         self.pointer = Pointers()
@@ -62,11 +63,7 @@ class UpK3UseCase:
 
     def _posicionar_char_spot(self):
         spots = spot_util.buscar_spots_k3()
-        poscionar = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot_util,
-            None,
-            spots)
+        poscionar = PosicionamentoSpotService(spots)
 
         achou_spot = poscionar.posicionar_bot_up()
 

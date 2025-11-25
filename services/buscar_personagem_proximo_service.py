@@ -5,6 +5,8 @@ from ctypes import wintypes
 from functools import lru_cache
 from typing import Optional, Tuple, Iterable, Dict, List, Set
 
+from utils.pointer_util import Pointers
+
 # ==== Constantes WinAPI (mantenha no topo do arquivo) ====
 PAGE_GUARD = 0x100
 PAGE_READONLY = 0x02
@@ -75,8 +77,8 @@ class BuscarPersoangemProximoService:
     _fixed_ranges: Dict[Tuple, Tuple[int, int]] = {}  # (pid, padrao) -> (ini,fim)
     _fixed_lock = threading.Lock()
 
-    def __init__(self, pointer):
-        self.pointer = pointer
+    def __init__(self):
+        self.pointer = Pointers()
 
         # Cache de varredura por chamada de achar_range (com flags)
         self._range_cache: Dict[Tuple, Tuple[Optional[int], Optional[int]]] = {}

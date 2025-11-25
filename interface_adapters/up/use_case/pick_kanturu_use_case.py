@@ -14,7 +14,6 @@ from services.movimentar_inicial_bot_k1_k2 import MovimentacaoInicialBotK1k2Serv
 from services.movimentar_volta_k3_para_k2_service import MovimentacaoVotaK3ParaK2Service
 from services.pklizar_service import PklizarService
 from services.posicionamento_spot_service import PosicionamentoSpotService
-from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import mouse_util, spot_util, safe_util, limpar_mob_ao_redor_util
 from utils.gem_no_spot_util import GemNoSpotUtil
@@ -28,18 +27,14 @@ from utils.teclado_util import Teclado_util
 class PickKanturuUseCase(BaseController):
 
     def _prepare(self):
-        # Inicialização de atributos básicos
-        self.handle = get_handle_atual()
         self.arduino = Arduino()
         self.teclado_util = Teclado_util()
         self.tela = win32gui.GetWindowText(self.handle)
-
-        # Utilitários relacionados ao movimento e apontadores
         self.mover_spot_util = MoverSpotUtil()
         self.pointer = Pointers()
         self.up_util = Up_util()
-        self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-        self.pklizar = PklizarService(self.handle, PathFinder.MAPA_KANTURU_1_E_2)
+        self.servico_buscar_personagem = BuscarPersoangemProximoService()
+        self.pklizar = PklizarService(PathFinder.MAPA_KANTURU_1_E_2)
         self.classe = self.pointer.get_classe()
 
         # Tempos iniciais para controles diversos
@@ -49,7 +44,6 @@ class PickKanturuUseCase(BaseController):
         self.tempo_inicial_limpar_mob_ao_redor = 0
         self.tempo_inicial_pklizar_ks = 0
         self.tempo_inicial_ativar_skill = 0
-
         # Estado do personagem e controle de ações
         self.mortes = []
         self.coord_spot_atual = None
@@ -246,7 +240,7 @@ class PickKanturuUseCase(BaseController):
     def _posicionar_char_spot(self):
         if not self.verficar_se_char_ja_esta_spot():
             spots = spot_util.buscar_todos_spots_k1_k2()
-            poscionar = PosicionamentoSpotService(self.handle, self.mover_spot_util, self.spot_up, spots)
+            poscionar = PosicionamentoSpotService(spots, spot_up=self.spot_up)
             poscionar.posicionar_bot_farm()
             self.chegou_spot = poscionar.get_chegou_ao_spot()
             self.coord_mouse_atual = poscionar.get_coord_mouse()
@@ -256,13 +250,7 @@ class PickKanturuUseCase(BaseController):
                 self.coord_spot_atual = (self.pointer.get_cood_y(), self.pointer.get_cood_x())
 
     def verficar_se_char_ja_esta_spot(self):
-        posiconamento_service = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot_util,
-            None,
-            spot_util.buscar_todos_spots_k1_k2()
-        )
-
+        posiconamento_service = PosicionamentoSpotService(spot_util.buscar_todos_spots_k1_k2())
         if posiconamento_service.verficar_se_char_ja_esta_spot():
             self.coord_mouse_atual = posiconamento_service.get_coord_mouse()
             self.coord_spot_atual = posiconamento_service.get_coord_spot()

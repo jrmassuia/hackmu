@@ -21,7 +21,6 @@ from utils.teclado_util import Teclado_util
 class UpController(BaseController):
 
     def _prepare(self):
-        self.handle = get_handle_atual()
         self.pointer = Pointers()
         self.up_util = Up_util()
         self.classe = self.pointer.get_classe()
@@ -231,18 +230,18 @@ class UpController(BaseController):
 
     def _inicializar_use_cases(self):
         return {
-            'lorencia': up_lorencia_use_case.UpLorenciaUseCase(self.handle, self.eh_char_noob),
-            'noria': up_noria_use_case.UpNoriasUseCase(self.handle),
-            'atlans': up_atlans_use_case.UpAtlansUseCase(self.handle),
-            'tarkan': up_tk_use_case.UpTarkanUseCase(self.handle),
-            'icarus': up_icarus_use_case.UpIcarusUseCase(self.handle),
-            'land': up_land_use_case.UpLandUseCase(self.handle),
-            'k2': up_k2_use_case.UpK2UseCase(self.handle),
-            'k3': up_k3_use_case.UpK3UseCase(self.handle),
-            'aida': up_aida_use_case.UpAidaUseCaseNovo(self.handle),
-            'kalima6': up_k6_use_case.UpK6UseCase(self.handle),
-            'kalima7': up_k7_use_case.UpK7UseCase(self.handle),
-            'reset': reset_use_case.ResetUseCase(self.handle, self.pointer.get_nome_char(), self.pointer.get_reset())
+            'lorencia': up_lorencia_use_case.UpLorenciaUseCase(self.eh_char_noob),
+            'noria': up_noria_use_case.UpNoriasUseCase(),
+            'atlans': up_atlans_use_case.UpAtlansUseCase(),
+            'tarkan': up_tk_use_case.UpTarkanUseCase(),
+            'icarus': up_icarus_use_case.UpIcarusUseCase(),
+            'land': up_land_use_case.UpLandUseCase(),
+            'k2': up_k2_use_case.UpK2UseCase(),
+            'k3': up_k3_use_case.UpK3UseCase(),
+            'aida': up_aida_use_case.UpAidaUseCaseNovo(),
+            'kalima6': up_k6_use_case.UpK6UseCase(),
+            'kalima7': up_k7_use_case.UpK7UseCase(),
+            'reset': reset_use_case.ResetUseCase()
         }
 
     def _enviar_comandos_iniciais(self):

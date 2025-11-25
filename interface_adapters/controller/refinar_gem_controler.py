@@ -56,7 +56,7 @@ class RefinarGemstoneController:
 
     def _mover_gemstone_para_cm(self):
         """Move o item gemstone para a área de combinação."""
-        image_position = BuscarItemUtil(self.handle).buscar_item_simples('./static/inventario/gemstone.png')
+        image_position = BuscarItemUtil().buscar_item_simples('./static/inventario/gemstone.png')
         if image_position:
             cpX, cpY = image_position
             self._mover_click(cpX, cpY)  # Clica no 'gemstone'

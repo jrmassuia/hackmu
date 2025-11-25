@@ -25,7 +25,7 @@ class Up_util:
         while True:
             self.teclado_util.tap_tecla(tecla)
             time.sleep(.5)
-            achou = BuscarItemUtil(self.handle).buscar_posicoes_de_item('./static/img/fechar_painel.png')
+            achou = BuscarItemUtil().buscar_posicoes_de_item('./static/img/fechar_painel.png')
             if (abrir and achou) or (abrir is False and achou is None):
                 break
 
@@ -64,7 +64,7 @@ class Up_util:
     def verifica_se_personagem_esta_na_tela(self, folder_path, filename):
         template_image_path = os.path.join(folder_path, filename)
         screenshot = screenshot_util.capture_window(self.handle)
-        image_position = BuscarItemUtil(self.handle).buscar_imagem_na_janela(screenshot,
+        image_position = BuscarItemUtil().buscar_imagem_na_janela(screenshot,
                                                                              template_image_path,
                                                                              precisao=.80)
         return image_position
@@ -73,7 +73,7 @@ class Up_util:
         mouse_util.mover(self.handle, 1, 1)
         start_time = time.time()
         while time.time() - start_time < timeout:
-            posicao = BuscarItemUtil(self.handle).buscar_item_simples(imagem_path)
+            posicao = BuscarItemUtil().buscar_item_simples(imagem_path)
             if posicao:
                 mouse_util.left_clique(self.handle, posicao[0], posicao[1])
                 return True
@@ -153,7 +153,7 @@ class Up_util:
         CAMINHO_PK0 = "./static/pk/pk0.png"
         CAMINHO_PK1 = "./static/pk/pk1.png"
         REGIAO_PK = (350, 270, 80, 25)
-        buscar_imagem = BuscarItemUtil(self.handle)
+        buscar_imagem = BuscarItemUtil()
 
         def _esperar_okinfo() -> bool:
             timeout_s = 5.0

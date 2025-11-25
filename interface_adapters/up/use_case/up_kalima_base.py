@@ -4,6 +4,7 @@ import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import mouse_util, acao_menu_util, safe_util, spot_util
 from utils.buscar_item_util import BuscarItemUtil
@@ -13,8 +14,8 @@ from utils.teclado_util import Teclado_util
 
 
 class UpKalimaBase:
-    def __init__(self, handle):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
         self.pointer = Pointers()
@@ -88,7 +89,7 @@ class UpKalimaBase:
         tempo_esperado = 0
 
         while tempo_esperado < tempo_max:
-            img_convite = BuscarItemUtil(self.handle).buscar_item_simples(self.caminho_convite())
+            img_convite = BuscarItemUtil().buscar_item_simples(self.caminho_convite())
 
             if img_convite:
                 cpX, cpY = img_convite
@@ -111,7 +112,7 @@ class UpKalimaBase:
 
         img_convite = None
         while tentativa < tentativa_max:
-            img_convite = BuscarItemUtil(self.handle).buscar_item_simples(self.caminho_convite())
+            img_convite = BuscarItemUtil().buscar_item_simples(self.caminho_convite())
             if img_convite is not None:
                 break
             tentativa += 1
@@ -130,7 +131,7 @@ class UpKalimaBase:
                 return True
 
             mouse_util.mover(self.handle, 1, 1)
-            img_portal = BuscarItemUtil(self.handle).buscar_item_simples('./static/img/portalkalima.png')
+            img_portal = BuscarItemUtil().buscar_item_simples('./static/img/portalkalima.png')
 
             if img_portal:
                 cpX, cpY = img_portal
@@ -146,12 +147,7 @@ class UpKalimaBase:
         return False
 
     def verficar_se_char_ja_esta_spot(self):
-        posiconamento_service = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot_util,
-            None,
-            spot_util.buscar_spots_kalima(),
-        )
+        posiconamento_service = PosicionamentoSpotService(spot_util.buscar_spots_kalima())
 
         if posiconamento_service.verficar_se_char_ja_esta_spot():
             self.coord_mouse_atual = posiconamento_service.get_coord_mouse()
@@ -163,12 +159,7 @@ class UpKalimaBase:
         self.mover_spot_util.movimentar((102, 20), movimentacao_proxima=True)
 
         spots = spot_util.buscar_spots_kalima()
-        poscionar = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot_util,
-            None,
-            spots
-        )
+        poscionar = PosicionamentoSpotService(spots)
 
         achou_spot = poscionar.posicionar_bot_up()
         if achou_spot:

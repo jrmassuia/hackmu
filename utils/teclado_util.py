@@ -2,6 +2,7 @@ import ctypes
 import time
 from typing import Iterable
 
+import pyautogui
 import win32con
 import win32gui
 
@@ -23,25 +24,10 @@ class Teclado_util:
         self.foco_mutex = FocoMutexService()
 
     def focus_window(self):
-        if win32gui.IsIconic(self.handle):
-            win32gui.ShowWindow(self.handle, win32con.SW_RESTORE)
-
-        id_thread_atual = kernel32.GetCurrentThreadId()
-        janela_frontal = usuario32.GetForegroundWindow()
-        thread_frontal = usuario32.GetWindowThreadProcessId(janela_frontal, 0) if janela_frontal else 0
-        thread_destino = usuario32.GetWindowThreadProcessId(self.handle, 0)
-
-        usuario32.AttachThreadInput(id_thread_atual, thread_frontal, True)
-        usuario32.AttachThreadInput(id_thread_atual, thread_destino, True)
-        try:
-            usuario32.SetForegroundWindow(self.handle)
-            usuario32.SetFocus(self.handle)
-            usuario32.BringWindowToTop(self.handle)
-        finally:
-            usuario32.AttachThreadInput(id_thread_atual, thread_frontal, False)
-            usuario32.AttachThreadInput(id_thread_atual, thread_destino, False)
-
-        self._pausa(0.05)
+        pyautogui.press("alt")
+        time.sleep(0.025)
+        win32gui.SetForegroundWindow(self.handle)
+        time.sleep(0.025)
 
     def tap_enter(self):
         if self.arduino.conexao_arduino:
@@ -62,6 +48,8 @@ class Teclado_util:
     def selecionar_skill_1(self):
         if self.arduino.conexao_arduino:
             self.tap_tecla('1')
+        else:
+            print('erro')
 
     def selecionar_skill_2(self):
         if self.arduino.conexao_arduino:

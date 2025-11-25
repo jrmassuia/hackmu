@@ -71,7 +71,7 @@ class RefinarPequenaController(BaseController):
         send_text(handles_filhos[len(handles_filhos) - 1], '250000000')
         self._mover_e_clicar_na_opcao('./static/inventario/ok.png')
         time.sleep(.5)
-        image_position = BuscarItemUtil(self.handle).buscar_item_simples('./static/inventario/okaviso.png')
+        image_position = BuscarItemUtil().buscar_item_simples('./static/inventario/okaviso.png')
         if image_position:
             cpX, cpY = image_position
             mouse_util.left_clique(self.handle, cpX, cpY)  # Clica no ok se tiver pouco zen
@@ -81,7 +81,7 @@ class RefinarPequenaController(BaseController):
         mouse_util.left_clique(self.handle, 470, 101)  # CLINA NPC
         mouse_util.mover(self.handle, 100, 100)  # Tira o mouse da frente da loja
         while True:
-            image_position = BuscarItemUtil(self.handle).buscar_item_simples('./static/inventario/spiritarmor.png')
+            image_position = BuscarItemUtil().buscar_item_simples('./static/inventario/spiritarmor.png')
             if image_position:
                 cpX, cpY = image_position
                 for i in range(16):
@@ -121,7 +121,7 @@ class RefinarPequenaController(BaseController):
         return self._mover_item_para_refinar()
 
     def _mover_item_para_refinar(self):
-        image_position = BuscarItemUtil(self.handle).buscar_item_simples('./static/inventario/spiritarmor.png')
+        image_position = BuscarItemUtil().buscar_item_simples('./static/inventario/spiritarmor.png')
         if image_position:
             cpX, cpY = image_position
             mouse_util.mover_click(self.handle, cpX, cpY)  # Clica no 'gladius'
@@ -201,7 +201,7 @@ class RefinarPequenaController(BaseController):
         start_time = time.time()
         achou = False
         while time.time() - start_time < timeout:
-            posicao = BuscarItemUtil(self.handle).buscar_item_simples(imagem_path)
+            posicao = BuscarItemUtil().buscar_item_simples(imagem_path)
 
             if achou and posicao is None:
                 return True

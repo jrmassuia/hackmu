@@ -1,5 +1,6 @@
 import time
 
+from sessao_handle import get_handle_atual
 from utils import mouse_util, safe_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -9,12 +10,12 @@ from utils.teclado_util import Teclado_util
 
 class ResetUseCase:
 
-    def __init__(self, handle, char_nome, resets):
-        self.handle = handle
-        self.char_nome = char_nome
-        self.resets = resets
-        self.pointer = Pointers()
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.teclado_util = Teclado_util()
+        self.pointer = Pointers()
+        self.char_nome = self.pointer.get_nome_char()
+        self.resets = self.pointer.get_reset()
         self.classe = self.pointer.get_classe()
 
     def executar(self):

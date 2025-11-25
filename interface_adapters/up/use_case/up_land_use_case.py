@@ -2,6 +2,7 @@ import time
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
 from utils import mouse_util, spot_util, safe_util
 from utils.buscar_item_util import BuscarItemUtil
@@ -11,11 +12,11 @@ from utils.teclado_util import Teclado_util
 
 
 class UpLandUseCase:
-    def __init__(self, handle):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.auto_pick = PegarItemUseCase(self.handle)
         self.pointer = Pointers()
-        self.mover_spot_util = MoverSpotUtil(handle)
+        self.mover_spot_util = MoverSpotUtil()
         self.up_util = Up_util()
         self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
@@ -73,7 +74,7 @@ class UpLandUseCase:
 
     def _entrada_nao_permitida(self):
         mouse_util.mover(self.handle, 1, 1)
-        entrada_nao_permitida = BuscarItemUtil(self.handle).buscar_item_simples('./static/img/landnaopermitido.png')
+        entrada_nao_permitida = BuscarItemUtil().buscar_item_simples('./static/img/landnaopermitido.png')
         if entrada_nao_permitida is not None:
             mouse_util.left_clique(self.handle, 16, 527, delay=1)
             return False
@@ -101,7 +102,7 @@ class UpLandUseCase:
 
     def _posicionar_em_spot_adequado(self):
         spots = spot_util.buscar_spots_land()
-        poscionar = PosicionamentoSpotService(self.handle, self.mover_spot_util, None, spots)
+        poscionar = PosicionamentoSpotService(spots)
 
         achou = poscionar.posicionar_bot_up()
         if achou:

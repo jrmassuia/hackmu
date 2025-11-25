@@ -25,7 +25,7 @@ class GuardaGemstoneService:
         time.sleep(4)
 
         # Busca itens na pasta específica, com precisão definida
-        itens = BuscarItemUtil(self.handle).buscar_varios_itens('./static/guardar_bau', precisao=0.7)
+        itens = BuscarItemUtil().buscar_varios_itens('./static/guardar_bau', precisao=0.7)
 
         if itens:
             for item in itens:

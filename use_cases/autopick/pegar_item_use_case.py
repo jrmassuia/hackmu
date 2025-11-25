@@ -1,6 +1,5 @@
 import time
 
-from interface_adapters.helpers.session_manager_new import *
 from interface_adapters.up.up_util.up_util import Up_util
 from menu import Menu
 from sessao_menu import obter_menu
@@ -16,7 +15,7 @@ class PegarItemUseCase:
         self.handle = handle
         self.up_util = Up_util()
         self.pointer = Pointers()
-        self.buscar_item = BuscarItemUtil(self.handle)
+        self.buscar_item = BuscarItemUtil()
         self.teclado_util = Teclado_util()
         self.classe = self.pointer.get_classe()
 

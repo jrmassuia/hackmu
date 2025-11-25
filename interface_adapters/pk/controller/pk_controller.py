@@ -7,7 +7,6 @@ from interface_adapters.pk.use_case.pk_k3_use_case import PkK3UseCase
 from interface_adapters.pk.use_case.pk_kanturu_use_case import PkKanturuUseCase
 from interface_adapters.pk.use_case.pk_knv_use_case import PkKnvUseCase
 from interface_adapters.pk.use_case.pk_tarkan_use_case import PktarkanUseCase
-from sessao_handle import get_handle_atual
 from utils import safe_util
 from utils.rota_util import PathFinder
 
@@ -15,7 +14,7 @@ from utils.rota_util import PathFinder
 class PKController(BaseController):
 
     def _prepare(self):
-        self.handle = get_handle_atual()
+        pass
 
     def _run(self):
 

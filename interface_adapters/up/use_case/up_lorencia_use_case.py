@@ -1,6 +1,7 @@
 import time
 
 from interface_adapters.up.up_util.up_util import Up_util
+from sessao_handle import get_handle_atual
 from utils import mouse_util, safe_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -8,8 +9,8 @@ from utils.pointer_util import Pointers
 
 class UpLorenciaUseCase:
 
-    def __init__(self, handle, eh_char_noob):
-        self.handle = handle
+    def __init__(self, eh_char_noob):
+        self.handle = get_handle_atual()
         self.eh_char_noob = eh_char_noob
         self.pointer = Pointers()
         self.classe = self.pointer.get_classe()

@@ -50,7 +50,7 @@ def gerar_senhas():
         # mover_click(handle, 320, 260) OK
 
         # Verifica se a senha foi aceita
-        if not BuscarItemUtil(handle).buscar_item_simples("../../static/numpessoal/botaoretirar.png"):
+        if not BuscarItemUtil().buscar_item_simples("../../static/numpessoal/botaoretirar.png"):
             print(f"Senha correta encontrada: {senha}")
             return
         # else:
@@ -67,7 +67,7 @@ def clicar_na_imagem_ou_fallback(handle, imagem_path, fallback_position, timeout
     """
     start_time = time.time()
     while time.time() - start_time < timeout:
-        posicao = BuscarItemUtil(handle).buscar_item_simples(imagem_path)
+        posicao = BuscarItemUtil().buscar_item_simples(imagem_path)
         if posicao:
             # mouse_util.moverClickEsquerdo(handle, *posicao)
             mover_click(handle, *posicao)
@@ -83,7 +83,7 @@ def esperar_por_imagem_e_executar(handle, imagem_path, acao, timeout=5):
     """
     start_time = time.time()
     while time.time() - start_time < timeout:
-        if BuscarItemUtil(handle).buscar_item_simples(imagem_path):
+        if BuscarItemUtil().buscar_item_simples(imagem_path):
             acao()
             return True
     return False

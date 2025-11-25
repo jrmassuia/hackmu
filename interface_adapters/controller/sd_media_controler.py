@@ -56,7 +56,7 @@ class SdMediaController(BaseController):
         mouse_util.mover(self.handle, 1, 1)
         start_time = time.time()
         while time.time() - start_time < timeout:
-            posicao = BuscarItemUtil(self.handle).buscar_item_simples(imagem_path)
+            posicao = BuscarItemUtil().buscar_item_simples(imagem_path)
             if posicao:
                 self.mover_click(*posicao)
                 return True

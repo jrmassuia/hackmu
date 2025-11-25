@@ -5,6 +5,7 @@ _ctx = threading.local()
 
 def set_handle_atual(handle: int) -> None:
     _ctx.handle = handle
+    pass
 
 
 def get_handle_atual(default=None) -> int | None:

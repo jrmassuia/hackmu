@@ -34,9 +34,9 @@ class PkBase(ABC):
         # utilitários
         self.teclado = Teclado_util()
         self.mover_spot = MoverSpotUtil()
-        self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
-        self.buscar_imagem = BuscarItemUtil(self.handle)
-        self.pklizar = PklizarService(self.handle, self.mapa)
+        self.servico_buscar_personagem = BuscarPersoangemProximoService()
+        self.buscar_imagem = BuscarItemUtil()
+        self.pklizar = PklizarService(self.mapa)
 
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
@@ -205,12 +205,7 @@ class PkBase(ABC):
             else:
                 spots = []
 
-            posicionador = PosicionamentoSpotService(
-                self.handle,
-                self.mover_spot,
-                None,
-                spots,
-            )
+            posicionador = PosicionamentoSpotService(spots)
 
             achou = posicionador.posicionar_bot_up()
             if achou:
@@ -220,12 +215,7 @@ class PkBase(ABC):
             self.morreu = bool(self.mover_spot.esta_na_safe)
 
     def verficar_se_char_ja_esta_spot(self):
-        posiconamento_service = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot,
-            None,
-            spot_util.buscar_todos_spots_aida()
-        )
+        posiconamento_service = PosicionamentoSpotService(spot_util.buscar_todos_spots_aida())
 
         if posiconamento_service.verficar_se_char_ja_esta_spot():
             self.coord_mouse_atual = posiconamento_service.get_coord_mouse()

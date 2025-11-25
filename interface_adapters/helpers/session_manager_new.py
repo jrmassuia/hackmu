@@ -121,7 +121,7 @@ class Zen:
         return self.data.get(campo, None)
 
 
-class Menu:
+class MenuSessao:
     def __init__(self, data):
         self.data = data
 
@@ -148,7 +148,7 @@ class Sessao:
         self.autopick = Autopick(self.data.get("autopick", {}))
         self.up = Up(self.data.get("up", {}))
         self.zen = Zen(self.data.get("zen", {}))
-        self.menu = Menu(self.data.get("menu", {}))
+        self.menu = MenuSessao(self.data.get("menu", {}))
         self.generico = Generico(self.data.get("generico", {}))
 
     def carregar_ou_criar_arquivo(self):

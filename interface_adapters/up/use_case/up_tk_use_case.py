@@ -2,6 +2,7 @@ import time
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from utils import buscar_coordenada_util, mouse_util, spot_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -9,9 +10,9 @@ from utils.teclado_util import Teclado_util
 
 
 class UpTarkanUseCase:
-    def __init__(self, handle):
-        self.handle = handle
-        self.mover_spot_util = MoverSpotUtil(handle)
+    def __init__(self):
+        self.handle = get_handle_atual()
+        self.mover_spot_util = MoverSpotUtil()
         self.pointer = Pointers()
         self.up_util = Up_util()
         self.teclado_util = Teclado_util()
@@ -62,7 +63,7 @@ class UpTarkanUseCase:
 
     def _posicionar_char_spot(self):
         spots = spot_util.buscar_spots_tk2()
-        poscionar = PosicionamentoSpotService(self.handle, self.mover_spot_util, None, spots)
+        poscionar = PosicionamentoSpotService(spots)
         poscionar.posicionar_bot_up()
 
         if poscionar.get_coord_mouse() is None or poscionar.get_coord_spot() is None:

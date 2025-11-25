@@ -156,7 +156,7 @@ def clicar_na_imagem_ou_coordenada(handle, imagem_path, fallback_position, timeo
     try:
         start_time = time.time()
         while time.time() - start_time < timeout:
-            posicao = BuscarItemUtil(handle).buscar_item_simples(imagem_path)
+            posicao = BuscarItemUtil().buscar_item_simples(imagem_path)
             if posicao:
                 left_clique(handle, *posicao, delay=.5)
                 return True

@@ -2,6 +2,7 @@ import time
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
+from sessao_handle import get_handle_atual
 from utils import mouse_util, buscar_coordenada_util, spot_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -9,8 +10,8 @@ from utils.pointer_util import Pointers
 
 class UpNoriasUseCase:
 
-    def __init__(self, handle):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
         self.mover_spot_util = MoverSpotUtil()
         self.pointer = Pointers()
         self.up_util = Up_util()
@@ -57,11 +58,7 @@ class UpNoriasUseCase:
         self.mover_spot_util.movimentar((208, 129), movimentacao_proxima=True)
 
         spots = spot_util.buscar_spots_noria()
-        poscionar = PosicionamentoSpotService(
-            self.handle,
-            self.mover_spot_util,
-            None,
-            spots)
+        poscionar = PosicionamentoSpotService(spots)
 
         poscionar.posicionar_bot_up(verificar_spot_livre=False)
 

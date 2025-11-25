@@ -39,7 +39,7 @@ def main():
         teclado.digitar_texto_email(nome.replace(" ", ""), titulo, corpo)
         mouse_util.left_clique(handle, 170, 370)  # clica no botao enviar
         time.sleep(.2)
-        achou = BuscarItemUtil(handle).buscar_item_simples('botaook.png')
+        achou = BuscarItemUtil().buscar_item_simples('botaook.png')
         if achou:
             print('Player não enviado: ' + nome)
             x, y = achou

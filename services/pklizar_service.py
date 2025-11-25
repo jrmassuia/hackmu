@@ -5,6 +5,7 @@ import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from sessao_handle import get_handle_atual
 from utils import mouse_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -14,15 +15,15 @@ from utils.teclado_util import Teclado_util
 
 class PklizarService:
 
-    def __init__(self, handle, mapa):
-        self.handle = handle
+    def __init__(self, mapa):
+        self.handle = get_handle_atual()
         self.pointer = Pointers()
         self.mapa = mapa
 
         self.classe = self.pointer.get_classe()
-        self.titulo_janela = win32gui.GetWindowText(handle)
+        self.titulo_janela = win32gui.GetWindowText(self.handle)
         self.up_util = Up_util()
-        self.servico_buscar_personagem = BuscarPersoangemProximoService(self.pointer)
+        self.servico_buscar_personagem = BuscarPersoangemProximoService()
         self.teclado = Teclado_util()
         self.mover_spot = MoverSpotUtil()
 

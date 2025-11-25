@@ -1,6 +1,7 @@
 import threading
 import time
 
+from domain.arduino_teclado import Arduino
 from interface_adapters.controller.autopick_controller import AutopickController
 from interface_adapters.controller.buf_controller import BufController
 from interface_adapters.controller.limpa_pk_controller import LimpaPkController
@@ -25,6 +26,18 @@ class MainApp:
         self.menu_autopick = None
         self.telas = []
         self.threads_ativas = []
+        self.arduino = Arduino()
+
+        timeout = 10.0  # segundos
+        inicio = time.time()
+
+        while not self.arduino.conexao_arduino and (time.time() - inicio) < timeout:
+            time.sleep(0.1)
+
+        if not self.arduino.conexao_arduino:
+            print("Não foi possível conectar ao Arduino dentro do tempo limite.")
+
+        FocoMutexService().inativar_foco()
 
     def configurar_menu(self):
         for tela, opcoes in self.menu_autopick.items():
@@ -38,7 +51,6 @@ class MainApp:
                 continue
 
             handle = handle_list[0]
-            ativo = False
 
             # 🔥 registra o menu dessa tela na seção global
             atualizar_menu(handle, opcoes.copy())
@@ -46,14 +58,6 @@ class MainApp:
             # controla as telas ativas
             if opcoes.get(Menu.ATIVO, 0) == 1:
                 self.telas.append(handle)
-                ativo = True
-
-            if ativo:
-                self._inicializar_managers(handle)
-
-    def _inicializar_managers(self, handle):
-        FocoMutexService().inativar_foco()
-        Teclado_util().pressionar_zoon()
 
     def _obter_handles_por_titulo(self, titulo_parcial):
         handles = []

@@ -3,12 +3,13 @@ import os
 import cv2
 import numpy as np
 
+from sessao_handle import get_handle_atual
 from utils import screenshot_util
 
 
 class BuscarItemUtil:
-    def __init__(self, handle=None):
-        self.handle = handle
+    def __init__(self):
+        self.handle = get_handle_atual()
 
     def _carregar_template(self, caminho_imagem):
         template = cv2.imread(caminho_imagem, cv2.IMREAD_GRAYSCALE)
