@@ -10,32 +10,22 @@ class PkCavaladaKanturuUseCase(PkBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def execute(self, loop=True):
-
-        def ciclo_tk_knv():
-            self.iniciar_pk()
-            self._mover_para_k1()
-
-        def ciclo_tk():
-            self.iniciar_pk()
-
-        if not loop:
-            ciclo_tk_knv()
-            return
-
-        while True:
-            ciclo_tk()
-
     def _definir_tipo_pk_e_senha(self) -> str:
         self.tipo_pk = 'KANTURU_1_2'
         return ''
 
+    def execute(self):
+        while True:
+            self.atualizar_lista_player()
+            self.iniciar_pk()
+
     def iniciar_pk(self):
-        self.esperar_se_morreu()
-        self.atualizar_lista_player()
+        self.morreu = False
         self._sair_da_safe()
-        self._ativar_skill()
-        self.cavalar_kanturus()
+        if not self.morreu:
+            self._ativar_skill()
+            self.cavalar_kanturus()
+        self.esperar_se_morreu()
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
@@ -45,9 +35,14 @@ class PkCavaladaKanturuUseCase(PkBase):
 
     def cavalar_kanturus(self):
         etapas: Sequence[Callable[[], List]] = (
+            self.buscar_spots_k1,
             spot_util.buscar_spots_k2,
         )
         self.executar_rota_pk(etapas)
+
+    def buscar_spots_k1(self):
+        spots = spot_util.buscar_spots_k1()
+        return spots[6:]
 
     def esperar_se_morreu(self):
         if self.morreu:

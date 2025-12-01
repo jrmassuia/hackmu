@@ -2,29 +2,25 @@ import random
 import time
 
 from domain.arduino_teclado import Arduino
+from interface_adapters.controller.BaseController import BaseController
 from utils import mouse_util, buscar_item_util, screenshot_util, acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
+from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
 
-class RefinarGemstoneController:
+class RefinarGemstoneController(BaseController):
 
-    def __init__(self, handle):
-        self.handle = handle
-        self.conexao_arduino = Arduino()
+    def _prepare(self):
         self.teclado_util = Teclado_util()
         self.pointers = Pointers()
         self.tempo = .5
         self.pos_y_ultima_joh = 0
         self.pos_x_ultima_joh = 0
         self.qtd_falha = 0
-        self.execute()
 
-    def execute(self):
-        self._iniciar_processo()
-
-    def _iniciar_processo(self):
+    def _run(self):
         # MoverSpotUtil().movimentar((75, 177))
         self.refinar()
 

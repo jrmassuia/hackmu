@@ -23,44 +23,45 @@ class PkAidaUseCase(PkBase):
         nome = self.pointer.get_nome_char()
 
         # AIDA 1
-        if nome == 'AlfaVictor':
-            senha = 'thiago123'
-            self.tipo_pk = self.PKLIZAR_AIDA_1
-
-        elif nome == 'ESTAMUERTO':
+        if nome == 'ESTAMUERTO':
             senha = '93148273'
+            self.tipo_pk = self.PKLIZAR_AIDA_1
+        elif nome == 'INFECTRIX':
+            senha = '9876Sonso'
+            self.tipo_pk = self.PKLIZAR_AIDA_1
+        elif nome == '_Offensive':
+            senha = 'kuChx98f'
             self.tipo_pk = self.PKLIZAR_AIDA_1
 
         # AIDA 2
         elif nome == 'LAZLU':
             senha = 'bebe133171'
             self.tipo_pk = self.PKLIZAR_AIDA_2
-
         elif nome == 'Omale_DL':
             senha = 'gtkn6iVy'
             self.tipo_pk = self.PKLIZAR_AIDA_2
         elif nome == 'Heisemberg':
             senha = '93148273'
             self.tipo_pk = self.PKLIZAR_AIDA_2
-
-        # AIDA CORREDOR
         elif nome == 'SM_Troyer':
             senha = 'romualdo12'
-            self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
+            self.tipo_pk = self.PKLIZAR_AIDA_2
+        elif nome == 'AlfaVictor':
+            senha = 'thiago123'
+            # self.sala_pk = 5
+            self.tipo_pk = self.PKLIZAR_AIDA_1
+
+        # AIDA CORREDOR
         elif nome == 'SisteMatyc':
             senha = 'carenae811'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
+            self.sala_pk = 5
         elif nome == 'ReiDav1':
             senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_AIDA_1
 
         # AIDA FINAL
-        elif nome == '_Offensive':
-            senha = 'kuChx98f'
-            self.tipo_pk = self.PKLIZAR_AIDA_FINAL
-        elif nome == 'INFECTRIX':
-            senha = '9876Sonso'
-            self.tipo_pk = self.PKLIZAR_AIDA_FINAL
+
         elif nome == 'DL_JirayA':
             senha = '134779'
             self.tipo_pk = self.PKLIZAR_AIDA_2
@@ -71,37 +72,24 @@ class PkAidaUseCase(PkBase):
         return senha
 
     def iniciar_pk(self):
-
-        # salas = [7, 3, 8, 9] # NECESSARIO VERIFICAR O PK ATIVO QUANDO FOR MUDAR DE SALA
-        salas = [7]
         self.morreu = False
+        self.mover_para_sala(self.sala_pk)
+        self.teclado.escrever_texto('/re off')
+        self._sair_da_safe()
 
-        for sala in salas:
-            self.mover_para_sala(sala)
-            self.teclado.escrever_texto('/re off')
-            self._sair_da_safe()
+        if not self.morreu:
+            self._ativar_skill()
 
-            if not self.morreu:
-                self._ativar_skill()
-
-                if sala != 7:
-                    continuar = self.pklizar_aida()
-                elif self.tipo_pk == self.PKLIZAR_AIDA_1:
-                    continuar = self.pklizar_aida1()
-                elif self.tipo_pk == self.PKLIZAR_AIDA_2:
-                    continuar = self.pklizar_aida2()
-                elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
-                    continuar = self.pklizar_aida_corredor()
-                elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
-                    continuar = self.pklizar_aida_final()
-                else:
-                    continuar = self.pklizar_aida1()
-
-                if continuar is False:
-                    break
-
+            if self.tipo_pk == self.PKLIZAR_AIDA_1:
+                self.pklizar_aida1()
+            elif self.tipo_pk == self.PKLIZAR_AIDA_2:
+                self.pklizar_aida2()
+            elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
+                self.pklizar_aida_corredor()
+            elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
+                self.pklizar_aida_final()
             else:
-                break
+                self.pklizar_aida1()
 
         if not self.morreu:
             print('Relizada a rota completa de PK: ' + self.titulo_janela)
@@ -122,6 +110,7 @@ class PkAidaUseCase(PkBase):
             self.buscar_spot_extra_aida1,
             spot_util.buscar_spots_aida_corredor,
             self.buscar_spot_aida2,
+            spot_util.buscar_spots_aida_final
         )
         return self.executar_rota_pk(etapas)
 

@@ -82,6 +82,8 @@ class MainApp:
             obj = BufController(handle)
         elif menu == Menu.REF_PEQ:
             obj = RefinarPequenaController(handle)
+        elif menu == Menu.REF_GEM:
+            obj = RefinarGemstoneController(handle)
         elif menu == Menu.SD_MEDIA:
             obj = SdMediaController(handle)
         elif menu == Menu.LIMPAPK:
@@ -171,7 +173,10 @@ class MainApp:
         time.sleep(2)
 
     def _executar_refinar_gem(self, handle):
-        RefinarGemstoneController(handle)
+        print('Inciando telas:')
+        print('--' + win32gui.GetWindowText(handle))
+        self.rodar_em_thread(handle, Menu.REF_GEM)
+        time.sleep(2)
 
     def _executar_refinar_stone(self, handle):
         print('Inciando telas:')

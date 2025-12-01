@@ -2,8 +2,7 @@ from PIL import Image, ImageDraw
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
-
-# MAP_NAME_LORENCIA = "Lorencia"
+from utils.pointer_util import Pointers
 
 
 class PathFinder:
@@ -35,17 +34,23 @@ class PathFinder:
         ('MAPA_ICARUS', '11', 1133412352),
         ('MAPA_KALIMA', '25', 1131413504),
         ('MAPA_LOREN', '31', 1130430464),
-        ('MAPA_LAND', '32', 0), #FALTA IFORMAR O CODIGO DO MAPA
+        ('MAPA_LAND', '32', 0),  # FALTA IFORMAR O CODIGO DO MAPA
         ('MAPA_AIDA', '34', 1131511808),
         ('MAPA_KANTURU_1_E_2', '38', 1133215744),
         ('MAPA_KANTURU_3', '39', 1126793216),
     ]
 
-    def __init__(self, num_mapa):
-        self.file_path = "C:/Program Files (x86)/MUCABRASIL/Data/World" + num_mapa + "/EncTerrain" + num_mapa + ".att"
+    def __init__(self):
+        numero_mapa = self.get_numero_mapa_atual()
+        self.file_path = "C:/Program Files (x86)/MUCABRASIL/Data/World" + numero_mapa + "/EncTerrain" + numero_mapa + ".att"
         self.grid = self._load_grid()
-        self.MAPA_CODIGO = num_mapa
-        self.MAPA_NOME = {codigo: nome for nome, codigo, _ in self.mapas}[num_mapa]
+
+    def get_numero_mapa_atual(self):
+        mapas = {valor: codigo for _, codigo, valor in self.mapas}
+        return mapas[Pointers().get_mapa_atual()]
+
+    def get_nome_mapa_atual(self):
+        return {codigo: nome for nome, codigo, _ in self.mapas}[self.get_numero_mapa_atual()]
 
     def _decode_file(self, data: bytes) -> bytes:
         xor_keys = [
@@ -136,6 +141,10 @@ class PathFinder:
             for x in range(256):
                 if x < margem or x >= 256 - margem or y < margem or y >= 256 - margem:
                     self.grid[y][x] = 0  # Não caminhável
+
+    def descricao_mapa_atual(self):
+        mapas = {valor: codigo for _, codigo, valor in PathFinder.mapas}
+        return mapas[Pointers().get_mapa_atual()]
 
 # Exemplo de uso
 # for a in range(80):

@@ -105,6 +105,7 @@ def buscar_spots_tk2(nao_ignorar_spot_pk=False):
             [['DL', 'EF'], [(49, 242)], (307, 119)]
         ]
     ])
+
     return coordenadas
 
 
@@ -587,11 +588,11 @@ def buscar_spots_k2():
         ],
         [
             [['SM', 'MG', 'BK'], [(37, 74)], (398, 240)],  # 25
-            [['DL'], [(37, 74)], (275, 201)] #falta configurar
+            [['DL'], [(37, 74)], (275, 201)]  # falta configurar
         ],
         [
             [['SM', 'MG', 'BK'], [(45, 94)], (398, 240)],  # 26
-            [['DL'], [(45, 94)], (275, 201)] #falta configurar
+            [['DL'], [(45, 94)], (275, 201)]  # falta configurar
         ]
     ])
     return coordenadas

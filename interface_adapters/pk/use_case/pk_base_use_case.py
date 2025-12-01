@@ -31,25 +31,23 @@ class PkBase(ABC):
         self.titulo_janela = win32gui.GetWindowText(handle)
         self.mapa = mapa
 
-        # utilitários
         self.teclado = Teclado_util()
         self.mover_spot = MoverSpotUtil()
         self.servico_buscar_personagem = BuscarPersoangemProximoService()
         self.buscar_imagem = BuscarItemUtil()
         self.pklizar = PklizarService(self.mapa)
+        self.pathfinder = PathFinder()
 
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
         self.coord_spot_atual: Optional[Tuple[int, int]] = None
+        self.sala_pk = 7
         self.tipo_pk: Optional[str] = None
         self._abates = 0
         self._abates_lock = threading.Lock()
         self.morreu = False
         self.lista_player_tohell = None
         self.lista_player_suicide = None
-
-        # comando inicial
-        self.teclado.escrever_texto('/re off')
 
         # definir tipo e senha (subclasse)
         senha = self._definir_tipo_pk_e_senha()
@@ -113,7 +111,7 @@ class PkBase(ABC):
 
     def atualizar_lista_suicide(self):
         try:
-            r = requests.get("http://192.168.101.14:8000/suicide/players?offset=0&limit=1000", timeout=10)
+            r = requests.get("http://192.168.101.14:8000/suicide/players?offset=0&limit=2000", timeout=10)
             r.raise_for_status()
             self.lista_player_suicide = r.json().get("items", [])
         except Exception as e:
@@ -180,7 +178,7 @@ class PkBase(ABC):
                 ultimo_check_pk = time.time()
                 limpou = self._verificar_se_limpou()
                 if limpou:
-                    self.mover_para_sala(7)
+                    self.mover_para_sala(self.sala_pk)
                     return
 
             self._corrigir_coordenada_e_mouse()

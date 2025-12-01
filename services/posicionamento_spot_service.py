@@ -1,3 +1,4 @@
+import socket
 import time
 
 from interface_adapters.up.up_util.up_util import Up_util
@@ -45,9 +46,9 @@ class PosicionamentoSpotService:
                 classes, coordenadas_spot, coord_mouse = grupo
                 if self.pointer.get_cood_y() == coordenadas_spot[0][0] and \
                         self.pointer.get_cood_x() == coordenadas_spot[0][1]:
+                    self.coord_spot_atual = coordenadas_spot[0]
                     self._configurar_spot(coord_mouse)
                     return True
-
         return False
 
     def posicionar_bot_up(self, verificar_spot_livre=True):
@@ -81,12 +82,12 @@ class PosicionamentoSpotService:
             return True
 
     def _spot_livre(self, tempo=10):
-
-        # resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
-        # if resultados:
-        #     char_proximos = self.buscar_personagem.ordenar_proximos(resultados, limite=20)
-        #     if len(char_proximos) == 0:
-        #         return True
+        if 'PC1' in socket.gethostname():
+            resultados = self.buscar_personagem.listar_nomes_e_coords_por_padrao()
+            if resultados:
+                char_proximos = self.buscar_personagem.ordenar_proximos(resultados, limite=20)
+                if len(char_proximos) == 0:
+                    return True
 
         start_time = time.time()
         while time.time() - start_time < tempo:

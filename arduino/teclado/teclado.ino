@@ -85,6 +85,7 @@ String line;
 
 // Barra "/" corrigida (evita virar ';' no jogo)
 #define KEY_SLASH_FIX 220
+#define KEY_SPACE 32
 // ================================================================
 
 // ---------- helpers ----------
@@ -183,6 +184,7 @@ bool modifierFromToken(const String &tok, uint8_t &mod) {
 // especiais diretos do Keyboard.h
 bool specialFromToken(const String &tok, uint8_t &kc) {
   if (tok=="ENTER")         { kc = KEY_RETURN; return true; }
+  if (tok=="SPACE")         { kc = KEY_SPACE; return true; }
   if (tok=="ESC")           { kc = KEY_ESC; return true; }
   if (tok=="BACKSPACE")     { kc = KEY_BACKSPACE; return true; }
   if (tok=="TAB")           { kc = KEY_TAB; return true; }
@@ -228,8 +230,7 @@ bool asciiPunctFromToken(const String &tok, char &out) {
   if (tok=="QUOTE")      { out='\'';return true; }
   if (tok=="COMMA")      { out=','; return true; }
   if (tok=="DOT")        { out='.'; return true; }
-  if (tok=="SLASH")      { out='/'; return true; } // OBS: para comandos use KEY_SLASH_FIX
-  if (tok=="SPACE")      { out=' '; return true; }
+  if (tok=="SLASH")      { out='/'; return true; } // OBS: para comandos use KEY_SLASH_FIX  
   return false;
 }
 

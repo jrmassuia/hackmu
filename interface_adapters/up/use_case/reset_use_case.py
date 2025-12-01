@@ -17,6 +17,8 @@ class ResetUseCase:
         self.char_nome = self.pointer.get_nome_char()
         self.resets = self.pointer.get_reset()
         self.classe = self.pointer.get_classe()
+        self.selecionar_char = SelecionarCharUtil(self.handle)
+
 
     def executar(self):
         if self.resets >= 250:
@@ -27,7 +29,6 @@ class ResetUseCase:
             self._resetar_lorencia()
 
         mouse_util.mover(self.handle, 1, 1)
-        time.sleep(6)  # AGUARDA VOLTAR PARA SELECIONAR CHAR
         self.selecionar_char_no_launcher()
         self._destribuir_pontos()
         time.sleep(1)
@@ -73,9 +74,8 @@ class ResetUseCase:
                 break
 
     def selecionar_char_no_launcher(self):
-        selecionar_char = SelecionarCharUtil(self.handle)
         while True:
-            selecionar_char.selecionar_char_no_launcher()
+            self.selecionar_char.selecionar_char_no_launcher()
             if safe_util.lorencia(self.handle) or safe_util.noria(self.handle):
                 break
             else:
@@ -89,23 +89,12 @@ class ResetUseCase:
             self.teclado_util.escrever_texto("/v 5000")
             self.teclado_util.escrever_texto("/e 32485")
         elif self.char_nome == 'TOROUVC':
-            self.teclado_util.escrever_texto("/f 1000")
-            self.teclado_util.escrever_texto("/a 26000")
-            self.teclado_util.escrever_texto("/v 1000")
+            self.teclado_util.escrever_texto("/f 25000")
+            self.teclado_util.escrever_texto("/a 29000")
+            self.teclado_util.escrever_texto("/v 2500")
             self.teclado_util.escrever_texto("/e 32474")
-        elif self.char_nome == 'Layna_':
-            self.teclado_util.escrever_texto("/f 2478")
-            self.teclado_util.escrever_texto("/a 20000")
-            self.teclado_util.escrever_texto("/v 3000")
-            self.teclado_util.escrever_texto("/e 32485")
         elif self.char_nome == 'ReiDav1':
-            self.teclado_util.escrever_texto("/f 9000")
+            self.teclado_util.escrever_texto("/f 12000")
             self.teclado_util.escrever_texto("/a 12000")
             self.teclado_util.escrever_texto("/v 500")
-            self.teclado_util.escrever_texto("/e 20000")
-
-        elif self.pointer.get_nome_char() == 'NC_elf':
-            self.teclado_util.escrever_texto("/f 2000")
-            self.teclado_util.escrever_texto("/a 20000")
-            self.teclado_util.escrever_texto("/v 500")
-            self.teclado_util.escrever_texto("/e 32485")
+            self.teclado_util.escrever_texto("/e 30000")

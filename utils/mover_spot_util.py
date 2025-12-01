@@ -14,12 +14,11 @@ class MoverSpotUtil:
         self.handle = get_handle_atual()
         self.pointer = Pointers()
         self.classe = self.pointer.get_classe()
-        self.pathfinder = None
         self.esta_na_safe = False
+        self.pathfinder = None
 
     def movimentar(self, coords, **kwargs):
-        mapas = {valor: codigo for _, codigo, valor in PathFinder.mapas}
-        self.pathfinder = PathFinder(mapas[self.pointer.get_mapa_atual()])
+        self.pathfinder = PathFinder()
         return self._movimentar_para(coords, **kwargs)
 
     def _movimentar_para(self, coords,
@@ -53,11 +52,12 @@ class MoverSpotUtil:
                 while True:
                     if self._tempo_excedido(tempo_inicio, max_tempo):
                         print(
-                            'Tempo máximo atingido para movimentação com o char ' + self.pointer.get_nome_char() + ' no mapa ' + self.pathfinder.MAPA_NOME)
+                            'Tempo máximo atingido para movimentação com o char ' + self.pointer.get_nome_char() +
+                            ' no mapa ' + self.pathfinder.get_nome_mapa_atual())
                         return True
 
                     if self._verificar_se_morreu() or (
-                            verficar_se_movimentou and self._checar_safe_zone(self.pathfinder.MAPA_CODIGO)):
+                            verficar_se_movimentou and self._checar_safe_zone(self.pathfinder.get_numero_mapa_atual())):
                         self.esta_na_safe = True
                         mouse_util.desativar_click_esquerdo(self.handle)
                         return False
@@ -86,6 +86,10 @@ class MoverSpotUtil:
                             self.pointer.get_cood_x() == destino_x and self.pointer.get_cood_y() == destino_y):
                         return True
 
+                    if self.pointer.get_char_pk_selecionado(): ##MATA OS MOB CASO FOR MOVIMENTAR
+                        mouse_util.clickDireito(self.handle)
+                        time.sleep(1)
+
                     if limpar_spot_se_necessario:
                         x_ant, y_ant, hora_inicial = self._verificar_limpeza_spot(
                             self.pointer.get_cood_x(), self.pointer.get_cood_y(), x_ant, y_ant, hora_inicial
@@ -93,7 +97,8 @@ class MoverSpotUtil:
 
         except Exception as e:
             print(
-                "Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " + self.pathfinder.MAPA_NOME + f" : {e}")
+                "Erro ao movimentar com o char " + self.pointer.get_nome_char() + " no mapa " +
+                self.pathfinder.get_nome_mapa_atual() + f" : {e}")
 
     def _checar_safe_zone(self, mapa):
         if mapa == PathFinder.MAPA_KANTURU_1_E_2:

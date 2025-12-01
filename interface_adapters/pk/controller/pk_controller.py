@@ -23,11 +23,12 @@ class PKController(BaseController):
                 self.pklizar_k3()
             elif safe_util.aida(self.handle):
                 self.pklizar_aida()
-            elif safe_util.k1(self.handle):
-                # self.pklizar_knv()
-                self.cavalar_kanturu()
-            elif safe_util.tk(self.handle):
-                self.pklizar_tarkan()
+            # elif safe_util.k1(self.handle):
+            #     # self.pklizar_knv()
+            #     # self.cavalar_kanturu()
+            #     self.pklizar_kanturu()
+            # elif safe_util.tk(self.handle):
+            #     self.pklizar_tarkan()
             else:
                 self.pklizar_kanturu()
 
@@ -68,4 +69,4 @@ class PKController(BaseController):
         PkK3UseCase(self.handle, PathFinder.MAPA_KANTURU_3).execute()
 
     def cavalar_kanturu(self):
-        return PkCavaladaKanturuUseCase(self.handle, PathFinder.MAPA_TARKAN).execute()
+        return PkCavaladaKanturuUseCase(self.handle, PathFinder.MAPA_KANTURU_1_E_2).execute()

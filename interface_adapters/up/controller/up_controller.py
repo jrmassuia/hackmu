@@ -13,7 +13,6 @@ from interface_adapters.up.use_case import (
     up_lorencia_use_case,
     up_tk_use_case, up_noria_use_case, up_k3_use_case, up_k2_use_case, up_k6_use_case, up_k7_use_case
 )
-from sessao_handle import get_handle_atual
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 

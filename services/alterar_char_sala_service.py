@@ -1,7 +1,8 @@
 import random
 import time
-import pyperclip
+
 import pyautogui
+import pyperclip
 import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util

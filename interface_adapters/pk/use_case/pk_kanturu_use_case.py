@@ -9,6 +9,7 @@ from utils.rota_util import PathFinder
 class PkKanturuUseCase(PkBase):
     PKLIZAR_K1 = 'KANTURU_1'
     PKLIZAR_K2 = 'KANTURU_2'
+    PKLIZAR_K1_SETOR_1 = 'KANTURU_1_SETOR_1'
 
     def _definir_tipo_pk_e_senha(self) -> str:
         nome = self.pointer.get_nome_char()
@@ -23,16 +24,24 @@ class PkKanturuUseCase(PkBase):
         elif nome == 'ESTAMUERTO':
             senha = '93148273'
             self.tipo_pk = self.PKLIZAR_K2
-        else:
-            self.tipo_pk = self.PKLIZAR_K1
+        #
+        elif nome == 'INFECTRIX':
+            senha = '9876Sonso'
+            self.tipo_pk = self.PKLIZAR_K1_SETOR_1
+        elif nome == '_Offensive':
+            senha = 'kuChx98f'
+            self.tipo_pk = self.PKLIZAR_K1_SETOR_1
+        elif nome == 'LAZLU':
+            senha = 'bebe133171'
+            self.tipo_pk = self.PKLIZAR_K1_SETOR_1
 
         return senha
 
     def iniciar_pk(self):
         # garantir mapa KANTURU (o fluxo original reseta mapa para TK em alguns casos)
         self.mapa = PathFinder.MAPA_KANTURU_1_E_2
-        self.mover_para_sala(7)
-        self._mover_para_k1()
+        self.mover_para_sala(self.sala_pk)
+        self._mover_portal_tk_para_k1()
         self._sair_da_safe()
         self._ativar_skill()
 
@@ -40,6 +49,8 @@ class PkKanturuUseCase(PkBase):
             self.pklizar_kanturu1()
         elif self.tipo_pk == self.PKLIZAR_K2:
             self.pklizar_kanturu2()
+        elif self.tipo_pk == self.PKLIZAR_K1_SETOR_1:
+            self.pklizar_kanturu1_setor1()
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
@@ -65,21 +76,45 @@ class PkKanturuUseCase(PkBase):
         )
         return self.executar_rota_pk(etapas)
 
-    def morreu(self) -> bool:
-        return safe_util.k1(self.handle)
+    def pklizar_kanturu1_setor1(self):
+        etapas: Sequence[Callable[[], List]] = (
+            self.spot_kanturu1_setor1,
+        )
+        return self.executar_rota_pk(etapas)
+
+    def spot_kanturu1_setor1(self):
+        coordenadas = []
+        coordenadas.extend([
+            [
+                [['DL'], [(196, 179)], (321, 183)]  # 6
+            ],
+            [
+                [['DL'], [(219, 158)], (243, 203)]  # 7
+            ],
+            [
+                [['DL'], [(221, 141)], (313, 217)]  # 8
+            ],
+            [
+                [['DL'], [(235, 132)], (230, 362)]  # 9
+            ],
+            [
+                [['DL'], [(235, 96)], (251, 339)]  # 10
+            ],
+            [
+                [['DL'], [(227, 84)], (207, 195)]  # 11
+            ],
+            [
+                [['DL'], [(220, 45)], (204, 269)]  # 12
+            ]
+        ])
+        return coordenadas
 
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
-            if self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
-                self.mover_spot.movimentar(
-                    self.coord_spot_atual,
-                    verficar_se_movimentou=True
-                )
-            elif self.mapa == PathFinder.MAPA_TARKAN:
-                self.mover_spot.movimentar(
-                    self.coord_spot_atual,
-                    verficar_se_movimentou=True
-                )
+            self.mover_spot.movimentar(
+                self.coord_spot_atual,
+                verficar_se_movimentou=True
+            )
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas):
@@ -99,11 +134,11 @@ class PkKanturuUseCase(PkBase):
             limpar_spot_se_necessario=True
         )
 
-    def _mover_para_k1(self):
+    def _mover_portal_tk_para_k1(self):
         if safe_util.tk(self.handle):
             self.teclado.selecionar_skill_1()
             while True:
-                self.mover_spot.movimentar((170, 58), movimentacao_proxima=True)
+                self.mover_spot.movimentar((170, 58), movimentacao_proxima=True)  # SAIR DA SAFE TK
 
                 movimentou = self.mover_spot.movimentar(
                     (12, 200),
@@ -116,7 +151,7 @@ class PkKanturuUseCase(PkBase):
                 if movimentou:
                     limpar_mob_ao_redor_util.limpar_mob_ao_redor(self.handle)
                     movimentou = self.mover_spot.movimentar((12, 200), verficar_se_movimentou=True,
-                                                                   max_tempo=240)
+                                                            max_tempo=240)
 
                 if movimentou:
                     mouse_util.left_clique(self.handle, 158, 139)
@@ -127,8 +162,11 @@ class PkKanturuUseCase(PkBase):
                     break
 
                 if safe_util.tk(self.handle):
-                    print('Morreu tentando subir para K1 — aguardando 300s')
-                    time.sleep(300)
+                    print('Morreu tentando subir para K1 — aguardando 15s')
+                    time.sleep(15)
+
+    def morreu(self) -> bool:
+        return safe_util.k1(self.handle)
 
     def _esta_na_safe(self):
         return safe_util.k1(self.handle) or safe_util.tk(self.handle)
