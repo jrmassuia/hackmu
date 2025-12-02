@@ -44,7 +44,6 @@ class UpBase:
 
     def verficar_se_char_ja_esta_spot(self):
         pathfinder = PathFinder()
-        spots = None
 
         if pathfinder.get_numero_mapa_atual() == PathFinder.MAPA_KANTURU_1_E_2:
             spots = spot_util.buscar_todos_spots_k1_k2()
@@ -58,6 +57,8 @@ class UpBase:
             spots = spot_util.buscar_spots_icarus()
         elif pathfinder.get_numero_mapa_atual() == PathFinder.MAPA_KANTURU_3:
             spots = spot_util.buscar_spots_k3()
+        else:
+            return False
 
         posiconamento_service = PosicionamentoSpotService(spots)
 

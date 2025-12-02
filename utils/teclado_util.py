@@ -24,10 +24,18 @@ class Teclado_util:
         self.foco_mutex = FocoMutexService()
 
     def focus_window(self):
-        pyautogui.FAILSAFE = False
-        pyautogui.press("alt")
-        win32gui.SetForegroundWindow(self.handle)
-        time.sleep(.05)
+        try:
+            pyautogui.FAILSAFE = False  # continua desativado
+            pyautogui.press("alt")
+            win32gui.SetForegroundWindow(self.handle)
+            time.sleep(0.05)
+        except Exception as e:
+            # Identifica se foi erro de FAILSAFE
+            if "fail-safe" in str(e).lower():
+                print(f"[ERRO FAILSAFE] {e}")
+            else:
+                print(f"[ERRO focus_window] {e}")
+            pyautogui.moveTo(1, 1)
 
     def tap_enter(self):
         if self.arduino.conexao_arduino:

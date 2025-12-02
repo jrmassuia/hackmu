@@ -48,7 +48,8 @@ class UpAidaUseCaseNovo(UpBase):
 
         if not iniciar_por_aida_2 and not achou_spot:
             # Se não achou em Aida 1, espera e tenta subir pra Aida 2
-            time.sleep(1200)
+            print('ESPERANDO 300s para voltar a procura spot aida!')
+            time.sleep(300)
             self.mover_spot_util.movimentar(
                 (207, 169),
                 max_tempo=3600,
