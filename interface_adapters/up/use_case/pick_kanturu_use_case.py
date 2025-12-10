@@ -79,7 +79,7 @@ class PickKanturuUseCase(BaseController):
     def _definir_spot_up(self):
         if 'PC1' in socket.gethostname():
             # spots_por_tela = [['[1/3]', 24, ''], ['[2/3]', 15, ''], ['[3/3]', 14, '']]
-            spots_por_tela = [['[1/3]', 14, ''], ['[2/3]', 15, ''], ['[3/3]', 14, '']]
+            spots_por_tela = [['[1/3]', 12, ''], ['[2/3]', 25, ''], ['[3/3]', 15, '']]
         elif 'PC2' in socket.gethostname():
             spots_por_tela = [['[1/3]', 21, ''], ['[2/3]', 22, ''], ['[3/3]', 26, '']]
         elif 'PC3' in socket.gethostname():

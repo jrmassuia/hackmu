@@ -66,35 +66,30 @@ class PkBase(ABC):
             else:
                 self.limpar_pk()
 
-    @abstractmethod
-    def _definir_tipo_pk_e_senha(self) -> str:
-        """Subclasse define self.tipo_pk e retorna senha (string)."""
-        raise NotImplementedError()
-
-    @abstractmethod
-    def iniciar_pk(self) -> None:
-        """Fluxo que inicia uma rotina de PK (por mapa/tipo)."""
-        raise NotImplementedError()
-
-    @abstractmethod
     def _corrigir_coordenada_e_mouse(self) -> None:
-        raise NotImplementedError()
+        if self.coord_spot_atual and self.coord_mouse_atual:
+            self.mover_spot.movimentar(
+                self.coord_spot_atual,
+                verficar_se_movimentou=True
+            )
+            mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
-    @abstractmethod
-    def _esta_na_safe(self) -> bool:
-        raise NotImplementedError()
-
-    @abstractmethod
     def _movimentar_char_spot(self, coordenadas: Tuple[int, int]) -> bool:
-        raise NotImplementedError()
+        return self.mover_spot.movimentar(
+            coordenadas,
+            max_tempo=600,
+            verficar_se_movimentou=True,
+            movimentacao_proxima=True,
+            limpar_spot_se_necessario=True
+        )
 
-    @abstractmethod
     def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _sair_da_safe(self) -> None:
-        raise NotImplementedError()
+        return self.mover_spot.movimentar(
+            (y, x),
+            verficar_se_movimentou=True,
+            posicionar_mouse_coordenada=True,
+            limpar_spot_se_necessario=True
+        )
 
     def atualizar_lista_player(self):
         self.atualizar_lista_tohell()
@@ -126,7 +121,9 @@ class PkBase(ABC):
             if self.morreu or not self.verificar_se_pode_continuar_com_pk():
                 return False
             else:
-                self.limpar_mob_ao_redor()
+                coordenada_mouse = spots[0][0][2]
+                if coordenada_mouse != (0, 0):
+                    self.limpar_mob_ao_redor()
         return True
 
     def limpar_mob_ao_redor(self):
@@ -228,47 +225,46 @@ class PkBase(ABC):
                 for grupo in grupo_de_spots:
                     classes, coordenadas_spot, coordenada_mouse = grupo
 
-                    if 'DL' not in classes:
-                        continue
+                    if 'SM' in classes:
 
-                    coordenadas = coordenadas_spot[0]
-                    movimentou = self._movimentar_char_spot(coordenadas)
-                    if not movimentou:
-                        print('Morreu enquanto procurava player - falha movimentação')
-                        self.morreu = True
-                        return
-
-                    resultados = self.servico_buscar_personagem.listar_nomes_e_coords_por_padrao()
-                    if not resultados:
-                        continue
-
-                    proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=30)
-                    if len(proximos) >= 3:
-                        proximos = proximos[:3]
-
-                    for registro in proximos:
-                        nome = registro.get("nome", "")
-                        x = registro.get("x", 0)
-                        y = registro.get("y", 0)
-
-                        if self.morreu:
+                        coordenadas = coordenadas_spot[0]
+                        movimentou = self._movimentar_char_spot(coordenadas)
+                        if not movimentou:
+                            print('Morreu enquanto procurava player - falha movimentação')
+                            self.morreu = True
                             return
 
-                        if self._verificar_se_eh_tohell(nome):
+                        resultados = self.servico_buscar_personagem.listar_nomes_e_coords_por_padrao()
+                        if not resultados:
                             continue
 
-                        if self.pointer.get_sala_atual() == 7 or self._verificar_se_eh_suicide(nome):
+                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=30)
+                        if len(proximos) >= 3:
+                            proximos = proximos[:3]
 
-                            posicionou = self._posicionar_char_pklizar(x, y)
-                            if posicionou:
-                                self._tentar_pklizar()
-                            else:
-                                print('MORREU ENQUANTO POSICIONAVA!')
-                                self.morreu = True
+                        for registro in proximos:
+                            nome = registro.get("nome", "")
+                            x = registro.get("x", 0)
+                            y = registro.get("y", 0)
+
+                            if self.morreu:
                                 return
-                        else:
-                            print('Continuando procura de suicide...')
-                            continue
+
+                            if self._verificar_se_eh_tohell(nome):
+                                continue
+
+                            if self.pointer.get_sala_atual() == 7 or self._verificar_se_eh_suicide(nome):
+
+                                posicionou = self._posicionar_char_pklizar(x, y)
+                                if posicionou:
+                                    self._tentar_pklizar()
+                                else:
+                                    print('MORREU ENQUANTO POSICIONAVA!')
+                                    self.morreu = True
+                                    return
+                            else:
+                                print('Continuando procura de suicide...')
+                                continue
         finally:
             self.pklizar.desativar_pk()
 
@@ -364,3 +360,21 @@ class PkBase(ABC):
         self.teclado.selecionar_skill_3()
         mouse_util.clickDireito(self.handle)
         self.teclado.selecionar_skill_1()
+
+    @abstractmethod
+    def _definir_tipo_pk_e_senha(self) -> str:
+        """Subclasse define self.tipo_pk e retorna senha (string)."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def iniciar_pk(self) -> None:
+        """Fluxo que inicia uma rotina de PK (por mapa/tipo)."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _esta_na_safe(self) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _sair_da_safe(self) -> None:
+        raise NotImplementedError()

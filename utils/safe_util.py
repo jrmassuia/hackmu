@@ -12,7 +12,7 @@ def _dentro_da_area(x, y, x_min, x_max, y_min, y_max):
 
 def lorencia(handle):
     x, y = _coordenadas(handle)
-    return _dentro_da_area(x, y, 115, 136, 130, 151)
+    return _dentro_da_area(x, y, 115, 136, 113, 155)
 
 
 def noria(handle):

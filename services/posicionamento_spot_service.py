@@ -33,7 +33,7 @@ class PosicionamentoSpotService:
             for grupo in spot:
                 classes, coordenadas_spot, coord_mouse = grupo
                 self.coord_spot_atual = coordenadas_spot[0]
-                if self.classe in classes and self._mover_para_spot():
+                if self.classe in classes and self._mover_para_spot(coord_mouse):
                     self._configurar_spot(coord_mouse)
                     return True
         return False
@@ -61,7 +61,8 @@ class PosicionamentoSpotService:
                 if 'SM' in classes:
                     self.coord_spot_atual = coordenada  # UTILIZA PARA PEGAR A COORDENADA CENTRAL DE CADA SPOT PARA CHEGAR MAIS PROXIMO
                 if self.classe in classes:
-                    conseguiu_posicionar = self._mover_para_spot(verificar_spot_livre=verificar_spot_livre)
+                    conseguiu_posicionar = self._mover_para_spot(coordenada_mouse,
+                                                                 verificar_spot_livre=verificar_spot_livre)
                     if self.mover_spot_util.esta_na_safe:
                         print('Voltou pra safe enquanto movimentava!')
                         return False
@@ -72,9 +73,11 @@ class PosicionamentoSpotService:
         print('Não achou spot!')
         return False
 
-    def _mover_para_spot(self, verificar_spot_livre=False):
+    def _mover_para_spot(self, coordenada_mouse, verificar_spot_livre=False):
         movimentou = self.movimentar_mapa()
         if not movimentou:
+            return False
+        elif coordenada_mouse == (0, 0):
             return False
         elif verificar_spot_livre:
             return self._spot_livre()

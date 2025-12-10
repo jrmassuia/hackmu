@@ -429,6 +429,22 @@ def buscar_spots_aida_volta_final(ignorar_spot_pk=False):
     return coordenadas
 
 
+def desbug_ponte_aida1():
+    return [
+        [
+            [['SM', 'MG', 'EF', 'BK'], [(209, 61)], (0, 0)]
+        ]
+    ]
+
+
+def desbug_corredor_aida_subindo_aida1_para_aida2():
+    return [
+        [
+            [['SM', 'MG', 'EF', 'BK'], [(229, 158)], (0, 0)]
+        ]
+    ]
+
+
 def buscar_spots_knv():
     coordenadas = []
     coordenadas.extend([

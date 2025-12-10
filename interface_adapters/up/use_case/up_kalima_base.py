@@ -15,15 +15,12 @@ class UpKalimaBase(UpBase):
 
     def executar(self):
 
-        if self.classe == 'EF' or (
-                self.ja_moveu_para_mapa is False and self._possui_convite() is False):
+        if self.classe == 'EF' or (self.ja_moveu_para_mapa is False and self._possui_convite() is False):
             return False
 
         if not self.ja_moveu_para_mapa:
-            mapa_atual = self.pointer.get_mapa_atual()
-
             # Caso ainda não esteja em Kalima → mover e posicionar
-            if mapa_atual != self.KALIMA:
+            if self.pointer.get_mapa_atual() != self.KALIMA:
                 if not self._mover_e_abrir_portal():
                     return False
                 self.posicionar_char_spot()
@@ -35,7 +32,7 @@ class UpKalimaBase(UpBase):
             self.ja_moveu_para_mapa = True
 
         if self.up_liberado:
-            if safe_util.devias(self.handle):
+            if self.pointer.get_mapa_atual() != self.KALIMA:
                 if self.tentativa_up > 3:
                     print(f'Atingiou o limite máximo de tentativa up em {self.nome_mapa()}')
                     return False

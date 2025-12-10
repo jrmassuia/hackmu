@@ -1,5 +1,7 @@
 import time
 
+import winsound
+
 from interface_adapters.up.up_util.up_util import Up_util
 from menu import Menu
 from sessao_menu import obter_menu
@@ -31,9 +33,6 @@ class PegarItemUseCase:
         else:
             self.up_util.ativar_up_e_centralizar()
 
-    def _coordenadas_validas(self, x, y, item):
-        return x is not None and y is not None and item is not None
-
     def _buscar_item(self):
         x, y, item = self.buscar_item.buscar_item_geral_autopick()
         x, y = self._calibrar(x, y, item)
@@ -48,6 +47,9 @@ class PegarItemUseCase:
         x, y, item = self.buscar_item.buscar_item_especifico_autopick(item_especifico)
         x, y = self._calibrar(x, y, item)
         return x, y, item
+
+    def _coordenadas_validas(self, x, y, item):
+        return x is not None and y is not None and item is not None
 
     def _processar_item(self, x, y, item):
         time.sleep(0.5)  # Tempo para o item cair no chão
@@ -64,8 +66,14 @@ class PegarItemUseCase:
 
             if 'zen' in item and self.classe in ['DL', 'EF']:
                 self.teclado_util.tap_espaco()
+            elif 'add4' in item:
+                frequency = 1000  # Hz
+                duration = 1000  # milissegundos
+                winsound.Beep(frequency, duration)
+                time.sleep(8)
             else:
                 mouse_util.left_clique(self.handle, x, y)
+                time.sleep(1)
 
             if item_especial:
                 novo_x, novo_y, novo_item = self._buscar_item_especifico(item)
@@ -97,7 +105,6 @@ class PegarItemUseCase:
                 else:
                     raio = 60
                 x_alvo, y_alvo = 400, 255  # CENTRO DA TELA
-
                 distancia = ((x - x_alvo) ** 2 + (y - y_alvo) ** 2) ** 0.5
                 return distancia <= raio
         return True
@@ -115,10 +122,14 @@ class PegarItemUseCase:
             # elif 'key' in item:c
             # elif 'kalima' in item and self.sessao.ler_menu(MenuFields.UPAR) == 1 and self.classe != 'EF':
             #     return self._calibrar_comum(x, y)
+            elif 'add4' in item and obter_menu(self.handle).get(Menu.JOIAS) == 1:
+                return self._calibrar_comum(x, y)
+            elif 'boxgreen' in item:
+                return self._calibrar_comum(x, y)
             elif 'zen' in item and obter_menu(self.handle).get(Menu.UPAR) == 1:
                 return self._calibrar_zen(x, y)
         else:
-            if 'gemsto ne' in item:
+            if 'gemstone' in item:
                 return self._calibrar_comum(x, y)
             elif 'joia' in item:
                 return self._calibrar_joia(x, y)

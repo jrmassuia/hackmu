@@ -12,12 +12,12 @@ from interface_adapters.controller.sd_small_controller import SdSmallController
 from interface_adapters.helpers.session_manager import *
 from interface_adapters.pk.controller.pk_controller import PKController
 from interface_adapters.recrutar.controller.recrutar_controller import RecrutarController
+from interface_adapters.teste.controller.teste_controller import TesteController
 from interface_adapters.up.controller.up_controller import UpController
 from interface_adapters.up.use_case.pick_kanturu_use_case import PickKanturuUseCase
 from menu import Menu
 from services.foco_mutex_service import FocoMutexService
 from sessao_menu import atualizar_menu, obter_menu
-from utils.teclado_util import Teclado_util
 
 
 class MainApp:
@@ -94,6 +94,8 @@ class MainApp:
             obj = PKController(handle)
         elif menu == Menu.RECRUTAR:
             obj = RecrutarController(handle)
+        elif menu == Menu.TESTE:
+            obj = TesteController(handle)
 
         thread = threading.Thread(target=obj.execute)
         self.threads_ativas.append((obj, thread))  # Armazena o objeto e a thread
@@ -134,6 +136,7 @@ class MainApp:
                 Menu.PICKKANTURU: self._executar_pick_kanturu,
                 Menu.PKLIZAR: self._executar_pklizar,
                 Menu.RECRUTAR: self._executar_recrutar,
+                Menu.TESTE: self._executar_teste
             }
 
             # Procura a primeira opção ativa (== 1) e executa
@@ -200,6 +203,12 @@ class MainApp:
         print('Inciando telas:')
         print('--' + win32gui.GetWindowText(handle))
         self.rodar_em_thread(handle, Menu.RECRUTAR)
+        time.sleep(2)
+
+    def _executar_teste(self, handle):
+        print('Inciando telas:')
+        print('--' + win32gui.GetWindowText(handle))
+        self.rodar_em_thread(handle, Menu.TESTE)
         time.sleep(2)
 
     def finalizar_autopick(self):

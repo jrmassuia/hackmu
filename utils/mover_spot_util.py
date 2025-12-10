@@ -1,6 +1,8 @@
-import random
 import time
 from datetime import datetime
+
+import win32api
+import win32gui
 
 from sessao_handle import get_handle_atual
 from utils import mouse_util, safe_util
@@ -10,12 +12,14 @@ from utils.rota_util import PathFinder
 
 class MoverSpotUtil:
 
-    def __init__(self):
-        self.handle = get_handle_atual()
-        self.pointer = Pointers()
+    def __init__(self, handle=None):
+        if handle is None:
+            self.handle = get_handle_atual()
+        self.pointer = Pointers(hwnd=handle)
         self.classe = self.pointer.get_classe()
         self.esta_na_safe = False
         self.pathfinder = None
+        self.proxima_posicao_mouse = None
 
     def movimentar(self, coords, **kwargs):
         self.pathfinder = PathFinder()
@@ -69,7 +73,7 @@ class MoverSpotUtil:
                         return True
 
                     caminho = self.pathfinder.find_path((y_atual, x_atual), (destino_y, destino_x))
-                    if not caminho:
+                    if not caminho or len(caminho) < 2:
                         continue
 
                     prox_posicao = self._obter_proxima_posicao(caminho, y_atual, x_atual)
@@ -86,7 +90,7 @@ class MoverSpotUtil:
                             self.pointer.get_cood_x() == destino_x and self.pointer.get_cood_y() == destino_y):
                         return True
 
-                    if self.pointer.get_char_pk_selecionado(): ##MATA OS MOB CASO FOR MOVIMENTAR
+                    if self.pointer.get_char_pk_selecionado():  ##MATA OS MOB CASO FOR MOVIMENTAR
                         mouse_util.clickDireito(self.handle)
                         time.sleep(1)
 
@@ -133,22 +137,53 @@ class MoverSpotUtil:
         return x_ant, y_ant, hora_inicial
 
     def _limpar_spot(self):
-        coordenadas = [
-            (392, 53),  # cima
-            (144, 252),  # esquerda
-            (404, 458),  # baixo
-            (667, 242)  # direita
-        ]
+        x, y = self.proxima_posicao_mouse  # posição do mouse no cliente do jogo
 
-        for _ in range(random.randint(1, 4)):
-            x, y = random.choice(coordenadas)
-            mouse_util.left_clique(self.handle, x, y)
+        x_centro = 400
+        y_centro = 270
+
+        if y < y_centro:
+            direcao_vertical = "cima"
+            y = y - 65
+        elif y > y_centro:
+            direcao_vertical = "baixo"
+            y = y + 65
+        else:
+            direcao_vertical = "centro_vertical"
+
+        # --- Horizontal ---
+        if x > x_centro:
+            direcao_horizontal = "esquerda"
+            x = x + 100
+        elif x < x_centro:
+            direcao_horizontal = "direita"
+            x = x - 100
+        else:
+            direcao_horizontal = "centro_horizontal"
+
+        mouse_util.left_clique(self.handle, x, y)
+
+        # coordenadas = [
+        #     (392, 53),  # cima
+        #     (144, 252),  # esquerda
+        #     (404, 458),  # baixo
+        #     (667, 242)  # direita
+        # ]
+        #
+        # for _ in range(random.randint(1, 4)):
+        #     x, y = random.choice(coordenadas)
+        #     mouse_util.left_clique(self.handle, x, y)
 
     def _tempo_excedido(self, tempo_inicio, max_tempo):
         return time.time() - tempo_inicio > max_tempo
 
     def _obter_proxima_posicao(self, caminho, y_atual, x_atual):
-        y_dest, x_dest = caminho[min(len(caminho) - 1, 4)]
+        if len(caminho) < 2:
+            return None
+
+        # caminho[0] = pos atual, caminho[1] = próximo passo
+        y_dest, x_dest = caminho[1]
+
         dy = y_dest - y_atual + 4
         dx = x_dest - x_atual + 4
 
@@ -159,6 +194,7 @@ class MoverSpotUtil:
 
         try:
             (py, px), (cx, cy) = self.matriz_posicoes()[index]
+            self.proxima_posicao_mouse = cx, cy
             if (dy, dx) == (py, px):
                 return py, px, cx, cy
         except IndexError:
@@ -168,8 +204,8 @@ class MoverSpotUtil:
 
     def _executar_movimento(self, caminho, cx, cy, movimentacao_proxima, posicionar_mouse_coordenada):
 
-        esta_proximo = len(caminho) <= 4
-        clique_rapido = not movimentacao_proxima and len(caminho) <= 5
+        esta_proximo = len(caminho) <= 2
+        clique_rapido = not movimentacao_proxima and len(caminho) <= 3
 
         if posicionar_mouse_coordenada:
             ultimas_posicoes = None
@@ -260,7 +296,7 @@ class MoverSpotUtil:
                    [(2, 8), (457, 160)]]
 
         matriz3 = [[(3, 0), (230, 335)], [(3, 1), (256, 323)], [(3, 2), (303, 294)], [(3, 3), (330, 278)],
-                   [(3, 4), (371, 250)], [(3, 5), (400, 238)], [(3, 6), (438, 214)], [(3, 7), (256, 200)],
+                   [(3, 4), (371, 250)], [(3, 5), (400, 238)], [(3, 6), (438, 214)], [(3, 7), (456, 200)],
                    [(3, 8), (493, 182)]]
 
         matriz4 = [[(4, 0), (260, 368)], [(4, 1), (288, 347)], [(4, 2), (338, 319)], [(4, 3), (362, 300)],

@@ -20,7 +20,27 @@ class SelecionarCharUtil:
             #
             ('TOROUVC', 1),
             #
-            ('INFECTRIX', 0)
+            ('INFECTRIX', 0),
+            #
+            ('Omale_DL', 1),
+            #
+            ('ESTAMUERTO', 1),
+            #
+            ('Deef_Stret', 0),
+            #
+            ('ReiDav1', 4),
+            #
+            ('Shokito', 0),
+            #
+            ('Yzzuth', 0),
+            #
+            ('AlfaVictor', 3),
+            #
+            ('_Offensive', 2),
+            #
+            ('LAZLU', 3),
+            #
+            ('DL_JirayA', 3)
         ]
 
     def reiniciar_char(self):
@@ -50,17 +70,28 @@ class SelecionarCharUtil:
     def selecionar_char_por_posicao(self):
         for nome, posicao in self._lista_char_para_selecionar():
             if nome == self.char_atual:
+                x = 0
+                y = 0
                 if posicao == 0:
-                    mouse_util.left_clique(self.handle, 156, 410)
+                    x = 156
+                    y = 410
                 elif posicao == 1:
-                    mouse_util.left_clique(self.handle, 274, 410)
+                    x = 274
+                    y = 410
                 elif posicao == 2:
-                    mouse_util.left_clique(self.handle, 406, 410)
+                    x = 406
+                    y = 410
                 elif posicao == 3:
-                    mouse_util.left_clique(self.handle, 534, 410)
+                    x = 534
+                    y = 410
                 elif posicao == 4:
-                    mouse_util.left_clique(self.handle, 655, 410)
+                    x = 655
+                    y = 410
+
+                mouse_util.left_clique(self.handle, x, y)
+                mouse_util.left_clique(self.handle, x, y)
                 time.sleep(1)
+
                 self.clicar_na_imagem_ou_fallback('./static/img/btnconnect.png', None)
                 time.sleep(3)
                 return True

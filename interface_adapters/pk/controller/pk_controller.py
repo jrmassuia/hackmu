@@ -18,29 +18,12 @@ class PKController(BaseController):
 
     def _run(self):
 
-        if 'PC1' in socket.gethostname():
-            if safe_util.k3(self.handle):
-                self.pklizar_k3()
-            elif safe_util.aida(self.handle):
-                self.pklizar_aida()
-            # elif safe_util.k1(self.handle):
-            #     # self.pklizar_knv()
-            #     # self.cavalar_kanturu()
-            #     self.pklizar_kanturu()
-            # elif safe_util.tk(self.handle):
-            #     self.pklizar_tarkan()
-            else:
-                self.pklizar_kanturu()
-
-        elif 'PC2' in socket.gethostname():
-            if safe_util.tk(self.handle):
-                self.pklizar_tarkan()
-            elif safe_util.aida(self.handle):
-                self.pklizar_aida()
-            elif safe_util.k3(self.handle):
-                self.pklizar_k3()
-            elif safe_util.k1(self.handle):
-                self.pklizar_knv()
+        if safe_util.tk(self.handle):
+            self.pklizar_tarkan()
+        elif safe_util.k3(self.handle):
+            self.pklizar_k3()
+        elif safe_util.k1(self.handle):
+            self.pklizar_knv()
         else:
             self.pklizar_aida()
 

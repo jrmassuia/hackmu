@@ -1,5 +1,7 @@
 from PIL import Image, ImageDraw
+from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
+from pathfinding.core.heuristic import chebyshev
 from pathfinding.finder.a_star import AStarFinder
 
 from utils.pointer_util import Pointers
@@ -110,15 +112,56 @@ class PathFinder:
         self.bloquear_bordas(margem=1)
 
         grid_obj = Grid(matrix=self.grid)
-        # start_node, end_node = grid_obj.node(*start), grid_obj.node(*end)
 
         start_node = grid_obj.node(start[0], start[1])
         end_node = grid_obj.node(end[0], end[1])
 
-        finder = AStarFinder()
+        finder = AStarFinder(
+            diagonal_movement=DiagonalMovement.if_at_most_one_obstacle,
+            heuristic=chebyshev
+        )
+
         path, _ = finder.find_path(start_node, end_node, grid_obj)
-        path_array = [(x, y) for x, y in path]
+
+        # converte para (y, x) ou (x, y) de acordo com seu uso
+        path_array = [(y, x) for (y, x) in path]
+
+        # *** AQUI: simplifica respeitando passo máximo de 4 tiles ***
+        path_array = self._simplificar_caminho(path_array, passo_max=4)
+
         return path_array
+
+    def _simplificar_caminho(self, path: list[tuple[int, int]], passo_max: int = 4) -> list[tuple[int, int]]:
+        """
+        Simplifica o caminho garantindo que cada salto entre pontos consecutivos
+        tenha distância Chebyshev <= passo_max (no seu caso, 4).
+        Assim, cada próximo ponto sempre estará dentro da matriz 9x9 de clique.
+        """
+        if len(path) <= 2:
+            return path
+
+        simplificado = [path[0]]
+        idx = 0
+        n = len(path)
+
+        while idx < n - 1:
+            next_idx = idx + 1
+
+            # tenta ir o mais longe possível a partir de 'idx' sem ultrapassar passo_max
+            for j in range(idx + 1, n):
+                dy = path[j][0] - path[idx][0]
+                dx = path[j][1] - path[idx][1]
+
+                if max(abs(dy), abs(dx)) <= passo_max:
+                    next_idx = j
+                else:
+                    # passou do limite, para de tentar ir mais longe
+                    break
+
+            simplificado.append(path[next_idx])
+            idx = next_idx
+
+        return simplificado
 
     def draw_path_on_map(self, path: list[tuple[int, int]]) -> None:
         img = Image.new("RGB", (256, 256), "black")

@@ -12,12 +12,10 @@ from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
+
 class AutopickController(BaseController):
 
-    def __init__(self, handle: int):
-        super().__init__(handle)
-        self.handle = handle
-
+    def _prepare(self):
         self.mover_spot_util = MoverSpotUtil()
         self.tela = win32gui.GetWindowText(self.handle)
         self.auto_pick = PegarItemUseCase(self.handle)
@@ -107,8 +105,8 @@ class AutopickController(BaseController):
         if (xcood and ycood) and ((85 <= xcood <= 95) and (80 <= ycood <= 90)):
             while True:
                 chegou = MoverSpotUtil().movimentar((82, 91), max_tempo=600,
-                                                               movimentacao_proxima=True,
-                                                               limpar_spot_se_necessario=True)
+                                                    movimentacao_proxima=True,
+                                                    limpar_spot_se_necessario=True)
                 if chegou:
                     break
             mouse_util.mover(self.handle, 490, 338)

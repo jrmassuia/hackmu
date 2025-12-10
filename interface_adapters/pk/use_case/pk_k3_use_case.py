@@ -57,31 +57,6 @@ class PkK3UseCase(PkBase):
             print('Esperando 600s para próximo PK em K3')
             time.sleep(600)
 
-    def _corrigir_coordenada_e_mouse(self):
-        if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot.movimentar(
-                self.coord_spot_atual,
-                verficar_se_movimentou=True
-            )
-            mouse_util.mover(self.handle, *self.coord_mouse_atual)
-
-    def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot.movimentar(
-            coordenadas,
-            max_tempo=600,
-            verficar_se_movimentou=True,
-            movimentacao_proxima=True,
-            limpar_spot_se_necessario=True
-        )
-
-    def _posicionar_char_pklizar(self, x, y):
-        # observe que o mover_kanturu_3 espera (linha,coluna) diferente do x,y
-        return self.mover_spot.movimentar(
-            (y, x),
-            verficar_se_movimentou=True,
-            posicionar_mouse_coordenada=True,
-            limpar_spot_se_necessario=True
-        )
 
     def verificar_se_pode_continuar_com_pk(self):
         return True

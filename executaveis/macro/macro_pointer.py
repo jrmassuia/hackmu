@@ -159,9 +159,9 @@ def usar_potes(numero_de_potes, limites, pointers, teclado):
 
     for _ in range(numero_de_potes):
         if (pointers.get_hp() != pointers.get_hp_max()) or (pointers.get_sd() != pointers.get_sd_max()):
-            teclado.toque_arduino("Q", delay=delay_tecla)  # Pota COMPLEX
+            teclado._toque_arduino("Q", delay=delay_tecla)  # Pota COMPLEX
             time.sleep(delay_entre_tecla)
-            teclado.toque_arduino("W", delay=delay_tecla)  # Pota SD MEDIA
+            teclado._toque_arduino("W", delay=delay_tecla)  # Pota SD MEDIA
 
         # if pointers.get_sd() >= limites["limite_sd_95"]:
         #     teclado_util.enviar_tecla(teclado_util.VK_E, delay=delay_tecla)  # Pota HP

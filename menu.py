@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-class Menu:
 
+class Menu:
     AUTOPICK = "autopick"
     SD = "sd"
     UPAR = "upar"
@@ -18,7 +18,7 @@ class Menu:
     BUF = "buf"
     PKLIZAR = "pk"
     RECRUTAR = "recrutar"
-
+    TESTE = "teste"
 
     def __init__(self, app):
         self.app = app
@@ -35,7 +35,8 @@ class Menu:
         self.root.rowconfigure(1, weight=1)
         self.root.columnconfigure(0, weight=1)
 
-        titulo = tk.Label(self.root, text="Menu de Configuração", font=("Helvetica", 16, "bold"), fg="white", bg="#2b2b2b")
+        titulo = tk.Label(self.root, text="Menu de Configuração", font=("Helvetica", 16, "bold"), fg="white",
+                          bg="#2b2b2b")
         titulo.grid(row=0, column=0, pady=10, sticky="n")
 
         estilo_frame = ttk.Style()
@@ -66,7 +67,8 @@ class Menu:
             ('upar', 'AutoUp'),
             ('buf', 'Buf'),
             ('pk', 'Pklizar'),
-            ('recrutar', 'Recrutar')
+            ('recrutar', 'Recrutar'),
+            ('teste', 'Teste')
         ]
 
         for idx, (tela_nome, _) in enumerate(telas):
@@ -118,7 +120,8 @@ class Menu:
             'upar': tela_vars['upar'].get(),
             'buf': tela_vars['buf'].get(),
             'pk': tela_vars['pk'].get(),
-            'recrutar': tela_vars['recrutar'].get()
+            'recrutar': tela_vars['recrutar'].get(),
+            'teste': tela_vars['teste'].get()
         }
 
     def run(self):

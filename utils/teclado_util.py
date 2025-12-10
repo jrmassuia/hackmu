@@ -18,8 +18,9 @@ TENTATIVAS_PADRAO = 10
 
 class Teclado_util:
 
-    def __init__(self):
-        self.handle = get_handle_atual()
+    def __init__(self, handle=None):
+        if handle is None:
+            self.handle = get_handle_atual()
         self.arduino = Arduino()
         self.foco_mutex = FocoMutexService()
 

@@ -1,5 +1,5 @@
 import time
-from typing import Sequence, Callable, List, Optional
+from typing import Sequence, Callable, List
 
 from interface_adapters.pk.use_case.pk_base_use_case import PkBase
 from utils import spot_util, safe_util, mouse_util
@@ -18,53 +18,49 @@ class PkAidaUseCase(PkBase):
     PKLIZAR_AIDA_CORREDOR = 'AIDA_CORREDOR'
     PKLIZAR_AIDA_FINAL = 'AIDA_FINAL'
 
-    # ---------- Definição de senha/tipo ----------
     def _definir_tipo_pk_e_senha(self) -> str:
         nome = self.pointer.get_nome_char()
 
         # AIDA 1
-        if nome == 'ESTAMUERTO':
-            senha = '93148273'
-            self.tipo_pk = self.PKLIZAR_AIDA_1
-        elif nome == 'INFECTRIX':
-            senha = '9876Sonso'
-            self.tipo_pk = self.PKLIZAR_AIDA_1
-        elif nome == '_Offensive':
+        if nome == '_Offensive':
             senha = 'kuChx98f'
+            self.tipo_pk = self.PKLIZAR_AIDA_1
+        elif nome == 'Omale_DL':
+            senha = 'gtkn6iVy'
             self.tipo_pk = self.PKLIZAR_AIDA_1
 
         # AIDA 2
         elif nome == 'LAZLU':
             senha = 'bebe133171'
             self.tipo_pk = self.PKLIZAR_AIDA_2
-        elif nome == 'Omale_DL':
-            senha = 'gtkn6iVy'
-            self.tipo_pk = self.PKLIZAR_AIDA_2
         elif nome == 'Heisemberg':
             senha = '93148273'
             self.tipo_pk = self.PKLIZAR_AIDA_2
-        elif nome == 'SM_Troyer':
-            senha = 'romualdo12'
-            self.tipo_pk = self.PKLIZAR_AIDA_2
         elif nome == 'AlfaVictor':
             senha = 'thiago123'
-            # self.sala_pk = 5
-            self.tipo_pk = self.PKLIZAR_AIDA_1
+            self.tipo_pk = self.PKLIZAR_AIDA_2
+        elif nome == 'INFECTRIX':
+            senha = '9876Sonso'
+            self.tipo_pk = self.PKLIZAR_AIDA_2
+        elif nome == 'ESTAMUERTO':
+            senha = '93148273'
+            self.tipo_pk = self.PKLIZAR_AIDA_2
 
         # AIDA CORREDOR
         elif nome == 'SisteMatyc':
             senha = 'carenae811'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
-            self.sala_pk = 5
-        elif nome == 'ReiDav1':
+        elif nome == 'SM_Troyer':
             senha = 'romualdo12'
-            self.tipo_pk = self.PKLIZAR_AIDA_1
+            self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
 
         # AIDA FINAL
-
         elif nome == 'DL_JirayA':
             senha = '134779'
-            self.tipo_pk = self.PKLIZAR_AIDA_2
+            self.tipo_pk = self.PKLIZAR_AIDA_FINAL
+        elif nome == 'ReiDav1':
+            senha = 'romualdo12'
+            self.tipo_pk = self.PKLIZAR_AIDA_FINAL
         else:
             print('Tela sem configuração definida! ' + self.titulo_janela)
             senha = ''
@@ -89,7 +85,7 @@ class PkAidaUseCase(PkBase):
             elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
                 self.pklizar_aida_final()
             else:
-                self.pklizar_aida1()
+                self.pklizar_aida2()
 
         if not self.morreu:
             print('Relizada a rota completa de PK: ' + self.titulo_janela)
@@ -98,6 +94,7 @@ class PkAidaUseCase(PkBase):
         etapas: Sequence[Callable[[], List]] = (
             lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
             self.buscar_spot_extra_aida1,
+            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_corredor,
             spot_util.buscar_spots_aida_final,
@@ -116,9 +113,12 @@ class PkAidaUseCase(PkBase):
 
     def pklizar_aida2(self):
         etapas: Sequence[Callable[[], List]] = (
+            spot_util.desbug_ponte_aida1,
+            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_corredor,
             spot_util.buscar_spots_aida_final,
+            spot_util.desbug_ponte_aida1,
             self.buscar_spot_extra_aida1,
         )
         return self.executar_rota_pk(etapas)
@@ -127,7 +127,9 @@ class PkAidaUseCase(PkBase):
         etapas: Sequence[Callable[[], List]] = (
             spot_util.buscar_spots_aida_corredor,
             self.buscar_spot_extra_aida1,
+            spot_util.desbug_ponte_aida1,
             lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
+            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_final,
         )
@@ -137,7 +139,10 @@ class PkAidaUseCase(PkBase):
         etapas: Sequence[Callable[[], List]] = (
             spot_util.buscar_spots_aida_final,
             spot_util.buscar_spots_aida_corredor,
+            spot_util.desbug_ponte_aida1,
             self.buscar_spot_extra_aida1,
+            spot_util.desbug_ponte_aida1,
+            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
         )
         return self.executar_rota_pk(etapas)
@@ -172,31 +177,6 @@ class PkAidaUseCase(PkBase):
             # clique extra em posição conhecida (fallback)
             mouse_util.left_clique(self.handle, 38, 369)
 
-    # ---------- correção de coordenadas / movimentação ----------
-    def _corrigir_coordenada_e_mouse(self):
-        if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot.movimentar(
-                self.coord_spot_atual,
-                verficar_se_movimentou=True
-            )
-            mouse_util.mover(self.handle, *self.coord_mouse_atual)
-
-    def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot.movimentar(
-            coordenadas,
-            max_tempo=600,
-            verficar_se_movimentou=True,
-            movimentacao_proxima=True,
-            limpar_spot_se_necessario=True
-        )
-
-    def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
-        return self.mover_spot.movimentar(
-            (y, x),
-            verficar_se_movimentou=True,
-            posicionar_mouse_coordenada=True,
-            limpar_spot_se_necessario=True
-        )
 
     def _esta_na_safe(self) -> bool:
         return safe_util.aida(self.handle)

@@ -15,6 +15,7 @@ import pyautogui
 import pydivert
 import win32con
 import win32gui
+import winsound
 
 import MuEntityScannerPK
 import testeautopk
@@ -145,8 +146,10 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    # pointer = Pointers().teste_pointer_necessarios()
-    Teclado_util(handle).selecionar_skill_1()
+    # pointer = Pointers(hwnd=handle).teste_pointer_necessarios()
+
+    # mouse_util.mover(handle,155, 273)
+    MoverSpotUtil(handle).movimentar((132, 113))
 
     # mouse_util.left_clique(handle, 482, 25)
 
