@@ -68,9 +68,10 @@ class PegarItemUseCase:
                 self.teclado_util.tap_espaco()
             elif 'add4' in item:
                 frequency = 1000  # Hz
-                duration = 1000  # milissegundos
+                duration = 500  # milissegundos
                 winsound.Beep(frequency, duration)
-                time.sleep(8)
+                mouse_util.left_clique(self.handle, x, y)
+                time.sleep(1)
             else:
                 mouse_util.left_clique(self.handle, x, y)
                 time.sleep(1)
@@ -123,7 +124,7 @@ class PegarItemUseCase:
             # elif 'kalima' in item and self.sessao.ler_menu(MenuFields.UPAR) == 1 and self.classe != 'EF':
             #     return self._calibrar_comum(x, y)
             elif 'add4' in item and obter_menu(self.handle).get(Menu.JOIAS) == 1:
-                return self._calibrar_comum(x, y)
+                return self._calibrar_add4(x, y)
             elif 'boxgreen' in item:
                 return self._calibrar_comum(x, y)
             elif 'zen' in item and obter_menu(self.handle).get(Menu.UPAR) == 1:
@@ -152,3 +153,6 @@ class PegarItemUseCase:
 
     def _calibrar_zen(self, x, y):
         return x + 12, y + 12
+
+    def _calibrar_add4(self, x, y):
+        return x - 20, y + 12

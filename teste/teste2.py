@@ -1,4 +1,5 @@
 import cv2
+import keyboard
 import numpy as np
 import ctypes
 import os
@@ -9,7 +10,13 @@ from ctypes.wintypes import HWND, WPARAM, LPARAM
 import ctypes
 import time
 from typing import Iterable
+import time
 
+import pydirectinput as pydirectinput
+import win32com.client as comclt
+import win32gui
+import win32api
+from pynput.keyboard import Key, Controller
 import psutil
 import pyautogui
 import pydivert
@@ -148,8 +155,17 @@ def main():
     handle = find_window_handle_by_partial_title(window_title)
     # pointer = Pointers(hwnd=handle).teste_pointer_necessarios()
 
-    # mouse_util.mover(handle,155, 273)
-    MoverSpotUtil(handle).movimentar((132, 113))
+    pyautogui.FAILSAFE = False  # continua desativado
+    pyautogui.press("alt")
+    win32gui.SetForegroundWindow(handle)
+    time.sleep(2)
+
+    pressionar_tecla("esc")
+
+def pressionar_tecla(tecla: str, delay=0.1) -> None:
+    interception.auto_capture_devices()
+    with interception.hold_key(tecla):
+        time.sleep(delay)
 
     # mouse_util.left_clique(handle, 482, 25)
 

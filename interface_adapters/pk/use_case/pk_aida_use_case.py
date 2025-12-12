@@ -94,7 +94,6 @@ class PkAidaUseCase(PkBase):
         etapas: Sequence[Callable[[], List]] = (
             lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
             self.buscar_spot_extra_aida1,
-            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_corredor,
             spot_util.buscar_spots_aida_final,
@@ -113,12 +112,10 @@ class PkAidaUseCase(PkBase):
 
     def pklizar_aida2(self):
         etapas: Sequence[Callable[[], List]] = (
-            spot_util.desbug_ponte_aida1,
-            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_corredor,
             spot_util.buscar_spots_aida_final,
-            spot_util.desbug_ponte_aida1,
+            
             self.buscar_spot_extra_aida1,
         )
         return self.executar_rota_pk(etapas)
@@ -127,9 +124,7 @@ class PkAidaUseCase(PkBase):
         etapas: Sequence[Callable[[], List]] = (
             spot_util.buscar_spots_aida_corredor,
             self.buscar_spot_extra_aida1,
-            spot_util.desbug_ponte_aida1,
             lambda: spot_util.buscar_spots_aida_1(ignorar_spot_pk=True),
-            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_final,
         )
@@ -139,10 +134,7 @@ class PkAidaUseCase(PkBase):
         etapas: Sequence[Callable[[], List]] = (
             spot_util.buscar_spots_aida_final,
             spot_util.buscar_spots_aida_corredor,
-            spot_util.desbug_ponte_aida1,
             self.buscar_spot_extra_aida1,
-            spot_util.desbug_ponte_aida1,
-            spot_util.desbug_corredor_aida_subindo_aida1_para_aida2,
             self.buscar_spot_aida2,
         )
         return self.executar_rota_pk(etapas)

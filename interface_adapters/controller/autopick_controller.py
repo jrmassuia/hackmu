@@ -59,26 +59,25 @@ class AutopickController(BaseController):
 
     def _mover_para_spot_aida(self):
         if self._esta_na_safe_aida():
-
             if self.iniciou_autopick:
-                time.sleep(300)
+                time.sleep(60)
             else:
                 self.iniciou_autopick = True
 
             self._sair_da_safe_aida()
-            coordenada = None
 
-            if '[1/3]' in self.tela:
-                coordenada = (226, 12)
+        if '[1/3]' in self.tela:
+            coordenada = (226, 12)
 
-            elif '[2/3]' in self.tela:
-                coordenada = (151, 37)
+        elif '[2/3]' in self.tela:
+            coordenada = (151, 37)
+        else:
+            coordenada = (205, 171)
 
-            self.mover_spot_util.movimentar(coordenada,
-                                            max_tempo=180,
-                                            limpar_spot_se_necessario=True,
-                                            movimentacao_proxima=True,
-                                            verficar_se_movimentou=True)
+        self.mover_spot_util.movimentar(coordenada,
+                                        max_tempo=400,
+                                        limpar_spot_se_necessario=True,
+                                        verficar_se_movimentou=True)
 
     def _mover_para_spot_k3(self):
         if self.iniciou_autopick:
