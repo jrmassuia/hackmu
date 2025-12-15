@@ -1,24 +1,26 @@
 import random
 import time
 
-from utils import acao_menu_util, mouse_util, screenshot_util, buscar_item_util, teclado_util
+from interface_adapters.controller.BaseController import BaseController
+from sessao_handle import get_handle_atual
+from utils import acao_menu_util, mouse_util, screenshot_util, buscar_item_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
 from utils.teclado_util import Teclado_util
 
 
-class SdSmallController:
-    def __init__(self, handle):
-        self.handle = handle
-        self.teclado_util = Teclado_util()
-        self.bau = 15
-        self.execute()
+class SdSmallController(BaseController):
 
-    def execute(self):
-        self.teclado_util.escrever_texto('/bau ' + str(self.bau))
+    def _prepare(self):
+        self.handle = get_handle_atual()
+        self.teclado_util = Teclado_util()
+        self.bau = 1
+
+    def _run(self):
         self._iniciar_processo()
 
     def _iniciar_processo(self):
+        self.teclado_util.escrever_texto('/bau ' + str(self.bau))
         while True:
             MoverSpotUtil().movimentar((181, 102))
             self._combinar_hp()

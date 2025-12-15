@@ -1,5 +1,6 @@
 import threading
 import time
+import win32gui
 
 from domain.arduino_teclado import Arduino
 from interface_adapters.controller.autopick_controller import AutopickController
@@ -9,7 +10,6 @@ from interface_adapters.controller.refinar_gem_controler import RefinarGemstoneC
 from interface_adapters.controller.refinar_peq_controller import RefinarPequenaController
 from interface_adapters.controller.sd_media_controler import SdMediaController
 from interface_adapters.controller.sd_small_controller import SdSmallController
-from interface_adapters.helpers.session_manager import *
 from interface_adapters.pk.controller.pk_controller import PKController
 from interface_adapters.recrutar.controller.recrutar_controller import RecrutarController
 from interface_adapters.teste.controller.teste_controller import TesteController
@@ -21,195 +21,155 @@ from sessao_menu import atualizar_menu, obter_menu
 
 
 class MainApp:
+    THREAD_START_DELAY = 2.0
+
+    # 1) Mapa central: Menu -> Classe que possui .execute() e .parar()
+    EXECUTAVEIS = {
+        Menu.AUTOPICK: AutopickController,
+        Menu.UPAR: UpController,
+        Menu.BUF: BufController,
+        Menu.REF_PEQ: RefinarPequenaController,
+        Menu.REF_GEM: RefinarGemstoneController,
+        Menu.SD_MEDIA: SdMediaController,
+        Menu.SD_SMALL: SdSmallController,
+        Menu.LIMPAPK: LimpaPkController,
+        Menu.PICKKANTURU: PickKanturuUseCase,
+        Menu.PKLIZAR: PKController,
+        Menu.RECRUTAR: RecrutarController,
+        Menu.TESTE: TesteController,
+    }
+
+    # 2) Ordem de prioridade ao ler o "sessao_menu"
+    PRIORIDADE_ACOES = [
+        Menu.UPAR,
+        Menu.REF_GEM,
+        Menu.REF_PEQ,
+        Menu.SD_MEDIA,
+        Menu.SD_SMALL,
+        Menu.BUF,
+        Menu.LIMPAPK,
+        Menu.PICKKANTURU,
+        Menu.PKLIZAR,
+        Menu.RECRUTAR,
+        Menu.TESTE,
+    ]
 
     def __init__(self):
         self.menu_autopick = None
         self.telas = []
-        self.threads_ativas = []
+        self.threads_ativas = []  # lista de tuplas (obj, thread)
         self.arduino = Arduino()
 
-        timeout = 10.0  # segundos
-        inicio = time.time()
+        self._aguardar_conexao_arduino(timeout=10.0)
+        FocoMutexService().inativar_foco()
 
+    # ----------------------------
+    # Setup / utilidades
+    # ----------------------------
+
+    def _aguardar_conexao_arduino(self, timeout: float) -> None:
+        inicio = time.time()
         while not self.arduino.conexao_arduino and (time.time() - inicio) < timeout:
             time.sleep(0.1)
 
         if not self.arduino.conexao_arduino:
             print("Não foi possível conectar ao Arduino dentro do tempo limite.")
 
-        FocoMutexService().inativar_foco()
+    def _obter_handles_por_titulo(self, titulo_parcial: str) -> list[int]:
+        handles: list[int] = []
+
+        def cb(handle, _):
+            titulo = win32gui.GetWindowText(handle).lower()
+            if titulo_parcial.lower() in titulo:
+                handles.append(handle)
+
+        win32gui.EnumWindows(cb, None)
+        return handles
+
+    def _obter_handle(self, titulo: str) -> int | None:
+        # tenta /3 e se falhar tenta /2 (seu comportamento original)
+        handles = self._obter_handles_por_titulo(titulo)
+        if not handles:
+            titulo_alt = titulo.replace("/3] MUCABRASIL", "/2] MUCABRASIL")
+            handles = self._obter_handles_por_titulo(titulo_alt)
+        return handles[0] if handles else None
 
     def configurar_menu(self):
-        for tela, opcoes in self.menu_autopick.items():
-
-            handle_list = self._obter_handles_por_titulo(tela)
-            if len(handle_list) == 0:
-                tela = tela.replace("/3] MUCABRASIL", "/2] MUCABRASIL")
-                handle_list = self._obter_handles_por_titulo(tela)
-
-            if len(handle_list) == 0:
+        for titulo_tela, opcoes in (self.menu_autopick or {}).items():
+            handle = self._obter_handle(titulo_tela)
+            if not handle:
                 continue
 
-            handle = handle_list[0]
-
-            # 🔥 registra o menu dessa tela na seção global
             atualizar_menu(handle, opcoes.copy())
 
-            # controla as telas ativas
             if opcoes.get(Menu.ATIVO, 0) == 1:
                 self.telas.append(handle)
 
-    def _obter_handles_por_titulo(self, titulo_parcial):
-        handles = []
-        win32gui.EnumWindows(
-            lambda handle, _: handles.append(handle) if titulo_parcial.lower() in win32gui.GetWindowText(
-                handle).lower() else None, None)
-        return handles
+    # ----------------------------
+    # Execução de ações
+    # ----------------------------
 
-    def _executar_autopick(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.AUTOPICK)
-        time.sleep(2)
+    def _log_inicio(self, handle: int):
+        print("Iniciando tela:")
+        print("--" + win32gui.GetWindowText(handle))
 
-    def rodar_em_thread(self, handle, menu):
-        obj = None
-        if menu == Menu.AUTOPICK:
-            obj = AutopickController(handle)
-        elif menu == Menu.UPAR:
-            obj = UpController(handle)
-        elif menu == Menu.BUF:
-            obj = BufController(handle)
-        elif menu == Menu.REF_PEQ:
-            obj = RefinarPequenaController(handle)
-        elif menu == Menu.REF_GEM:
-            obj = RefinarGemstoneController(handle)
-        elif menu == Menu.SD_MEDIA:
-            obj = SdMediaController(handle)
-        elif menu == Menu.LIMPAPK:
-            obj = LimpaPkController(handle)
-        elif menu == Menu.PICKKANTURU:
-            obj = PickKanturuUseCase(handle)
-        elif menu == Menu.PKLIZAR:
-            obj = PKController(handle)
-        elif menu == Menu.RECRUTAR:
-            obj = RecrutarController(handle)
-        elif menu == Menu.TESTE:
-            obj = TesteController(handle)
+    def _iniciar_acao(self, handle: int, menu: str):
+        cls = self.EXECUTAVEIS.get(menu)
+        if not cls:
+            print(f"[WARN] Menu '{menu}' não mapeado. Caindo no AUTOPICK.")
+            cls = self.EXECUTAVEIS[Menu.AUTOPICK]
+            menu = Menu.AUTOPICK
 
-        thread = threading.Thread(target=obj.execute)
-        self.threads_ativas.append((obj, thread))  # Armazena o objeto e a thread
+        self._log_inicio(handle)
+
+        obj = cls(handle)
+        thread = threading.Thread(target=obj.execute, daemon=True)
+        self.threads_ativas.append((obj, thread))
         thread.start()
+
+        time.sleep(self.THREAD_START_DELAY)
         return obj, thread
-
-    def monitorar_threads(self):
-        # Monitora as threads e remove as que já terminaram
-        for obj, thread in self.threads_ativas[:]:
-            if not thread.is_alive():
-                print(f"Thread da tela {obj.handle} foi finalizada.")
-                self.threads_ativas.remove((obj, thread))
-
-    def parar_todas_as_threads(self):
-        # Para todas as threads ativas e aguarda que terminem
-        print("Parando todas as execuções")
-        for obj, thread in self.threads_ativas:
-            obj.parar()  # Para o loop dentro de cada thread
-        for obj, thread in self.threads_ativas:
-            thread.join()  # Aguarda a thread terminar
 
     def executar_opcao_menu(self):
         for handle in self.telas:
             sessao = obter_menu(handle)
 
+            # sem sessão -> autopick
             if not sessao:
-                self._executar_autopick(handle)
+                self._iniciar_acao(handle, Menu.AUTOPICK)
                 continue
 
-            actions = {
-                Menu.UPAR: self._executar_upar,
-                Menu.REF_GEM: self._executar_refinar_gem,
-                Menu.REF_PEQ: self._executar_refinar_stone,
-                Menu.SD_MEDIA: self._executar_sd_media,
-                Menu.SD_SMALL: self._executar_sd_small,
-                Menu.BUF: self._executar_buf,
-                Menu.LIMPAPK: self._executar_limpa_pk,
-                Menu.PICKKANTURU: self._executar_pick_kanturu,
-                Menu.PKLIZAR: self._executar_pklizar,
-                Menu.RECRUTAR: self._executar_recrutar,
-                Menu.TESTE: self._executar_teste
-            }
+            menu_escolhido = self._primeira_acao_ativa(sessao) or Menu.AUTOPICK
+            self._iniciar_acao(handle, menu_escolhido)
 
-            # Procura a primeira opção ativa (== 1) e executa
-            for key, action in actions.items():
-                if sessao.get(key) == 1:
-                    action(handle)
-                    break
-            else:
-                # Nenhuma opção marcada → executa autopick
-                self._executar_autopick(handle)
+    def _primeira_acao_ativa(self, sessao: dict) -> str | None:
+        for menu in self.PRIORIDADE_ACOES:
+            if sessao.get(menu) == 1:
+                return menu
+        return None
 
-    def _executar_pick_kanturu(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.PICKKANTURU)
-        time.sleep(2)
+    # ----------------------------
+    # Gerência de threads
+    # ----------------------------
 
-    def _executar_limpa_pk(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.LIMPAPK)
-        time.sleep(2)
+    def monitorar_threads(self):
+        for obj, thread in self.threads_ativas[:]:
+            if not thread.is_alive():
+                print(f"Thread da tela {getattr(obj, 'handle', '?')} foi finalizada.")
+                self.threads_ativas.remove((obj, thread))
 
-    def _executar_buf(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.BUF)
-        time.sleep(2)
+    def parar_todas_as_threads(self):
+        print("Parando todas as execuções")
+        for obj, _thread in self.threads_ativas:
+            if hasattr(obj, "parar"):
+                obj.parar()
 
-    def _executar_sd_small(self, handle):
-        SdSmallController(handle)
+        for _obj, thread in self.threads_ativas:
+            thread.join()
 
-    def _executar_sd_media(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.SD_MEDIA)
-        time.sleep(2)
-
-    def _executar_refinar_gem(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.REF_GEM)
-        time.sleep(2)
-
-    def _executar_refinar_stone(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.REF_PEQ)
-        time.sleep(2)
-
-    def _executar_upar(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.UPAR)
-        time.sleep(2)
-
-    def _executar_pklizar(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.PKLIZAR)
-        time.sleep(2)
-
-    def _executar_recrutar(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.RECRUTAR)
-        time.sleep(2)
-
-    def _executar_teste(self, handle):
-        print('Inciando telas:')
-        print('--' + win32gui.GetWindowText(handle))
-        self.rodar_em_thread(handle, Menu.TESTE)
-        time.sleep(2)
+    # ----------------------------
+    # App
+    # ----------------------------
 
     def finalizar_autopick(self):
         exit()
@@ -220,15 +180,6 @@ class MainApp:
 
 
 if __name__ == "__main__":
-    # data_limite = datetime(2025, 10, 30)
-    # data_atual = datetime.now()
-    # if data_atual > data_limite:
-    #
-    #     exit()
-
-    # Remove todos os arquivos json
-
-    # Inicializa a aplicação
     app = MainApp()
     app.iniciar()
     app.configurar_menu()

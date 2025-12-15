@@ -1,11 +1,9 @@
 import random
 import time
 
-from domain.arduino_teclado import Arduino
 from interface_adapters.controller.BaseController import BaseController
 from utils import mouse_util, buscar_item_util, screenshot_util, acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
-from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
 
@@ -28,8 +26,8 @@ class RefinarGemstoneController(BaseController):
         while True:
             if not self._preparar_combinar():
                 acao_menu_util.pressionar_painel_inventario(self.handle)
-                self.teclado_util.escrever_texto('/move noria')
-                exit()
+                # self.teclado_util.escrever_texto('/move noria')
+                # exit()
 
     def _preparar_combinar(self):
         """Prepara o processo de combinação de itens."""
@@ -40,12 +38,27 @@ class RefinarGemstoneController(BaseController):
         return self._mover_gemstone_para_cm()
 
     def _clicar_na_elpis(self):
-        if self.pointers.get_cood_y() == 75 and self.pointers.get_cood_x() == 176:
-            self._mover_click(490, 243)  # 75 176
-        elif self.pointers.get_cood_y() == 75 and self.pointers.get_cood_x() == 177:
-            self._mover_click(487, 242)  # 75, 177
-        elif self.pointers.get_cood_y() == 77 and self.pointers.get_cood_x() == 174:
-            self._mover_click(490, 200)  # 77 174
+        while True:
+            if self.pointers.get_cood_y() == 75 and self.pointers.get_cood_x() == 176:
+                self._mover_click(490, 243)  # 75 176
+                break
+            elif self.pointers.get_cood_y() == 75 and self.pointers.get_cood_x() == 177:
+                self._mover_click(487, 242)  # 75, 177
+                break
+            elif self.pointers.get_cood_y() == 77 and self.pointers.get_cood_x() == 174:
+                self._mover_click(490, 200)  # 77 174
+                break
+            elif self.pointers.get_cood_y() == 74 and self.pointers.get_cood_x() == 177:
+                self._mover_click(551, 260)
+                break
+            elif self.pointers.get_cood_y() == 74 and self.pointers.get_cood_x() == 176:
+                self._mover_click(522, 274)
+                break
+            elif self.pointers.get_cood_y() == 78 and self.pointers.get_cood_x() == 174:
+                self._mover_click(444, 161)
+                break
+            else:
+                time.sleep(3)
 
     def _clicar_na_opcao_refinar_gemstone(self):
         self._mover_click(450, 350)
@@ -99,6 +112,13 @@ class RefinarGemstoneController(BaseController):
         while conta <= 2:
             time.sleep(.2)
             screenshot_cm = screenshot_util.capture_window(self.handle)
+
+            todoscamposvazioscm = buscar_item_util.buscar_posicoes_item_epecifico(
+                './static/inventario/todoscamposvaziorefin.png', screenshot_cm, confidence_=0.95)
+
+            if todoscamposvazioscm:
+                break
+
             image_positions = buscar_item_util.buscar_posicoes_item_epecifico(
                 './static/inventario/joh.png', screenshot_cm, confidence_=0.9)
 
@@ -130,7 +150,7 @@ class RefinarGemstoneController(BaseController):
                     self._mover_click(x, y)  # Move joh para inventário
                     break
 
-    def _mover_click(self, x, y, delay=0.1):
+    def _mover_click(self, x, y, delay=0.15):
         """Move o mouse e clica na posição especificada."""
         mouse_util.mover(self.handle, x, y)
         time.sleep(delay)

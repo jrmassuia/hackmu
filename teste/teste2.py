@@ -153,14 +153,8 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    # pointer = Pointers(hwnd=handle).teste_pointer_necessarios()
+    pointer = Pointers(hwnd=handle).teste_pointer_necessarios()
 
-    pyautogui.FAILSAFE = False  # continua desativado
-    pyautogui.press("alt")
-    win32gui.SetForegroundWindow(handle)
-    time.sleep(2)
-
-    pressionar_tecla("esc")
 
 def pressionar_tecla(tecla: str, delay=0.1) -> None:
     interception.auto_capture_devices()
