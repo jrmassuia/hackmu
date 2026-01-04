@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 from typing import Tuple, Callable, List
 
-import requests
 import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
