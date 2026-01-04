@@ -5,12 +5,14 @@ import win32con
 import win32gui
 
 from interface_adapters.controller.BaseController import BaseController
+from interface_adapters.up.up_util.up_util import Up_util
 from sessao_handle import get_handle_atual
 from utils import mouse_util, buscar_item_util, acao_menu_util, screenshot_util, buscar_coordenada_util, \
     safe_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
+from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
 
@@ -30,6 +32,7 @@ class RefinarPequenaController(BaseController):
         self.mover_spot_util = MoverSpotUtil()
         self.pointer = Pointers()
         self.teclado_util = Teclado_util()
+        self.up_util = Up_util()
 
     def _run(self):
 
@@ -78,7 +81,7 @@ class RefinarPequenaController(BaseController):
 
     def _comprar_spirit_armor(self):
         self._mover_coordenada(174, 121)
-        mouse_util.left_clique(self.handle, 470, 101)  # CLINA NPC
+        self.up_util.clicar_no_npc(470, 101)
         mouse_util.mover(self.handle, 100, 100)  # Tira o mouse da frente da loja
         while True:
             image_position = BuscarItemUtil().buscar_item_simples('./static/inventario/spiritarmor.png')
@@ -91,11 +94,13 @@ class RefinarPequenaController(BaseController):
         acao_menu_util.clicar_inventario(self.handle)
 
     def _mover_para_aida(self):
-        self.mover_spot_util.movimentar((161, 77))
-        self.mover_spot_util.movimentar((222, 44))
-        self._mover_coordenada(222, 36)  # move para portal
-        mouse_util.left_clique(self.handle, 125, 441)
-        time.sleep(3)
+        self.mover_spot_util.movimentar((218, 39), movimentacao_proxima=True)
+        while True:
+            self.mover_spot_util.movimentar((222, 30), verficar_se_movimentou=True)
+            time.sleep(3)
+            self.pathfinder = PathFinder()
+            if self.pathfinder.get_numero_mapa_atual() == PathFinder.MAPA_AIDA:
+                break
 
     def _mover_coordenada(self, y, x, mapa='noria'):
         while True:
@@ -116,7 +121,7 @@ class RefinarPequenaController(BaseController):
                 break
 
     def _preparar_refinar(self):
-        mouse_util.left_clique(self.handle, 450, 200)  # Clica no goblin
+        self.up_util.clicar_no_npc(450, 200)  # Clica no goblin
         self._mover_e_clicar_na_opcao('./static/inventario/okaviso.png')
         return self._mover_item_para_refinar()
 
@@ -125,7 +130,6 @@ class RefinarPequenaController(BaseController):
         if image_position:
             cpX, cpY = image_position
             mouse_util.mover_click(self.handle, cpX, cpY)  # Clica no 'gladius'
-            # x, y = self._campo_na_cm_para_mover_cp()
             coordenadas = [
                 (376, 161),
                 (413, 152),
@@ -213,25 +217,3 @@ class RefinarPequenaController(BaseController):
                 achou = True
 
         return False
-        # try:
-        #     mouse_util.mover(self.handle, 0, 0)
-        #     time.sleep(.1)
-        #     while True:
-        #         # local = self._localizar_em_multiplos_monitores(Image.open(img), confidence=0.70)
-        #         screenshot_cm = screenshot_util.capture_window(self.handle)
-        #         image_positions = buscar_item_util.buscar_posicoes_item_epecifico(img, screenshot_cm, confidence_=0.9)
-        #
-        #         if image_positions:
-        #             x = image_positions[0][0]
-        #             y = image_positions[0][1]
-        #             mouse_util.mover_click(self.handle, x, y)
-        #             break
-        #         else:
-        #             time.sleep(0.5)
-        # except:
-        #     print('NAO ACHOU: ' + img)
-        #     self._mover_e_clicar_na_opcao(img)
-
-    def _esta_na_safe_aida(self):
-        ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
-        return (xcood and ycood) and ((5 <= xcood <= 17) and (75 <= ycood <= 92))

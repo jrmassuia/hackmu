@@ -92,26 +92,9 @@ class PkBase(ABC):
         )
 
     def atualizar_lista_player(self):
-        self.atualizar_lista_tohell()
-        self.atualizar_lista_suicide()
-
-    def atualizar_lista_tohell(self):
-        try:
-            r = requests.get("http://192.168.101.14:8000/tohell/players?offset=0&limit=1000", timeout=10)
-            r.raise_for_status()
-            self.lista_player_tohell = r.json().get("items", [])
-        except Exception as e:
-            print(f"[ERRO] Falha ToHeLL: {e}")
-            exit()
-
-    def atualizar_lista_suicide(self):
-        try:
-            r = requests.get("http://192.168.101.14:8000/suicide/players?offset=0&limit=2000", timeout=10)
-            r.raise_for_status()
-            self.lista_player_suicide = r.json().get("items", [])
-        except Exception as e:
-            print(f"[ERRO] Falha Suicide: {e}")
-            exit()
+        self.pklizar.atualizar_lista_player()
+        self.lista_player_tohell = self.pklizar.lista_player_tohell
+        self.lista_player_suicide = self.pklizar.lista_player_suicide
 
     def executar_rota_pk(self, etapas: Sequence[Callable[[], List]]):
         self.morreu = False
@@ -250,7 +233,7 @@ class PkBase(ABC):
                             if self.morreu:
                                 return
 
-                            if self._verificar_se_eh_tohell(nome):
+                            if self._verificar_se_eh_tohell(nome) or self.pklizar.eh_char_bloqueado(nome):
                                 continue
 
                             if self.pointer.get_sala_atual() == 7 or self._verificar_se_eh_suicide(nome):

@@ -92,7 +92,7 @@ class Up_util:
     def desativar_up(self):
         mouse_util.desativar_click_direito(self.handle)
 
-    def clicar_bau(self, x, y):
+    def clicar_no_npc(self, x, y):
         if self.arduino.conexao_arduino:
             with self.teclado_util.foco_mutex.focar_mutex():
                 self.teclado_util.focus_window()

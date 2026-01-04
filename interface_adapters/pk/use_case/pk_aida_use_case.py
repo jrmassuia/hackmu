@@ -55,7 +55,7 @@ class PkAidaUseCase(PkBase):
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
 
         # AIDA FINAL
-        elif nome == 'DL_JirayA':
+        elif nome == '_ImpertuS_':
             senha = '134779'
             self.tipo_pk = self.PKLIZAR_AIDA_FINAL
         elif nome == 'ReiDav1':

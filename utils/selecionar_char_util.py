@@ -24,7 +24,7 @@ class SelecionarCharUtil:
             #
             ('Omale_DL', 1),
             #
-            ('ESTAMUERTO', 1),
+            ('ESTAMUERTO', 2),
             #
             ('Deef_Stret', 0),
             #
@@ -40,7 +40,7 @@ class SelecionarCharUtil:
             #
             ('LAZLU', 3),
             #
-            ('DL_JirayA', 3)
+            ('_ImpertuS_', 3)
         ]
 
     def reiniciar_char(self):

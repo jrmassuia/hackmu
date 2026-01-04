@@ -207,7 +207,7 @@ class PklizarService:
 
     def atualizar_lista_tohell(self):
         try:
-            r = requests.get("http://192.168.101.14:8000/tohell/players?offset=0&limit=1000", timeout=10)
+            r = requests.get("http://192.168.101.14:8000/players?rival=nao&offset=0&limit=10000", timeout=10)
             r.raise_for_status()
             self.lista_player_tohell = r.json().get("items", [])
         except Exception as e:
@@ -216,9 +216,14 @@ class PklizarService:
 
     def atualizar_lista_suicide(self):
         try:
-            r = requests.get("http://192.168.101.14:8000/suicide/players?offset=0&limit=1000", timeout=10)
+            r = requests.get("http://192.168.101.14:8000/players?rival=sim&offset=0&limit=10000", timeout=10)
             r.raise_for_status()
-            self.lista_player_suicide = r.json().get("items", [])
+            items = r.json().get("items", [])
+            self.lista_player_suicide = items
         except Exception as e:
             print(f"[ERRO] Falha Suicide: {e}")
             exit()
+
+    def eh_char_bloqueado(self, nome: str) -> bool:
+        nomes_bloqueados = {"Dynast_", "Dynasty_", "Baal"}
+        return any(nome_bloqueado in nome for nome_bloqueado in nomes_bloqueados)

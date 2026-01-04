@@ -9,6 +9,7 @@ from interface_adapters.up.up_util.up_util import Up_util
 from utils import mouse_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.pointer_util import Pointers
+from utils.selecionar_char_util import SelecionarCharUtil
 from utils.teclado_util import Teclado_util
 
 
@@ -21,6 +22,7 @@ class AlterarCharSalaService:
         self.pointer = Pointers()
         self.teclado_util = Teclado_util()
         self.titulo_janela = win32gui.GetWindowText(handle)
+        self.selecionar_char = SelecionarCharUtil(self.handle)
         self.buscar_imagem = BuscarItemUtil()
 
     def selecionar_sala(self, sala=None):
@@ -96,7 +98,7 @@ class AlterarCharSalaService:
                 else:
                     mouse_util.left_clique(self.handle, 402, 330)  # CLICA NO OK MSG TOKEN INVALIDO
 
-        self.up_util.selecionar_char_no_launcher(self.char)
+        self.selecionar_char.selecionar_char_no_launcher()
 
         if sala is not None and sala != self.pointer.get_sala_atual():
             print('Tentado  selecionar novamente a sala!')

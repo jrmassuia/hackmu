@@ -18,7 +18,7 @@ class GuardaGemstoneService:
         time.sleep(1)
 
         # Clica no baú na coordenada especificada
-        self.up_util.clicar_bau(775, 370)
+        self.up_util.clicar_no_npc(775, 370)
 
         # Ajusta mouse e desativa click direito para evitar interferência
         mouse_util.mover(self.handle, 10, 10)
