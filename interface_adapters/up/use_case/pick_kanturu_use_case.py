@@ -8,7 +8,7 @@ import win32gui
 from domain.arduino_teclado import Arduino
 from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.up.up_util.up_util import Up_util
-from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from services.buscar_personagem_proximo_service_old import BuscarPersoangemProximoService
 from services.guardar_gem_bau_service import GuardaGemstoneService
 from services.movimentar_inicial_bot_k1_k2 import MovimentacaoInicialBotK1k2Service
 from services.movimentar_volta_k3_para_k2_service import MovimentacaoVotaK3ParaK2Service

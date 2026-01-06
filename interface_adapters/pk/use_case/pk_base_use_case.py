@@ -9,7 +9,7 @@ import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
 from services.alterar_char_sala_service import AlterarCharSalaService
-from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from services.buscar_personagem_proximo_service import BuscarPersonagemProximoService
 from services.pklizar_service import PklizarService
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import mouse_util, spot_util
@@ -32,7 +32,7 @@ class PkBase(ABC):
 
         self.teclado = Teclado_util()
         self.mover_spot = MoverSpotUtil()
-        self.servico_buscar_personagem = BuscarPersoangemProximoService()
+        self.servico_buscar_personagem = BuscarPersonagemProximoService()
         self.buscar_imagem = BuscarItemUtil()
         self.pklizar = PklizarService(self.mapa)
         self.pathfinder = PathFinder()

@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 
 from services.alterar_char_sala_service import AlterarCharSalaService
-from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from services.buscar_personagem_proximo_service_old import BuscarPersoangemProximoService
 from services.verificador_imagem_userbar import VerificadorImagemUseBar
 from utils import spot_util, mouse_util
 from utils.buscar_item_util import BuscarItemUtil

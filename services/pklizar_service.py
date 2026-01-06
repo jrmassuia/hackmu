@@ -4,7 +4,7 @@ import requests
 import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
-from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from services.buscar_personagem_proximo_service_old import BuscarPersoangemProximoService
 from sessao_handle import get_handle_atual
 from utils import mouse_util
 from utils.mover_spot_util import MoverSpotUtil

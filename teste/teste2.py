@@ -26,7 +26,7 @@ import winsound
 
 import MuEntityScannerPK
 import testeautopk
-from services.buscar_personagem_proximo_service import BuscarPersoangemProximoService
+from services.buscar_personagem_proximo_service_old import BuscarPersoangemProximoService
 from services.foco_mutex_service import FocoMutexService
 from services.verificador_imagem_userbar import VerificadorImagemUseBar
 from utils.buscar_item_util import BuscarItemUtil
@@ -153,8 +153,7 @@ def main():
 
     window_title = f"[{escolha}/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
-    # pointer = Pointers(hwnd=handle).teste_pointer_necessarios()
-    print('Death Tree' in 'ath Tree')
+    pointer = Pointers(hwnd=handle).teste_pointer_necessarios()
 
 def pressionar_tecla(tecla: str, delay=0.1) -> None:
     interception.auto_capture_devices()
