@@ -61,7 +61,7 @@ class BuscarPersoangemProximoService:
         'Hero Mutant', 'Lizard Warrior', 'Rogue Centurion', 'Death Angel', 'Sea Worm', 'Necron',
         'Death Centurion', 'Schriker', 'Blood Soldier', 'Aegis',
         # lixo de interface, ignorar sempre
-        'data\\interf',
+        'data\\interf'
     }
 
     # ---- Ordens MSB pré-calculadas ----
@@ -566,7 +566,7 @@ class BuscarPersoangemProximoService:
                     cand_b = bytes(b for b in raw0 if 32 <= b <= 126).strip()
                     if 3 <= len(cand_b) <= name_max:
                         nome = cand_b.decode("ascii", errors="ignore")
-                        if nome in ignore_str:
+                        if self.deve_ignorar_nome(ignore_str, nome):
                             continue
                 except Exception:
                     pass
@@ -586,7 +586,7 @@ class BuscarPersoangemProximoService:
                                 if cand in ignore_bytes:
                                     continue
                                 nome = cand.decode("ascii", errors="ignore")
-                                if nome in ignore_str:
+                                if self.deve_ignorar_nome(ignore_str, nome):
                                     continue
                     except Exception:
                         pass
@@ -608,6 +608,12 @@ class BuscarPersoangemProximoService:
             addr += tam
 
         return resultados
+
+    def deve_ignorar_nome(self, nomes, nome):
+        for ignore_nome in nomes:
+            if ignore_nome in nome or nome in ignore_nome:
+                return True
+        return False
 
     # ----------------- Pós-processamento: ordenar próximos -----------------
     def ordenar_proximos(self,
@@ -646,7 +652,7 @@ class BuscarPersoangemProximoService:
 
                 if x is None or y is None:
                     continue
-                x = int(x);
+                x = int(x)
                 y = int(y)
             except Exception as e:
                 print(f"[WARN] item ignorado (formato inválido): {item} -> {e}")

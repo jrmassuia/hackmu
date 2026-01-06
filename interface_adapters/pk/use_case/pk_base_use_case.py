@@ -220,7 +220,7 @@ class PkBase(ABC):
                         if not resultados:
                             continue
 
-                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=30)
+                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=60)
                         if len(proximos) >= 3:
                             proximos = proximos[:3]
 
@@ -252,13 +252,13 @@ class PkBase(ABC):
 
     def _verificar_se_eh_tohell(self, nome):
         for player in self.lista_player_tohell:
-            if player == nome:
+            if nome in player:
                 return True
         return False
 
     def _verificar_se_eh_suicide(self, nome):
         for player in self.lista_player_suicide:
-            if player == nome:
+            if nome in player:
                 return True
         return False
 

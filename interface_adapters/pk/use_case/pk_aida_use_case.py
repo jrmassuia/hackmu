@@ -62,6 +62,7 @@ class PkAidaUseCase(PkBase):
             senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_AIDA_FINAL
         else:
+            self.tipo_pk = self.PKLIZAR_AIDA_1
             print('Tela sem configuração definida! ' + self.titulo_janela)
             senha = ''
 

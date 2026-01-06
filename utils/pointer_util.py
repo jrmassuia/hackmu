@@ -78,38 +78,38 @@ class Pointers:
 
         try:
             # -- NECESSARIOS ATUALIZAR
-            self.Y_POINTER = self.get_pointer(self.CLIENT + 0x025A3B40, offsets=[0xA4])
-            self.X_POINTER = self.get_pointer(self.CLIENT + 0x025A3B40, offsets=[0xA8])
-            self.NIVEL_PK_POINTER = self.get_pointer(self.CLIENT + 0x025A3B40, offsets=[0x20])
+            self.Y_POINTER = self.get_pointer(self.CLIENT + 0x025A2AF8, offsets=[0xA8])
+            self.X_POINTER = self.get_pointer(self.CLIENT + 0x025A2AF8, offsets=[0xAC])
+            self.NIVEL_PK_POINTER = self.get_pointer(self.CLIENT + 0x025A2AF8, offsets=[0x20])
 
             #
-            self.MAGIA_POINTER = self.get_pointer(self.CLIENT + 0x0005FA7C, offsets=[0x0])
+            # self.MAGIA_POINTER = self.get_pointer(self.CLIENT + 0x0006067C, offsets=[0x0])
             #
-            self.HP_POINTER = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x28])
-            self.HP_POINTER_MAX = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x28]) + 0x8
-            self.SD_POINTER = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x38])
-            self.SD_POINTER_MAX = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x38]) + 0x4
-            self.ZEN_POINTER1 = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0xA80])
-            self.NOME_CHAR_POINTER = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x0])
-            self.PONTO_LVL_POINTER = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x88])
-            self.RESET_POINTER = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x10])
-            self.LVL_POINTER = self.get_pointer(self.CLIENT + 0x0352CC34, offsets=[0x0]) + 0x0E
+            self.HP_POINTER = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x28])
+            self.HP_POINTER_MAX = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x28]) + 0x8
+            self.SD_POINTER = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x38])
+            self.SD_POINTER_MAX = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x38]) + 0x4
+            self.ZEN_POINTER1 = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0xA80])
+            self.NOME_CHAR_POINTER = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x0])
+            self.PONTO_LVL_POINTER = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x88])
+            self.RESET_POINTER = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x10])
+            self.LVL_POINTER = self.get_pointer(self.CLIENT + 0x0352C14C, offsets=[0x0]) + 0x0E
             #
-            self.MOSTRAR_DESC_POINTER = self.get_pointer(self.CLIENT + 0x0422E354, offsets=[0x18])
+            self.MOSTRAR_DESC_POINTER = self.get_pointer(self.CLIENT + 0x0422D2F4, offsets=[0x18])
             #
-            self.PK_ATIVO_POINTER = self.get_pointer(self.CLIENT + 0x00112448, offsets=[0x0])
+            self.PK_ATIVO_POINTER = self.get_pointer(self.CLIENT + 0x00113048, offsets=[0x0])
             #
-            self.CHAR_PK_SELECIONADO_POINTER = self.get_pointer(self.CLIENT + 0x000D8064, offsets=[0x0])
-            self.ITEM_SELECIONADO_POINTER = self.get_pointer(self.CLIENT + 0x000D8064, offsets=[0x4])
+            self.CHAR_PK_SELECIONADO_POINTER = self.get_pointer(self.CLIENT + 0x000D8EF4, offsets=[0x0])
+            self.ITEM_SELECIONADO_POINTER = self.get_pointer(self.CLIENT + 0x000D8EF4, offsets=[0x4])
             #
-            self.SALA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001506AC, offsets=[0x104])
+            self.SALA_ATUAL_POINTER = self.get_pointer(self.CLIENT + 0x001511EC, offsets=[0x104])
             #
-            self.CLASSE_POINTER = self.get_pointer(self.CLIENT + 0x0422DB70, offsets=[0x4C])
+            self.CLASSE_POINTER = self.get_pointer(self.CLIENT + 0x0422CB00, offsets=[0x4C])
             #
             # QUANDO PESQUISAR O POINTER VALIDOR O CODIGO DE TODOS OS MAPAS. A PESQUISA FAÇA PELO CODIGO QUE ESTA EM PATHFINDER
-            self.MAPA_ATUAL_POINTER = self.CLIENT + 0x39E2D64
+            self.MAPA_ATUAL_POINTER = self.CLIENT + 0x39E1D24
             #
-            # pointer_base = self.CLIENT + 0x0352CC34
+            # pointer_base = self.CLIENT + 0x0352C14C
             # if pointer_base:
             #     print(f"Dump da estrutura em 0x{pointer_base:08X}:")
             #
@@ -224,12 +224,16 @@ class Pointers:
         return self.read_value(self.Y_POINTER, data_type="int")
 
     def get_nivel_pk(self):
-        nivel = self.read_value(self.NIVEL_PK_POINTER)
-        if nivel == 3:
-            return 0
-        elif nivel == 4:
+        nivel = self.read_value(self.NIVEL_PK_POINTER, data_type="int")
+        # PK 1 = 1025
+        # PK 2 = 1281
+        # PK 100 = 1537
+        if nivel == 1025:
             return 1
-        return 100
+        elif nivel > 1025:
+            return 100
+        else:
+            return 0
 
     def get_hp(self):
         return self.read_value(self.HP_POINTER, data_type="int")
@@ -308,10 +312,10 @@ class Pointers:
 
     def imprimir_todos_tipos_do_endereco_memoria(self, endereco_raiz=None, tamanho=0x0B00):
         """
-        Lê a estrutura apontada por (CLIENT + 0x0352CC34) e imprime todos os tipos
+        Lê a estrutura apontada por (CLIENT + 0x0352C14C) e imprime todos os tipos
         em cada offset (BYTE/WORD/DWORD/FLOAT), caminhando byte a byte.
 
-        - endereco_raiz: se None, usa self.CLIENT + 0x0352CC34 e dereferencia.
+        - endereco_raiz: se None, usa self.CLIENT + 0x0352C14C e dereferencia.
                          se você já souber o endereço real da estrutura, passe-o aqui.
         - tamanho: bytes a ler a partir da base da estrutura (ex.: 0x0B00 cobre offsets até ~0xA80).
         """
@@ -320,7 +324,7 @@ class Pointers:
         try:
             if endereco_raiz is None:
                 # 1) endereço estático que contém o ponteiro da estrutura
-                ptr_addr = self.CLIENT + 0x0352CC34
+                ptr_addr = self.CLIENT + 0x0352C14C
                 # ptr_addr = self.CLIENT + 0x0429EBCC
                 # 2) deref para obter a base real da estrutura
                 struct_base = self.pm.read_int(ptr_addr)  # use read_longlong em processo 64-bit
@@ -328,7 +332,7 @@ class Pointers:
                 struct_base = endereco_raiz
 
             if not struct_base:
-                print("[ERRO] Ponteiro raiz nulo/zero ao dereferenciar 0x0352CC34.")
+                print("[ERRO] Ponteiro raiz nulo/zero ao dereferenciar 0x0352C14C.")
                 return
 
             print(f"\n📦 Dump da estrutura em 0x{struct_base:08X} ({tamanho} bytes):")

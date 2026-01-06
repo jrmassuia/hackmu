@@ -59,7 +59,7 @@ class PkKnvUseCase(PkBase):
 
     def _mover_portal_knv(self):
         mouse_util.left_clique(self.handle, 433, 44)  # clica no portal knv
-        time.sleep(8)
+        time.sleep(3)
 
         if not safe_util.knv(self.handle):
             self.morreu = True
