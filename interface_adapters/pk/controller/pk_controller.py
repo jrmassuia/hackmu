@@ -23,7 +23,8 @@ class PKController(BaseController):
         elif safe_util.k3(self.handle):
             self.pklizar_k3()
         elif safe_util.k1(self.handle):
-            self.pklizar_knv()
+            # self.pklizar_knv()
+            self.pklizar_kanturu()
         else:
             self.pklizar_aida()
 
