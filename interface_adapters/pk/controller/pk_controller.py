@@ -1,5 +1,3 @@
-import socket
-
 from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.pk.use_case.pk_aida_use_case import PkAidaUseCase
 from interface_adapters.pk.use_case.pk_cavalada_kanturu_use_case import PkCavaladaKanturuUseCase
@@ -23,8 +21,7 @@ class PKController(BaseController):
         elif safe_util.k3(self.handle):
             self.pklizar_k3()
         elif safe_util.k1(self.handle):
-            # self.pklizar_knv()
-            self.pklizar_kanturu()
+            self.pklizar_kanturus()
         else:
             self.pklizar_aida()
 
@@ -35,22 +32,15 @@ class PKController(BaseController):
         tarkan = PktarkanUseCase(self.handle, PathFinder.MAPA_TARKAN)
         knv = PkKnvUseCase(self.handle, PathFinder.MAPA_KANTURU_1_E_2)
         tarkan.execute()
-        # while True:
-        #     tarkan.execute(loop=False)
-        #     if not tarkan.morreu:
-        #         self.pklizar_knv().execute(loop=False)
 
     def pklizar_tarkan(self):
         return PktarkanUseCase(self.handle, PathFinder.MAPA_TARKAN).execute()
 
-    def pklizar_knv(self):
-        return PkKnvUseCase(self.handle, PathFinder.MAPA_KANTURU_1_E_2).execute()
-
-    def pklizar_kanturu(self):
-        PkKanturuUseCase(self.handle, PathFinder.MAPA_KANTURU_1_E_2).execute()
-
     def pklizar_k3(self):
         PkK3UseCase(self.handle, PathFinder.MAPA_KANTURU_3).execute()
+
+    def pklizar_kanturus(self):
+        PkKanturuUseCase(self.handle).execute()
 
     def cavalar_kanturu(self):
         return PkCavaladaKanturuUseCase(self.handle, PathFinder.MAPA_KANTURU_1_E_2).execute()

@@ -1,9 +1,6 @@
 import time
 from datetime import datetime
 
-import win32api
-import win32gui
-
 from sessao_handle import get_handle_atual
 from utils import mouse_util, safe_util
 from utils.pointer_util import Pointers

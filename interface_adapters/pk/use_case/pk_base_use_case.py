@@ -173,7 +173,13 @@ class PkBase(ABC):
             self._sair_da_safe()
 
             if self.mapa == PathFinder.MAPA_AIDA:
-                spots = spot_util.buscar_spots_aida_2()
+                spots = []
+                spots.extend(spot_util.buscar_spots_aida_2())
+                spots.extend(spot_util.buscar_spots_aida_corredor())
+                spots.extend(spot_util.buscar_spots_aida_final())
+                spots.extend(spot_util.buscar_spots_aida_volta_final())
+                spots.extend(spot_util.buscar_spots_aida_1())
+
             elif self.mapa == PathFinder.MAPA_TARKAN:
                 spots = spot_util.buscar_todos_spots_tk(nao_ignorar_spot_pk=True)
             elif self.mapa == PathFinder.MAPA_KANTURU_1_E_2:

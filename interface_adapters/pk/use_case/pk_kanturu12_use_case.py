@@ -5,10 +5,11 @@ from interface_adapters.pk.use_case.pk_base_use_case import PkBase
 from utils import safe_util, spot_util
 
 
-class PkKanturuUseCase(PkBase):
+class PkKanturu12UseCase(PkBase):
 
     def execute(self):
-        self.iniciar_pk()
+        while True:
+            self.iniciar_pk()
 
     def iniciar_pk(self):
         self._esperar_safe_se_necessario()
@@ -33,17 +34,17 @@ class PkKanturuUseCase(PkBase):
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
-            self.mover_spot.movimentar((46, 222), movimentacao_proxima=True)
+            self.mover_spot.movimentar((41, 231), movimentacao_proxima=True)
 
     def voltar_pra_safe_e_esperar_proximo_pk(self):
         if not self.morreu:
-            voltou = self.mover_spot.movimentar(
-                (40, 214),
+            self.mover_spot.movimentar(
+                (35, 211),
                 verficar_se_movimentou=True,
                 movimentacao_proxima=True,
                 max_tempo=360
             )
-            if voltou:
+            if self.mover_spot.esta_na_safe:
                 print('ESPERANDO 600s PARA PROXIMO PK EM KNV')
                 time.sleep(600)
         else:
