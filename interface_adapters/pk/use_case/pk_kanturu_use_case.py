@@ -13,7 +13,7 @@ class PkKanturuUseCase:
     def execute(self):
         char = self.pointer.get_nome_char()
 
-        if char == 'DL_DoMall':
+        if char == 'DL_DoMall' or char == 'ReiDav1':
             self.pklizar_kanturu12()
         else:
             self.pklizar_knv()
