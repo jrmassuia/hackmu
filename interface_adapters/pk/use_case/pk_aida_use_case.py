@@ -66,13 +66,13 @@ class PkAidaUseCase(PkBase):
             print('Tela sem configuração definida! ' + self.titulo_janela)
             senha = ''
 
-        if nome in ['SisteMatyc', 'INFECTRIX', 'SM_Troyer']:
-            self.sala_pk = self.definir_prioriadade_pk_sala3()
+        if nome in ['SisteMatyc', 'INFECTRIX', 'SM_Troyer', 'ReiDav1']:
+            self.definir_prioriadade_pk_sala3()
 
         return senha
 
     def iniciar_pk(self):
-        self.morreu = False
+
         for sala in self.sala_pk:
             self.mover_para_sala(sala)
             self.teclado.escrever_texto('/re off')
@@ -82,20 +82,20 @@ class PkAidaUseCase(PkBase):
                 self._ativar_skill()
 
                 if self.tipo_pk == self.PKLIZAR_AIDA_1:
-                    self.pklizar_aida1()
+                    continuar = self.pklizar_aida1()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_2:
-                    self.pklizar_aida2()
+                    continuar = self.pklizar_aida2()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
-                    self.pklizar_aida_corredor()
+                    continuar = self.pklizar_aida_corredor()
                 elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
-                    self.pklizar_aida_final()
+                    continuar = self.pklizar_aida_final()
                 else:
-                    self.pklizar_aida2()
+                    continuar = self.pklizar_aida2()
 
-            if not self.morreu:
-                print('Relizada a rota completa de PK: ' + self.titulo_janela)
-            else:
-                break
+                if continuar:
+                    print('Relizada a rota completa de PK: ' + self.titulo_janela)
+                else:
+                    break
 
     def pklizar_aida(self):
         etapas: Sequence[Callable[[], List]] = (
@@ -122,7 +122,6 @@ class PkAidaUseCase(PkBase):
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_corredor,
             spot_util.buscar_spots_aida_final,
-
             self.buscar_spot_extra_aida1,
         )
         return self.executar_rota_pk(etapas)

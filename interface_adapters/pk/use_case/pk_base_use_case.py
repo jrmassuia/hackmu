@@ -40,14 +40,13 @@ class PkBase(ABC):
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
         self.coord_spot_atual: Optional[Tuple[int, int]] = None
-        self.sala_pk = None
         self.tipo_pk: Optional[str] = None
         self._abates = 0
         self._abates_lock = threading.Lock()
         self.morreu = False
         self.lista_player_tohell = None
         self.lista_player_suicide = None
-
+        self.sala_pk = None
         self.definir_prioriadade_pk_sala7()
 
         # definir tipo e senha (subclasse)
