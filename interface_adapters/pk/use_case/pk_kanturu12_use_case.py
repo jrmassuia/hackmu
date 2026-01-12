@@ -29,7 +29,7 @@ class PkKanturu12UseCase(PkBase):
     def _pklizar_kanturu(self):
         etapas: Sequence[Callable[[], List]] = (
             spot_util.buscar_spots_k2,
-            spot_util.buscar_spots_k1
+            lambda: list(reversed(spot_util.buscar_spots_k1()))
         )
         self.executar_rota_pk(etapas)
 
