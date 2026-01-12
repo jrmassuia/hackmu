@@ -58,7 +58,10 @@ class PkKanturu12UseCase(PkBase):
         if self.morreu:
             print('Morreu no Kanturu. Aguardando na safe…')
             self.morreu = False
-            time.sleep(600)
+            if self.pointer.get_nome_char() == 'ReiDav1':
+                time.sleep(60)
+            else:
+                time.sleep(300)
 
     def _sair_da_safe(self):
         if safe_util.k1(self.handle):
@@ -78,8 +81,8 @@ class PkKanturu12UseCase(PkBase):
                     mouse_util.mover(self.handle, 286, 164)
                     time.sleep(0.5)
                     mouse_util.ativar_click_direito(self.handle)
-                    print('ESPERANDO 180s PARA PROXIMO PK EM KANTURU ' + nome)
-                    time.sleep(180)
+                    print('ESPERANDO 60s PARA PROXIMO PK EM KANTURU ' + nome)
+                    time.sleep(60)
                     mouse_util.desativar_click_direito(self.handle)
 
             else:

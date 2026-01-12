@@ -20,13 +20,15 @@ class PkAidaUseCase(PkBase):
 
     def _definir_tipo_pk_e_senha(self) -> str:
         nome = self.pointer.get_nome_char()
-
         # AIDA 1
         if nome == '_Offensive':
             senha = 'kuChx98f'
             self.tipo_pk = self.PKLIZAR_AIDA_1
         elif nome == 'Omale_DL':
             senha = 'gtkn6iVy'
+            self.tipo_pk = self.PKLIZAR_AIDA_1
+        elif nome == 'SM_Troyer':
+            senha = 'romualdo12'
             self.tipo_pk = self.PKLIZAR_AIDA_1
 
         # AIDA 2
@@ -50,9 +52,7 @@ class PkAidaUseCase(PkBase):
         elif nome == 'SisteMatyc':
             senha = 'carenae811'
             self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
-        elif nome == 'SM_Troyer':
-            senha = 'romualdo12'
-            self.tipo_pk = self.PKLIZAR_AIDA_CORREDOR
+
 
         # AIDA FINAL
         elif nome == '_ImpertuS_':
@@ -66,30 +66,36 @@ class PkAidaUseCase(PkBase):
             print('Tela sem configuração definida! ' + self.titulo_janela)
             senha = ''
 
+        if nome in ['SisteMatyc', 'INFECTRIX', 'SM_Troyer']:
+            self.sala_pk = self.definir_prioriadade_pk_sala3()
+
         return senha
 
     def iniciar_pk(self):
         self.morreu = False
-        self.mover_para_sala(self.sala_pk)
-        self.teclado.escrever_texto('/re off')
-        self._sair_da_safe()
+        for sala in self.sala_pk:
+            self.mover_para_sala(sala)
+            self.teclado.escrever_texto('/re off')
+            self._sair_da_safe()
 
-        if not self.morreu:
-            self._ativar_skill()
+            if not self.morreu:
+                self._ativar_skill()
 
-            if self.tipo_pk == self.PKLIZAR_AIDA_1:
-                self.pklizar_aida1()
-            elif self.tipo_pk == self.PKLIZAR_AIDA_2:
-                self.pklizar_aida2()
-            elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
-                self.pklizar_aida_corredor()
-            elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
-                self.pklizar_aida_final()
+                if self.tipo_pk == self.PKLIZAR_AIDA_1:
+                    self.pklizar_aida1()
+                elif self.tipo_pk == self.PKLIZAR_AIDA_2:
+                    self.pklizar_aida2()
+                elif self.tipo_pk == self.PKLIZAR_AIDA_CORREDOR:
+                    self.pklizar_aida_corredor()
+                elif self.tipo_pk == self.PKLIZAR_AIDA_FINAL:
+                    self.pklizar_aida_final()
+                else:
+                    self.pklizar_aida2()
+
+            if not self.morreu:
+                print('Relizada a rota completa de PK: ' + self.titulo_janela)
             else:
-                self.pklizar_aida2()
-
-        if not self.morreu:
-            print('Relizada a rota completa de PK: ' + self.titulo_janela)
+                break
 
     def pklizar_aida(self):
         etapas: Sequence[Callable[[], List]] = (
@@ -116,7 +122,7 @@ class PkAidaUseCase(PkBase):
             self.buscar_spot_aida2,
             spot_util.buscar_spots_aida_corredor,
             spot_util.buscar_spots_aida_final,
-            
+
             self.buscar_spot_extra_aida1,
         )
         return self.executar_rota_pk(etapas)
@@ -169,7 +175,6 @@ class PkAidaUseCase(PkBase):
             time.sleep(1)
             # clique extra em posição conhecida (fallback)
             mouse_util.left_clique(self.handle, 38, 369)
-
 
     def _esta_na_safe(self) -> bool:
         return safe_util.aida(self.handle)

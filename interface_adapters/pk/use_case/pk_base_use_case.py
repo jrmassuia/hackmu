@@ -40,13 +40,15 @@ class PkBase(ABC):
         # estado
         self.coord_mouse_atual: Optional[Tuple[int, int]] = None
         self.coord_spot_atual: Optional[Tuple[int, int]] = None
-        self.sala_pk = 7
+        self.sala_pk = None
         self.tipo_pk: Optional[str] = None
         self._abates = 0
         self._abates_lock = threading.Lock()
         self.morreu = False
         self.lista_player_tohell = None
         self.lista_player_suicide = None
+
+        self.definir_prioriadade_pk_sala7()
 
         # definir tipo e senha (subclasse)
         senha = self._definir_tipo_pk_e_senha()
@@ -157,7 +159,8 @@ class PkBase(ABC):
                 ultimo_check_pk = time.time()
                 limpou = self._verificar_se_limpou()
                 if limpou:
-                    self.mover_para_sala(self.sala_pk)
+                    sala_pk_principal = self.sala_pk[0]
+                    self.mover_para_sala(sala_pk_principal)
                     return
 
             self._corrigir_coordenada_e_mouse()
@@ -226,7 +229,7 @@ class PkBase(ABC):
                         if not resultados:
                             continue
 
-                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=60)
+                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=50)
                         if len(proximos) >= 3:
                             proximos = proximos[:3]
 
@@ -348,6 +351,12 @@ class PkBase(ABC):
         self.teclado.selecionar_skill_3()
         mouse_util.clickDireito(self.handle)
         self.teclado.selecionar_skill_1()
+
+    def definir_prioriadade_pk_sala7(self):
+        self.sala_pk = [7, 3]
+
+    def definir_prioriadade_pk_sala3(self):
+        self.sala_pk = [3, 7]
 
     @abstractmethod
     def _definir_tipo_pk_e_senha(self) -> str:
