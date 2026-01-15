@@ -32,7 +32,7 @@ class UpLandUseCase:
         return self._mover_para_loren()
 
     def _mover_para_loren(self):
-        if safe_util.lorencia(self.handle):
+        if safe_util.lorencia():
             self.ja_moveu_para_loren = False
             time.sleep(2)
 
@@ -89,7 +89,6 @@ class UpLandUseCase:
         movimentou = self.mover_spot_util.movimentar(
             (92, 82),
             max_tempo=300,
-            limpar_spot_se_necessario=True,
             verficar_se_movimentou=True,
             movimentacao_proxima=True
         )

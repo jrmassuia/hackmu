@@ -58,7 +58,7 @@ class UpK3UseCase:
         self.mover_spot_util.movimentar((94, 105), movimentacao_proxima=True)
 
     def _esta_na_safe(self):
-        ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
+        ycood, xcood = buscar_coordenada_util.coordernada()
         return (xcood and ycood) and ((100 <= xcood <= 110) and (70 <= ycood <= 77))
 
     def _posicionar_char_spot(self):

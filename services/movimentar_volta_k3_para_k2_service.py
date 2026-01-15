@@ -14,11 +14,10 @@ class MovimentacaoVotaK3ParaK2Service:
 
     def mover_para_k3(self):
 
-        if safe_util.tk(self.handle):
+        if safe_util.tk():
             while True:
                 self.mover_spot_util.movimentar((157, 58))
                 movimentou = self.mover_spot_util.movimentar((8, 199), verficar_se_movimentou=True,
-                                                                    limpar_spot_se_necessario=True,
                                                                     max_tempo=240)
                 if movimentou:
                     mouse_util.left_clique(self.handle, 281, 207)
@@ -42,7 +41,6 @@ class MovimentacaoVotaK3ParaK2Service:
         return self.mover_spot_util.movimentar(
             (82, 91),
             verficar_se_movimentou=True,
-            limpar_spot_se_necessario=True,
             max_tempo=300,
             movimentacao_proxima=True
         )

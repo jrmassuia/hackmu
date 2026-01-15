@@ -126,8 +126,7 @@ class PklizarService:
         return self.mover_spot.movimentar(
             (y, x),
             verficar_se_movimentou=True,
-            posicionar_mouse_coordenada=True,
-            limpar_spot_se_necessario=True
+            posicionar_mouse_coordenada=True
         )
 
     def _tentar_pklizar(self):  # DEVE RETORNAR TRUE PARA CONTINUAR COM A PKLIZACAO

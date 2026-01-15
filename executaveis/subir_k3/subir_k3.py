@@ -8,8 +8,7 @@ from utils.mover_spot_util import MoverSpotUtil
 
 def _mover_k3(handle):
     while True:
-        chegou = MoverSpotUtil(handle).movimentar((82, 91), max_tempo=600, movimentacao_proxima=True,
-                                                              limpar_spot_se_necessario=True)
+        chegou = MoverSpotUtil(handle).movimentar((82, 91), max_tempo=600, movimentacao_proxima=True)
         if chegou:
             break
     mouse_util.mover(handle, 490, 338)

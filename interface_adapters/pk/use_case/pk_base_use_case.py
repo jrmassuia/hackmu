@@ -8,6 +8,7 @@ from typing import Tuple, Callable, List
 import win32gui
 
 from interface_adapters.up.up_util.up_util import Up_util
+from provider.pointer_provider import get_pointer
 from services.alterar_char_sala_service import AlterarCharSalaService
 from services.buscar_personagem_proximo_service import BuscarPersonagemProximoService
 from services.pklizar_service import PklizarService
@@ -15,7 +16,6 @@ from services.posicionamento_spot_service import PosicionamentoSpotService
 from utils import mouse_util, spot_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
-from utils.pointer_util import Pointers
 from utils.rota_util import PathFinder
 from utils.teclado_util import Teclado_util
 
@@ -24,7 +24,7 @@ class PkBase(ABC):
 
     def __init__(self, handle, mapa):
         self.handle = handle
-        self.pointer = Pointers()
+        self.pointer = get_pointer()
         self.up_util = Up_util()
         self.classe = self.pointer.get_classe()
         self.titulo_janela = win32gui.GetWindowText(handle)
@@ -42,12 +42,30 @@ class PkBase(ABC):
         self.coord_spot_atual: Optional[Tuple[int, int]] = None
         self.tipo_pk: Optional[str] = None
         self._abates = 0
+        self.tempo_inicial_corrigir_coordenada_e_mouse = 0
         self._abates_lock = threading.Lock()
         self.morreu = False
         self.lista_player_tohell = None
         self.lista_player_suicide = None
         self.sala_pk = None
         self.definir_prioriadade_pk_sala7()
+
+        self.spots = None
+        if self.mapa == PathFinder.MAPA_AIDA:
+            self.spots = []
+            self.spots.extend(spot_util.buscar_spots_aida_2())
+            self.spots.extend(spot_util.buscar_spots_aida_corredor())
+            self.spots.extend(spot_util.buscar_spots_aida_final())
+            self.spots.extend(spot_util.buscar_spots_aida_volta_final())
+            self.spots.extend(spot_util.buscar_spots_aida_1())
+
+        elif self.mapa == PathFinder.MAPA_TARKAN:
+            self.spots = spot_util.buscar_todos_spots_tk(nao_ignorar_spot_pk=True)
+        elif self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
+            self.mapa = PathFinder.MAPA_TARKAN
+            self.spots = spot_util.buscar_todos_spots_tk()
+        else:
+            self.spots = []
 
         # definir tipo e senha (subclasse)
         senha = self._definir_tipo_pk_e_senha()
@@ -67,28 +85,34 @@ class PkBase(ABC):
                 self.limpar_pk()
 
     def _corrigir_coordenada_e_mouse(self) -> None:
-        if self.coord_spot_atual and self.coord_mouse_atual:
-            self.mover_spot.movimentar(
-                self.coord_spot_atual,
-                verficar_se_movimentou=True
-            )
-            mouse_util.mover(self.handle, *self.coord_mouse_atual)
+        # if self.coord_spot_atual and self.coord_mouse_atual:
+        #     self.mover_spot.movimentar(
+        #         self.coord_spot_atual,
+        #         verficar_se_movimentou=True
+        #     )
+        #     mouse_util.mover(self.handle, *self.coord_mouse_atual)
+
+        if (time.time() - self.tempo_inicial_corrigir_coordenada_e_mouse) > 120:
+            self.tempo_inicial_corrigir_coordenada_e_mouse = time.time()
+            if self.coord_spot_atual and self.coord_mouse_atual:
+                self.mover_spot.movimentar(self.coord_spot_atual,
+                                           verficar_se_movimentou=True,
+                                           max_tempo=10)
+                mouse_util.mover(self.handle, *self.coord_mouse_atual)
 
     def _movimentar_char_spot(self, coordenadas: Tuple[int, int]) -> bool:
         return self.mover_spot.movimentar(
             coordenadas,
             max_tempo=600,
             verficar_se_movimentou=True,
-            movimentacao_proxima=True,
-            limpar_spot_se_necessario=True
+            movimentacao_proxima=True
         )
 
     def _posicionar_char_pklizar(self, x: int, y: int) -> bool:
         return self.mover_spot.movimentar(
             (y, x),
             verficar_se_movimentou=True,
-            posicionar_mouse_coordenada=True,
-            limpar_spot_se_necessario=True
+            posicionar_mouse_coordenada=True
         )
 
     def atualizar_lista_player(self):
@@ -174,23 +198,7 @@ class PkBase(ABC):
             self.teclado.selecionar_skill_1()
             self._sair_da_safe()
 
-            if self.mapa == PathFinder.MAPA_AIDA:
-                spots = []
-                spots.extend(spot_util.buscar_spots_aida_2())
-                spots.extend(spot_util.buscar_spots_aida_corredor())
-                spots.extend(spot_util.buscar_spots_aida_final())
-                spots.extend(spot_util.buscar_spots_aida_volta_final())
-                spots.extend(spot_util.buscar_spots_aida_1())
-
-            elif self.mapa == PathFinder.MAPA_TARKAN:
-                spots = spot_util.buscar_todos_spots_tk(nao_ignorar_spot_pk=True)
-            elif self.mapa == PathFinder.MAPA_KANTURU_1_E_2:
-                self.mapa = PathFinder.MAPA_TARKAN
-                spots = spot_util.buscar_todos_spots_tk()
-            else:
-                spots = []
-
-            posicionador = PosicionamentoSpotService(spots)
+            posicionador = PosicionamentoSpotService(self.spots)
 
             achou = posicionador.posicionar_bot_up()
             if achou:

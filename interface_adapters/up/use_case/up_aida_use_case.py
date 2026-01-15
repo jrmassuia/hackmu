@@ -18,7 +18,7 @@ class UpAidaUseCaseNovo(UpBase):
 
             self.ja_moveu_para_mapa = True
 
-        if self.up_liberado is False or safe_util.aida(self.handle):
+        if self.up_liberado is False or safe_util.aida():
             self.ja_moveu_para_mapa = False
             print('Esperando na safe de aida por 120s')
             time.sleep(120)  # ESPERA PRA VOLTAR PRO SPOT
@@ -53,7 +53,6 @@ class UpAidaUseCaseNovo(UpBase):
             self.mover_spot_util.movimentar(
                 (207, 169),
                 max_tempo=3600,
-                limpar_spot_se_necessario=True,
                 movimentacao_proxima=True
             )
             self.posicionar_char_spot()  # Volta a procurar em Aida 2

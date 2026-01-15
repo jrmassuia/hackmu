@@ -224,8 +224,7 @@ class BufController(BaseController):
         while True:
             movimentou = self.mover_spot_util.movimentar((bp.coordy, bp.coordx),
                                                          max_tempo=tempo_max_movimento,
-                                                         verficar_se_movimentou=True,
-                                                         limpar_spot_se_necessario=True)
+                                                         verficar_se_movimentou=True)
 
             time.sleep(1)
 
@@ -311,9 +310,9 @@ class BufController(BaseController):
         return False
 
     def _verifica_se_esta_na_safe(self):
-        return (safe_util.lorencia(self.handle) or safe_util.devias(self.handle) or
-                safe_util.atlans(self.handle) or safe_util.losttower(self.handle) or
-                safe_util.noria(self.handle))
+        return (safe_util.lorencia() or safe_util.devias() or
+                safe_util.atlans() or safe_util.losttower() or
+                safe_util.noria())
 
     def _esperar_na_safe_se_necessario(self):
         if self.classe != BufController.CLASSE_BK:
@@ -512,7 +511,7 @@ class BufController(BaseController):
 
     def _notificar_discord_local_bp(self):
         if self.classe == BufController.CLASSE_BK:
-            coordenadas = buscar_coordenada_util.coordernada(self.handle)
+            coordenadas = buscar_coordenada_util.coordernada()
             mapa = self._formatar_nome_mapa(self.ultimo_mapa)
             texto = (
                 "---\n"

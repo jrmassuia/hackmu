@@ -17,7 +17,7 @@ class UpTarkanUseCase(UpBase):
             self.ja_moveu_para_mapa = True
             self.posicionar_char_spot()
 
-        if safe_util.tk(self.handle):
+        if safe_util.tk():
             self._ir_ate_tk2()
             self.ja_moveu_para_mapa = False
         else:
@@ -32,7 +32,6 @@ class UpTarkanUseCase(UpBase):
         movimentou = self.mover_spot_util.movimentar(
             destino,
             max_tempo=tempo_maximo,
-            limpar_spot_se_necessario=True,
             verficar_se_movimentou=True,
             movimentacao_proxima=True
         )

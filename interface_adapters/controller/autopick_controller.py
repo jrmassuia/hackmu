@@ -48,9 +48,9 @@ class AutopickController(BaseController):
         while self.executando:
             if self._esta_na_safe_aida():
                 self._mover_para_spot_aida()
-            elif safe_util.k3(self.handle):
+            elif safe_util.k3():
                 self._mover_para_spot_k3()
-            elif safe_util.atlans(self.handle):
+            elif safe_util.atlans():
                 self._mover_para_spot_atlans()
             self._voltar_para_k3_se_necessario()
             self.auto_pick.execute()
@@ -74,10 +74,7 @@ class AutopickController(BaseController):
         else:
             coordenada = (205, 171)
 
-        self.mover_spot_util.movimentar(coordenada,
-                                        max_tempo=400,
-                                        limpar_spot_se_necessario=True,
-                                        verficar_se_movimentou=True)
+        self.mover_spot_util.movimentar(coordenada, max_tempo=400, verficar_se_movimentou=True)
 
     def _mover_para_spot_k3(self):
         if self.iniciou_autopick:
@@ -95,17 +92,15 @@ class AutopickController(BaseController):
 
         self.mover_spot_util.movimentar(coordenada,
                                         max_tempo=180,
-                                        limpar_spot_se_necessario=True,
                                         movimentacao_proxima=True,
                                         verficar_se_movimentou=True)
 
     def _voltar_para_k3_se_necessario(self):
-        ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
+        ycood, xcood = buscar_coordenada_util.coordernada()
         if (xcood and ycood) and ((85 <= xcood <= 95) and (80 <= ycood <= 90)):
             while True:
                 chegou = MoverSpotUtil().movimentar((82, 91), max_tempo=600,
-                                                    movimentacao_proxima=True,
-                                                    limpar_spot_se_necessario=True)
+                                                    movimentacao_proxima=True)
                 if chegou:
                     break
             mouse_util.mover(self.handle, 490, 338)
@@ -117,15 +112,14 @@ class AutopickController(BaseController):
         time.sleep(300)
         safe_util.sair_da_safe_atlans(self.mover_spot_util)
         self.mover_spot_util.movimentar((self.y_coordenda_autal, self.x_coordenda_autal),
-                                        limpar_spot_se_necessario=True,
                                         movimentacao_proxima=True)
 
     def _esta_na_safe_aida(self):
-        ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
+        ycood, xcood = buscar_coordenada_util.coordernada()
         return (xcood and ycood) and ((5 <= xcood <= 17) and (75 <= ycood <= 92))
 
     def _esta_na_safe_k3(self):
-        ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
+        ycood, xcood = buscar_coordenada_util.coordernada()
         return (xcood and ycood) and ((100 <= xcood <= 110) and (70 <= ycood <= 77))
 
     def _sair_da_safe_aida(self):

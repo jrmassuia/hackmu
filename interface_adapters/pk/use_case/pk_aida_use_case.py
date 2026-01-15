@@ -74,6 +74,7 @@ class PkAidaUseCase(PkBase):
     def iniciar_pk(self):
 
         for sala in self.sala_pk:
+            self.morreu = False
             self.mover_para_sala(sala)
             self.teclado.escrever_texto('/re off')
             self._sair_da_safe()
@@ -156,7 +157,7 @@ class PkAidaUseCase(PkBase):
         return spots
 
     def _sair_da_safe(self):
-        if safe_util.aida(self.handle):
+        if safe_util.aida():
             self._desbugar_goblin()
             saiu = self.mover_spot.movimentar(
                 (115, 13),
@@ -176,4 +177,4 @@ class PkAidaUseCase(PkBase):
             mouse_util.left_clique(self.handle, 38, 369)
 
     def _esta_na_safe(self) -> bool:
-        return safe_util.aida(self.handle)
+        return safe_util.aida()

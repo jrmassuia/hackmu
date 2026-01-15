@@ -44,7 +44,7 @@ class RefinarPequenaController(BaseController):
             self._refinar()
 
     def _mover_noria(self):
-        if safe_util.noria(self.handle) is False:
+        if safe_util.noria() is False:
             self.teclado_util.escrever_texto('/move noria')
             time.sleep(1)
 

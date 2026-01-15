@@ -66,7 +66,7 @@ class UpNoriasUseCase:
         self.coord_spot_atual = poscionar.get_coord_spot()
 
     def _esta_na_safe(self):
-        y, x = buscar_coordenada_util.coordernada(self.handle)
+        y, x = buscar_coordenada_util.coordernada()
         return (x and y) and (90 <= x <= 130) and (165 <= y <= 201)
 
     def limpar_mob_ao_redor(self):

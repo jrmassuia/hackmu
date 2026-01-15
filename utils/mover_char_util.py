@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 
 from utils import buscar_coordenada_util, mouse_util
@@ -8,7 +7,7 @@ def mover(handle, coord_destino, tempo):
     horaInicio = datetime.now()
     chegouNaCoordenadaDesejada = False
 
-    y_atual, x_atual = buscar_coordenada_util.coordernada(handle)
+    y_atual, x_atual = buscar_coordenada_util.coordernada()
 
     if y_atual is None or x_atual is None:
         return False
@@ -48,7 +47,7 @@ def mover(handle, coord_destino, tempo):
                 clicar_na_posicao(handle, -30, -30)
                 coordXanterior = x_atual
 
-        y_atual, x_atual = buscar_coordenada_util.coordernada(handle)
+        y_atual, x_atual = buscar_coordenada_util.coordernada()
 
         if y_atual is None or x_atual is None:
             chegouNaCoordenadaDesejada = False
@@ -70,11 +69,7 @@ def mover(handle, coord_destino, tempo):
 
 def clicar_na_posicao(handle, posx, posy):
     x, y = 400 + posx, 260 - posy  # CENTRO DA TELA
-    # mouse_util.left_clique(handle, x, y)
     mouse_util.left_clique(handle, x, y)
-    # time.sleep(.2)
-    # mouse_util.clickEsquerdo(handle)
-
 
 def atingiu_tempo_limite(horaIncio, tempo):
     if tempo > 0:

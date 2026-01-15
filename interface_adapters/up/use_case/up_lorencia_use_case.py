@@ -21,15 +21,14 @@ class UpLorenciaUseCase:
         self._mover_lorencia()
 
     def _mover_lorencia(self):
-        if safe_util.lorencia(self.handle):
+        if safe_util.lorencia():
             self._pegar_buf()
             MoverSpotUtil().movimentar((139, 221),
-                                                           max_tempo=120,
-                                                           limpar_spot_se_necessario=True,
-                                                           verficar_se_movimentou=True,
-                                                           movimentacao_proxima=True)
+                                       max_tempo=120,
+                                       verficar_se_movimentou=True,
+                                       movimentacao_proxima=True)
 
-            if safe_util.lorencia(self.handle):
+            if safe_util.lorencia():
                 self._mover_lorencia()
             self.up_util.ativar_up()
 

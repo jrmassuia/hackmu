@@ -1,5 +1,6 @@
 import ctypes
 import threading
+import time
 from ctypes import wintypes
 from dataclasses import dataclass
 from functools import lru_cache
@@ -440,6 +441,25 @@ class ScannerPersonagens:
         name_max: int,
         xy_max: int,
     ) -> List[PersonagemEncontrado]:
+
+        def _extrair_candidato_no_fallback(pre: bytes) -> bytes:
+            """Extrai o último segmento ASCII imprimível do buffer (fallback compatível com a versão antiga)."""
+            if not pre:
+                return b""
+
+            j = len(pre) - 1
+            while j >= 0 and pre[j] == 0:
+                j -= 1
+            if j < 0:
+                return b""
+
+            end = j
+            while j >= 0 and 32 <= pre[j] <= 126:
+                j -= 1
+            start = j + 1
+            if start > end:
+                return b""
+            return pre[start:end + 1].strip()
         need_before = 8
         carry_len = need_before + len(padrao) - 1
 
@@ -512,22 +532,27 @@ class ScannerPersonagens:
                         if cand and not self._filtro.ignorar_por_string(cand):
                             nome = cand
 
-                # fallback: procura texto antes do padrão
+                # fallback: procura texto antes do padrão (mesma estratégia da classe antiga)
                 if not nome:
                     try:
                         pre_ini = max(base_inicio, addr_nome)
                         pre_len = min(64, addr_padrao - pre_ini)
                         if pre_len > 0:
                             pre = self._pointer.pm.read_bytes(pre_ini, pre_len)
-                            clean_pre = self._san.limpar(pre)
-                            if 3 <= len(clean_pre) <= name_max:
-                                if self._filtro.ignorar_por_bytes_exato(clean_pre):
+                            cand_b = _extrair_candidato_no_fallback(pre)
+                            if 3 <= len(cand_b) <= name_max:
+                                if self._filtro.ignorar_por_bytes_exato(cand_b):
                                     continue
-                                cand = clean_pre.decode("ascii", errors="ignore")
+                                cand = cand_b.decode("ascii", errors="ignore")
                                 if cand and not self._filtro.ignorar_por_string(cand):
                                     nome = cand
                     except Exception:
                         pass
+
+                # Compatibilidade com a versão anterior: se não conseguiu extrair nome,
+                # não retorna o item (evita "nome=None" nos resultados).
+                if not nome:
+                    continue
 
                 chave = (addr_padrao, x, y)
                 if chave in vistos:

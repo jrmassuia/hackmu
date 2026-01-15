@@ -42,7 +42,7 @@ class PktarkanUseCase(PkBase):
         self.pklizar_tarkan()
 
     def _sair_da_safe(self):
-        if safe_util.tk(self.handle):
+        if safe_util.tk():
             saiu_safe = self.mover_spot.movimentar((205, 100), movimentacao_proxima=True)
             if not saiu_safe:
                 self.morreu = True
@@ -63,14 +63,13 @@ class PktarkanUseCase(PkBase):
         """
         Tenta subir para k1: movimenta, limpa mobs ao redor e verifica safe.
         """
-        if safe_util.tk(self.handle) or self.morreu:
+        if safe_util.tk() or self.morreu:
             return
 
         while True:
             movimentou = self.mover_spot.movimentar(
                 (12, 200),
                 verficar_se_movimentou=True,
-                limpar_spot_se_necessario=True,
                 movimentacao_proxima=True,
                 max_tempo=240
             )
@@ -83,11 +82,11 @@ class PktarkanUseCase(PkBase):
                 mouse_util.left_clique(self.handle, 158, 139)
                 time.sleep(5)
 
-            if safe_util.k1(self.handle):
+            if safe_util.k1():
                 break
 
     def verificar_se_pode_continuar_com_pk(self):
         return True
 
     def _esta_na_safe(self):
-        return safe_util.tk(self.handle)
+        return safe_util.tk()

@@ -125,10 +125,7 @@ class RecrutarUseCase:
                 self._enviar_carta(nome)
 
     def _movimentar_char_spot(self, coordenadas):
-        return self.mover_spot.movimentar(
-            coordenadas,
-            movimentacao_proxima=True,
-            limpar_spot_se_necessario=True)
+        return self.mover_spot.movimentar(coordenadas, movimentacao_proxima=True)
 
     def _verificar_se_esta_sem_guild(self, nome):
         return self.verificador_imagem_usebar.verificar_pasta(nome, "./static/usebar/semguild/")

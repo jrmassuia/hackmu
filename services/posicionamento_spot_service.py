@@ -102,7 +102,6 @@ class PosicionamentoSpotService:
     def movimentar_mapa(self):
         return self.mover_spot_util.movimentar(
             self.coord_spot_atual,
-            limpar_spot_se_necessario=True,
             verficar_se_movimentou=True,
             max_tempo=180,
             movimentacao_proxima=True

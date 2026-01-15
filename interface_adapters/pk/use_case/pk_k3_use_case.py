@@ -2,7 +2,7 @@ import time
 from typing import Sequence, Callable, List
 
 from interface_adapters.pk.use_case.pk_base_use_case import PkBase
-from utils import safe_util, spot_util, mouse_util
+from utils import safe_util, spot_util
 
 
 class PkK3UseCase(PkBase):
@@ -35,7 +35,7 @@ class PkK3UseCase(PkBase):
         self.esperar_se_morreu()
 
     def _sair_da_safe(self):
-        if safe_util.k3(self.handle):
+        if safe_util.k3():
             saiu = self.mover_spot.movimentar((109, 79), max_tempo=20, movimentacao_proxima=True)
             if not saiu:
                 self.morreu = True
@@ -62,4 +62,4 @@ class PkK3UseCase(PkBase):
         return True
 
     def _esta_na_safe(self):
-        return safe_util.k3(self.handle)
+        return safe_util.k3()

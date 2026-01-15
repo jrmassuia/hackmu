@@ -58,7 +58,7 @@ class UpAtlansUseCase:
         self.teclado_util.escrever_texto('/move atlans3')
 
     def _esta_na_safe_atlans(self):
-        ycood, xcood = buscar_coordenada_util.coordernada(self.handle)
+        ycood, xcood = buscar_coordenada_util.coordernada()
         return (xcood and ycood) and ((11 <= xcood <= 24) and (12 <= ycood <= 29))
 
     def limpar_mob_ao_redor(self):

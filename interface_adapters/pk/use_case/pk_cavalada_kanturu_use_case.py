@@ -28,7 +28,7 @@ class PkCavaladaKanturuUseCase(PkBase):
         self.esperar_se_morreu()
 
     def _sair_da_safe(self):
-        if safe_util.k1(self.handle):
+        if safe_util.k1():
             saiu_safe = self.mover_spot.movimentar((49, 230), movimentacao_proxima=True)
             if not saiu_safe:
                 self.morreu = True
@@ -56,14 +56,13 @@ class PkCavaladaKanturuUseCase(PkBase):
                     break
 
     def _mover_para_k1(self):
-        if safe_util.tk(self.handle) or self.morreu:
+        if safe_util.tk() or self.morreu:
             return
 
         while True:
             movimentou = self.mover_spot.movimentar(
                 (12, 200),
                 verficar_se_movimentou=True,
-                limpar_spot_se_necessario=True,
                 movimentacao_proxima=True,
                 max_tempo=240
             )
@@ -76,14 +75,14 @@ class PkCavaladaKanturuUseCase(PkBase):
                 mouse_util.left_clique(self.handle, 158, 139)
                 time.sleep(5)
 
-            if safe_util.k1(self.handle):
+            if safe_util.k1():
                 break
 
     def verificar_se_pode_continuar_com_pk(self):
         return True
 
     def _esta_na_safe(self):
-        return safe_util.tk(self.handle)
+        return safe_util.tk()
 
     def limpar_mob_ao_redor(self):
         pass

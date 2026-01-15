@@ -1,5 +1,6 @@
-from utils.pointer_util import Pointers
+from provider.pointer_provider import get_pointer
 
-def coordernada(handle):
-    pointer = Pointers()
+
+def coordernada():
+    pointer = get_pointer()
     return pointer.get_cood_y(), pointer.get_cood_x()

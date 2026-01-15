@@ -54,7 +54,6 @@ class UpKalimaBase(UpBase):
 
         moveu = self.mover_spot_util.movimentar(
             (92, 156),
-            limpar_spot_se_necessario=True,
             movimentacao_proxima=True
         )
         if not moveu:
@@ -110,7 +109,7 @@ class UpKalimaBase(UpBase):
         fechou_inventario = False
 
         while tempo_esperado < tempo_max:
-            if safe_util.kalima(self.handle):
+            if safe_util.kalima():
                 return True
 
             mouse_util.mover(self.handle, 1, 1)

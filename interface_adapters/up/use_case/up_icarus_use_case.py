@@ -18,7 +18,7 @@ class UpIcarusUseCase(UpBase):
             self.ja_moveu_para_mapa = True
             self.posicionar_char_spot()
 
-        if safe_util.devias(self.handle):
+        if safe_util.devias():
             self.ja_moveu_para_mapa = False
             time.sleep(180)
         else:

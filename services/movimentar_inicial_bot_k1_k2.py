@@ -69,7 +69,6 @@ class MovimentacaoInicialBotK1k2Service:
         return self.mover_spot_util.movimentar(
             destino,
             max_tempo=tempo,
-            limpar_spot_se_necessario=True,
             verficar_se_movimentou=True,
             movimentacao_proxima=True
         )

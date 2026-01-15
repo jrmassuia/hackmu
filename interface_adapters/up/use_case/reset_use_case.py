@@ -76,7 +76,7 @@ class ResetUseCase:
     def selecionar_char_no_launcher(self):
         while True:
             self.selecionar_char.selecionar_char_no_launcher()
-            if safe_util.lorencia(self.handle) or safe_util.noria(self.handle):
+            if safe_util.lorencia() or safe_util.noria():
                 break
             else:
                 print('Char não está na safe de lorencia/noria!')

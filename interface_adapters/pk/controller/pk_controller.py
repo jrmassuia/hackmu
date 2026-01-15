@@ -16,11 +16,11 @@ class PKController(BaseController):
 
     def _run(self):
 
-        if safe_util.tk(self.handle):
+        if safe_util.tk():
             self.pklizar_tarkan()
-        elif safe_util.k3(self.handle):
+        elif safe_util.k3():
             self.pklizar_k3()
-        elif safe_util.k1(self.handle):
+        elif safe_util.k1():
             self.pklizar_kanturus()
         else:
             self.pklizar_aida()

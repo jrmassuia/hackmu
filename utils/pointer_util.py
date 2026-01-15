@@ -13,6 +13,20 @@ user32 = ctypes.WinDLL("user32", use_last_error=True)
 class Pointers:
     _instancias: dict[int, "Pointers"] = {}
     _lock = threading.Lock()
+    _open_lock = threading.Lock()  # evita abertura concorrente do processo
+
+    def _fechar_pm(self) -> None:
+        """Fecha o handle do processo (evita vazamento de recursos)."""
+        try:
+            if getattr(self, "pm", None) is not None:
+                close = getattr(self.pm, "close_process", None) or getattr(self.pm, "close", None)
+                if callable(close):
+                    close()
+        except Exception:
+            pass
+        finally:
+            self.pm = None
+            self.CLIENT = None
 
     def __new__(cls, hwnd=None, *args, **kwargs):
         """
@@ -66,6 +80,7 @@ class Pointers:
 
         for tentativa in range(max_retries):
             try:
+                self._fechar_pm()
                 self.pm = pymem.Pymem()
                 self.pm.open_process_from_id(pid)
                 self.CLIENT = self.pm.base_address

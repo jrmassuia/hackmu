@@ -53,7 +53,7 @@ class UpK2UseCase:
         return self.up_liberado
 
     def _esta_na_safe_k1(self):
-        y, x = buscar_coordenada_util.coordernada(self.handle)
+        y, x = buscar_coordenada_util.coordernada()
         return (x and y) and (190 <= x <= 225 and 15 <= y <= 44)
 
     def _posicionar_char_spot(self):
@@ -83,5 +83,5 @@ class UpK2UseCase:
     def _corrigir_coordenada_e_mouse(self):
         if self.coord_spot_atual and self.coord_mouse_atual:
             self.mover_spot_util.movimentar(self.coord_spot_atual,
-                                                        verficar_se_movimentou=True)
+                                            verficar_se_movimentou=True)
             mouse_util.mover(self.handle, *self.coord_mouse_atual)
