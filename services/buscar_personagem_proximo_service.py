@@ -1,6 +1,5 @@
 import ctypes
 import threading
-import time
 from ctypes import wintypes
 from dataclasses import dataclass
 from functools import lru_cache
@@ -77,6 +76,7 @@ class FiltroIgnorarNomes:
     - Parcial por string (mais lento, use com cuidado)
     - Reverse-contains opcional (para casos truncados: 'ath Tree' em 'Death Tree')
     """
+
     def __init__(self, nomes_exatos: Sequence[str]) -> None:
         self._ignorados_str: Set[str] = set(nomes_exatos)
         self._ignorados_bytes: Set[bytes] = {s.encode("ascii", errors="ignore") for s in self._ignorados_str}
@@ -134,6 +134,7 @@ class FiltroIgnorarNomes:
 
 class SanitizadorAscii:
     """Sanitiza bytes para ASCII imprimível com alta performance (translate em C)."""
+
     def __init__(self) -> None:
         self._tabela = bytes((b if 32 <= b <= 126 else 0) for b in range(256))
 
@@ -155,6 +156,7 @@ class SanitizadorAscii:
 
 class IteradorRegioesMemoria:
     """Itera regiões do processo via VirtualQueryEx."""
+
     def iterar(self, process_handle) -> Iterable[Tuple[int, int, MEMORY_BASIC_INFORMATION]]:
         addr = 0
         mbi = MEMORY_BASIC_INFORMATION()
@@ -201,6 +203,7 @@ class CacheRangeFixo:
 
 class ValidadorRegiao:
     """Verifica se um endereço ainda está em região COMMIT e legível."""
+
     def __init__(self, pointer: Pointers) -> None:
         self._pointer = pointer
 
@@ -275,6 +278,7 @@ class EncontradorRangePorMSB:
     Encontra um range [ini, fim] dentro de regiões MEM_PRIVATE COMMIT, usando um padrao (bytes)
     e restrições de MSB (do low32 do endereço).
     """
+
     def __init__(self, pointer: Pointers) -> None:
         self._pointer = pointer
         self._iter = IteradorRegioesMemoria()
@@ -283,16 +287,16 @@ class EncontradorRangePorMSB:
         self._cache: Dict[Tuple, Tuple[Optional[int], Optional[int]]] = {}
 
     def achar_cached(
-        self,
-        *,
-        padrao: bytes,
-        bloco_leitura: int,
-        margem: int,
-        exigir_rw: bool,
-        msb: int,
-        require_region_msb: bool,
-        use_msb_band_hint: bool,
-        force_refresh: bool,
+            self,
+            *,
+            padrao: bytes,
+            bloco_leitura: int,
+            margem: int,
+            exigir_rw: bool,
+            msb: int,
+            require_region_msb: bool,
+            use_msb_band_hint: bool,
+            force_refresh: bool,
     ) -> Tuple[Optional[int], Optional[int]]:
         pid = getattr(self._pointer.pm, "process_id", None)
         key = (pid, msb, padrao, exigir_rw, bloco_leitura, margem, require_region_msb, use_msb_band_hint)
@@ -319,15 +323,15 @@ class EncontradorRangePorMSB:
         return ini, fim
 
     def achar(
-        self,
-        *,
-        padrao: bytes,
-        bloco_leitura: int,
-        margem: int,
-        exigir_rw: bool,
-        msb: int,
-        require_region_msb: bool,
-        use_msb_band_hint: bool,
+            self,
+            *,
+            padrao: bytes,
+            bloco_leitura: int,
+            margem: int,
+            exigir_rw: bool,
+            msb: int,
+            require_region_msb: bool,
+            use_msb_band_hint: bool,
     ) -> Tuple[Optional[int], Optional[int]]:
 
         def is_rw(protect: int) -> bool:
@@ -420,26 +424,27 @@ class EncontradorRangePorMSB:
 
 class ScannerPersonagens:
     """Faz o scan dentro de um range e extrai (nome, x, y)."""
+
     def __init__(
-        self,
-        pointer: Pointers,
-        filtro: FiltroIgnorarNomes,
-        sanitizador: SanitizadorAscii,
+            self,
+            pointer: Pointers,
+            filtro: FiltroIgnorarNomes,
+            sanitizador: SanitizadorAscii,
     ) -> None:
         self._pointer = pointer
         self._filtro = filtro
         self._san = sanitizador
 
     def scan_range(
-        self,
-        *,
-        base_inicio: int,
-        base_fim: int,
-        padrao: bytes,
-        bloco_leitura: int,
-        name_delta: int,
-        name_max: int,
-        xy_max: int,
+            self,
+            *,
+            base_inicio: int,
+            base_fim: int,
+            padrao: bytes,
+            bloco_leitura: int,
+            name_delta: int,
+            name_max: int,
+            xy_max: int,
     ) -> List[PersonagemEncontrado]:
 
         def _extrair_candidato_no_fallback(pre: bytes) -> bytes:
@@ -460,6 +465,7 @@ class ScannerPersonagens:
             if start > end:
                 return b""
             return pre[start:end + 1].strip()
+
         need_before = 8
         carry_len = need_before + len(padrao) - 1
 
@@ -577,16 +583,17 @@ class ScannerPersonagens:
 
 class OrdenadorProximos:
     """Filtra e ordena resultados próximos às coordenadas atuais do personagem."""
+
     def __init__(self, pointer: Pointers) -> None:
         self._pointer = pointer
 
     def ordenar(
-        self,
-        resultados: Sequence[Union[dict, tuple]],
-        *,
-        limite: Optional[int] = None,
-        incluir_dist: bool = True,
-        max_delta: int = 10,
+            self,
+            resultados: Sequence[Union[dict, tuple]],
+            *,
+            limite: Optional[int] = None,
+            incluir_dist: bool = True,
+            max_delta: int = 10,
     ) -> List[dict]:
         x0 = self._pointer.get_cood_x()
         y0 = self._pointer.get_cood_y()
@@ -602,7 +609,8 @@ class OrdenadorProximos:
                     x = int(item.get("x"))
                     y = int(item.get("y"))
                     nome = item.get("nome")
-                    addr_raw = item.get("addr_padrao") or item.get("addr_nome") or item.get("addr") or item.get("address")
+                    addr_raw = item.get("addr_padrao") or item.get("addr_nome") or item.get("addr") or item.get(
+                        "address")
                 else:
                     addr_raw, x, y = item[0], int(item[1]), int(item[2])
                     nome = None
@@ -698,17 +706,66 @@ class BuscarPersonagemProximoService:
         self._msb_hit_order: Dict[int, List[int]] = {}
 
     def listar_nomes_e_coords_por_padrao(
-        self,
-        padrao: bytes = b"\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF",
-        bloco_leitura: int = 0x40000,
-        name_delta: int = 0x74,
-        name_max: int = 16,
-        xy_max: int = 4096,
-        start_hints: Sequence[int] = (0x0E, 0x0F, 0x0A, 0x08, 0x0B),
-        force_refresh: bool = False,
-        mobs_ignorar: Optional[Sequence[Union[str, bytes]]] = None,
+            self,
+            padrao: bytes = b"\x80\xFF\xFF\xFF\xFF\xFF\xFF\xFF",
+            bloco_leitura: int = 0x40000,
+            name_delta: int = 0x74,
+            name_max: int = 16,
+            xy_max: int = 4096,
+            start_hints: Sequence[int] = (0x0E, 0x0F, 0x0A, 0x08, 0x0B),
+            force_refresh: bool = False,
+            mobs_ignorar: Optional[Sequence[Union[str, bytes]]] = None,
+            # NOVO:
+            # - padroes: lista/tupla de padrões alternativos a testar
+            # - max_padroes: por padrão testa somente os primeiros 15 (mais rápido)
+            padroes: Optional[Sequence[bytes]] = None,
+            max_padroes: int = 10,
     ) -> List[dict]:
+        """
+        Se `padroes` for informado, testa em ordem (limitado por `max_padroes`) e retorna
+        assim que encontrar resultados. Mantém compatibilidade com o parâmetro `padrao`.
+        """
 
+        if padroes:
+            candidatos = [p for p in padroes[:max_padroes] if p]
+            for p in candidatos:
+                res = self._listar_por_um_padrao(
+                    padrao=p,
+                    bloco_leitura=bloco_leitura,
+                    name_delta=name_delta,
+                    name_max=name_max,
+                    xy_max=xy_max,
+                    start_hints=start_hints,
+                    force_refresh=force_refresh,
+                    mobs_ignorar=mobs_ignorar,
+                )
+                if res:
+                    return res
+            return []
+
+        return self._listar_por_um_padrao(
+            padrao=padrao,
+            bloco_leitura=bloco_leitura,
+            name_delta=name_delta,
+            name_max=name_max,
+            xy_max=xy_max,
+            start_hints=start_hints,
+            force_refresh=force_refresh,
+            mobs_ignorar=mobs_ignorar,
+        )
+
+    def _listar_por_um_padrao(
+            self,
+            *,
+            padrao: bytes,
+            bloco_leitura: int,
+            name_delta: int,
+            name_max: int,
+            xy_max: int,
+            start_hints: Sequence[int],
+            force_refresh: bool,
+            mobs_ignorar: Optional[Sequence[Union[str, bytes]]],
+    ) -> List[dict]:
         if mobs_ignorar:
             for s in mobs_ignorar:
                 self._filtro.adicionar(s)
@@ -768,9 +825,9 @@ class BuscarPersonagemProximoService:
                         return [r.to_dict() for r in res]
 
             for margem, req_msb, hint in (
-                (0x800, True, True),
-                (0x1000, False, True),
-                (0x2000, False, False),
+                    (0x800, True, True),
+                    (0x1000, False, True),
+                    (0x2000, False, False),
             ):
                 b0, b1 = self._finder_range.achar_cached(
                     padrao=padrao,
@@ -797,7 +854,8 @@ class BuscarPersonagemProximoService:
                         hits = self._msb_hit_order.get(pid, [])
                         self._msb_hit_order[pid] = [msb] + [m for m in hits if m != msb]
                         CacheRangeFixo.set(pid, padrao, b0, b1)
-                        print(f"[SCAN] Encontrado (hints) MSB={hex(msb)} base={hex(b0)}..{hex(b1)} ({len(res)} resultados)")
+                        print(
+                            f"[SCAN] Encontrado (hints) MSB={hex(msb)} base={hex(b0)}..{hex(b1)} ({len(res)} resultados)")
                         return [r.to_dict() for r in res]
 
         hits = self._msb_hit_order.get(pid, [])
@@ -833,9 +891,9 @@ class BuscarPersonagemProximoService:
 
             found_here = False
             for margem, req_msb, hint in (
-                (0x800, True, True),
-                (0x1000, False, True),
-                (0x2000, False, False),
+                    (0x800, True, True),
+                    (0x1000, False, True),
+                    (0x2000, False, False),
             ):
                 b0, b1 = self._finder_range.achar_cached(
                     padrao=padrao,
@@ -861,7 +919,8 @@ class BuscarPersonagemProximoService:
                         self._msb_result_cache[(pid, msb)] = (b0, b1)
                         self._msb_hit_order[pid] = [msb] + [m for m in hits if m != msb]
                         CacheRangeFixo.set(pid, padrao, b0, b1)
-                        print(f"[SCAN] Encontrado (resto) MSB={hex(msb)} base={hex(b0)}..{hex(b1)} ({len(res)} resultados)")
+                        print(
+                            f"[SCAN] Encontrado (resto) MSB={hex(msb)} base={hex(b0)}..{hex(b1)} ({len(res)} resultados)")
                         return [r.to_dict() for r in res]
 
                     found_here = True
@@ -878,10 +937,10 @@ class BuscarPersonagemProximoService:
         return []
 
     def ordenar_proximos(
-        self,
-        resultados: List,
-        limite: Optional[int] = None,
-        incluir_dist: bool = True
+            self,
+            resultados: List,
+            limite: Optional[int] = None,
+            incluir_dist: bool = True
     ) -> List[dict]:
         return self._ordenador.ordenar(resultados, limite=limite, incluir_dist=incluir_dist)
 

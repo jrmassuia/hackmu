@@ -278,7 +278,7 @@ class PkBase(ABC):
                 self.morreu = True
                 return
 
-            time.sleep(.25)  # DA O TEMPO DE CARREGAR A SELEÇÃO DO MOUSE NO CHAR
+            time.sleep(.15)  # DA O TEMPO DE CARREGAR A SELEÇÃO DO MOUSE NO CHAR
 
             if self.pointer.get_char_pk_selecionado() is False:
                 print('Não encontrou alvo para PK')
