@@ -2,7 +2,7 @@ import time
 
 from interface_adapters.up.up_util.up_util import Up_util
 from sessao_handle import get_handle_atual
-from utils import buscar_coordenada_util, mouse_util
+from utils import mouse_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
@@ -58,7 +58,7 @@ class UpAtlansUseCase:
         self.teclado_util.escrever_texto('/move atlans3')
 
     def _esta_na_safe_atlans(self):
-        ycood, xcood = buscar_coordenada_util.coordernada()
+        ycood, xcood = self.pointer.get_coordernada_y_x()
         return (xcood and ycood) and ((11 <= xcood <= 24) and (12 <= ycood <= 29))
 
     def limpar_mob_ao_redor(self):

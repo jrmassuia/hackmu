@@ -7,7 +7,7 @@ from interface_adapters.up.up_util.up_util import Up_util
 from menu import Menu
 from sessao_menu import obter_menu
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
-from utils import buscar_coordenada_util, mouse_util, safe_util
+from utils import mouse_util, safe_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
@@ -48,9 +48,9 @@ class AutopickController(BaseController):
         while self.executando:
             if self._esta_na_safe_aida():
                 self._mover_para_spot_aida()
-            elif safe_util.k3():
+            elif safe_util.k3(self.pointer.get_coordernada_y_x()):
                 self._mover_para_spot_k3()
-            elif safe_util.atlans():
+            elif safe_util.atlans(self.pointer.get_coordernada_y_x()):
                 self._mover_para_spot_atlans()
             self._voltar_para_k3_se_necessario()
             self.auto_pick.execute()
@@ -96,7 +96,7 @@ class AutopickController(BaseController):
                                         verficar_se_movimentou=True)
 
     def _voltar_para_k3_se_necessario(self):
-        ycood, xcood = buscar_coordenada_util.coordernada()
+        ycood, xcood = self.pointer.get_coordernada_y_x()
         if (xcood and ycood) and ((85 <= xcood <= 95) and (80 <= ycood <= 90)):
             while True:
                 chegou = MoverSpotUtil().movimentar((82, 91), max_tempo=600,
@@ -115,11 +115,11 @@ class AutopickController(BaseController):
                                         movimentacao_proxima=True)
 
     def _esta_na_safe_aida(self):
-        ycood, xcood = buscar_coordenada_util.coordernada()
+        ycood, xcood = self.pointer.get_coordernada_y_x()
         return (xcood and ycood) and ((5 <= xcood <= 17) and (75 <= ycood <= 92))
 
     def _esta_na_safe_k3(self):
-        ycood, xcood = buscar_coordenada_util.coordernada()
+        ycood, xcood = self.pointer.get_coordernada_y_x()
         return (xcood and ycood) and ((100 <= xcood <= 110) and (70 <= ycood <= 77))
 
     def _sair_da_safe_aida(self):

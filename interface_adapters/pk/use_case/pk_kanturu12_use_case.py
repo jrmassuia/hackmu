@@ -66,7 +66,7 @@ class PkKanturu12UseCase(PkBase):
                 time.sleep(300)
 
     def _sair_da_safe(self):
-        if safe_util.k1():
+        if safe_util.k1(self.pointer.get_coordernada_y_x()):
             self.mover_spot.movimentar((41, 231), movimentacao_proxima=True)
 
     def voltar_pra_safe_e_esperar_proximo_pk(self):
@@ -101,10 +101,10 @@ class PkKanturu12UseCase(PkBase):
             time.sleep(8)  # DELAY PARA CASO MORRA E VOLTAR PARA SAFE
 
     def morreu(self) -> bool:
-        return safe_util.k1()
+        return safe_util.k1(self.pointer.get_coordernada_y_x())
 
     def _esta_na_safe(self):
-        return safe_util.k1() or safe_util.tk()
+        return safe_util.k1(self.pointer.get_coordernada_y_x()) or safe_util.tk(self.pointer.get_coordernada_y_x())
 
     def _definir_tipo_pk_e_senha(self) -> str:
         return ''

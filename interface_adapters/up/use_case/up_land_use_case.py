@@ -32,7 +32,7 @@ class UpLandUseCase:
         return self._mover_para_loren()
 
     def _mover_para_loren(self):
-        if safe_util.lorencia():
+        if safe_util.lorencia(self.pointer.get_coordernada_y_x()):
             self.ja_moveu_para_loren = False
             time.sleep(2)
 

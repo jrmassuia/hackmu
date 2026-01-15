@@ -6,7 +6,7 @@ from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from sessao_handle import get_handle_atual
 from use_cases.autopick.pegar_item_use_case import PegarItemUseCase
-from utils import buscar_coordenada_util, spot_util, mouse_util
+from utils import spot_util, mouse_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 from utils.teclado_util import Teclado_util
@@ -58,7 +58,7 @@ class UpK3UseCase:
         self.mover_spot_util.movimentar((94, 105), movimentacao_proxima=True)
 
     def _esta_na_safe(self):
-        ycood, xcood = buscar_coordenada_util.coordernada()
+        ycood, xcood = self.pointer.get_coordernada_y_x()
         return (xcood and ycood) and ((100 <= xcood <= 110) and (70 <= ycood <= 77))
 
     def _posicionar_char_spot(self):

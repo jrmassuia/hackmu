@@ -17,7 +17,7 @@ class UpTarkanUseCase(UpBase):
             self.ja_moveu_para_mapa = True
             self.posicionar_char_spot()
 
-        if safe_util.tk():
+        if safe_util.tk(self.pointer.get_coordernada_y_x()):
             self._ir_ate_tk2()
             self.ja_moveu_para_mapa = False
         else:

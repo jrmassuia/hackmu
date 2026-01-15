@@ -3,7 +3,7 @@ import time
 from interface_adapters.up.up_util.up_util import Up_util
 from services.posicionamento_spot_service import PosicionamentoSpotService
 from sessao_handle import get_handle_atual
-from utils import mouse_util, buscar_coordenada_util, spot_util
+from utils import mouse_util, spot_util
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
 
@@ -66,7 +66,7 @@ class UpNoriasUseCase:
         self.coord_spot_atual = poscionar.get_coord_spot()
 
     def _esta_na_safe(self):
-        y, x = buscar_coordenada_util.coordernada()
+        y, x = self.pointer.get_coordernada_y_x()
         return (x and y) and (90 <= x <= 130) and (165 <= y <= 201)
 
     def limpar_mob_ao_redor(self):

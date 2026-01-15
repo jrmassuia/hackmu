@@ -99,21 +99,21 @@ class MoverSpotUtil:
 
     def _checar_safe_zone(self, mapa):
         if mapa == PathFinder.MAPA_KANTURU_1_E_2:
-            return safe_util.k1()
+            return safe_util.k1(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_AIDA or mapa == PathFinder.MAPA_KALIMA:
-            return safe_util.aida()
+            return safe_util.aida(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_TARKAN:
-            return safe_util.tk()
+            return safe_util.tk(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_ATLANS:
-            return safe_util.atlans()
+            return safe_util.atlans(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_KANTURU_3:
-            return safe_util.k3()
+            return safe_util.k3(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_DEVIAS:
-            return safe_util.devias()
+            return safe_util.devias(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_LOSTTOWER:
-            return safe_util.losttower()
+            return safe_util.losttower(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_DUNGEON:
-            return safe_util.lorencia()
+            return safe_util.lorencia(self.pointer.get_coordernada_y_x())
         return False
 
     def _verificar_se_morreu(self):

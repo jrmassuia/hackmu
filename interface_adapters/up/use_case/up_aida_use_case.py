@@ -18,7 +18,7 @@ class UpAidaUseCaseNovo(UpBase):
 
             self.ja_moveu_para_mapa = True
 
-        if self.up_liberado is False or safe_util.aida():
+        if self.up_liberado is False or safe_util.aida(self.pointer.get_coordernada_y_x()):
             self.ja_moveu_para_mapa = False
             print('Esperando na safe de aida por 120s')
             time.sleep(120)  # ESPERA PRA VOLTAR PRO SPOT

@@ -35,7 +35,7 @@ class PkKnvUseCase(PkBase):
         self.voltar_pra_safe_e_esperar_proximo_pk()
 
     def _sair_da_safe(self):
-        if not safe_util.k1():
+        if not safe_util.k1(self.pointer.get_coordernada_y_x()):
             self._marcar_morte()
             return
 
@@ -61,7 +61,7 @@ class PkKnvUseCase(PkBase):
         mouse_util.left_clique(self.handle, 433, 44)  # clica no portal knv
         time.sleep(3)
 
-        if not safe_util.knv():
+        if not safe_util.knv(self.pointer.get_coordernada_y_x()):
             self.morreu = True
             return False
         return True
@@ -90,7 +90,7 @@ class PkKnvUseCase(PkBase):
             time.sleep(8)  # DELAY PARA CASO MORRA E VOLTAR PARA SAFE
 
     def _mover_para_tk(self):
-        if safe_util.k1():
+        if safe_util.k1(self.pointer.get_coordernada_y_x()):
             mouse_util.left_clique(self.handle, 472, 40)
             time.sleep(5)
             self.mover_spot.movimentar((17, 198), verficar_se_movimentou=True,
@@ -110,4 +110,4 @@ class PkKnvUseCase(PkBase):
         return True
 
     def _esta_na_safe(self):
-        return safe_util.k1()
+        return safe_util.k1(self.pointer.get_coordernada_y_x())

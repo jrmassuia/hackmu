@@ -300,7 +300,7 @@ class MoverSpotUtil:
                         time.sleep(1)
 
                     x_ant, y_ant, hora_inicial = \
-                        self._verificar_e_desbloquear_coordenada_equanto_movimenta_se_necessario(
+                        self._verificar_e_desbloquear_coordenada_enquanto_movimenta_se_necessario(
                             self.pointer.get_cood_x(),
                             self.pointer.get_cood_y(),
                             x_ant,
@@ -324,21 +324,21 @@ class MoverSpotUtil:
 
     def _checar_safe_zone(self, mapa) -> bool:
         if mapa == PathFinder.MAPA_KANTURU_1_E_2:
-            return safe_util.k1()
+            return safe_util.k1(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_AIDA or mapa == PathFinder.MAPA_KALIMA:
-            return safe_util.aida()
+            return safe_util.aida(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_TARKAN:
-            return safe_util.tk()
+            return safe_util.tk(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_ATLANS:
-            return safe_util.atlans()
+            return safe_util.atlans(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_KANTURU_3:
-            return safe_util.k3()
+            return safe_util.k3(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_DEVIAS:
-            return safe_util.devias()
+            return safe_util.devias(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_LOSTTOWER:
-            return safe_util.losttower()
+            return safe_util.losttower(self.pointer.get_coordernada_y_x())
         if mapa == PathFinder.MAPA_DUNGEON:
-            return safe_util.lorencia()
+            return safe_util.lorencia(self.pointer.get_coordernada_y_x())
         return False
 
     def _verificar_se_morreu(self) -> bool:
@@ -510,16 +510,16 @@ class MoverSpotUtil:
     # Limpeza de spot
     # ---------------------------
 
-    def _verificar_e_desbloquear_coordenada_equanto_movimenta_se_necessario(self, x_atual, y_atual, x_ant, y_ant,
-                                                                            hora_inicial):
+    def _verificar_e_desbloquear_coordenada_enquanto_movimenta_se_necessario(self, x_atual, y_atual, x_ant, y_ant,
+                                                                             hora_inicial):
         if (x_ant, y_ant) != (x_atual, y_atual):
             return x_atual, y_atual, datetime.now()
         elif hora_inicial and (datetime.now() - hora_inicial).total_seconds() >= 1.5:
-            self._desbloquear_coordenada_equanto_movimenta()
+            self._desbloquear_coordenada_enquanto_movimenta()
             return None, None, None
         return x_ant, y_ant, hora_inicial
 
-    def _desbloquear_coordenada_equanto_movimenta(self):
+    def _desbloquear_coordenada_enquanto_movimenta(self):
         if not self.proxima_posicao_mouse:
             return
 

@@ -100,7 +100,7 @@ class PickKanturuUseCase(BaseController):
     def _mover_mapa(self):
         self._mover_ate_k1_se_necessario()
 
-        if not safe_util.k1():
+        if not safe_util.k1(self.pointer.get_coordernada_y_x()):
             return
 
         self._resetar_coordenadas()
@@ -134,8 +134,8 @@ class PickKanturuUseCase(BaseController):
         return False
 
     def _mover_ate_k1_se_necessario(self):
-        if safe_util.tk() or safe_util.tk2_portal():
-            if safe_util.tk():
+        if safe_util.tk(self.pointer.get_coordernada_y_x()) or safe_util.tk2_portal(self.pointer.get_coordernada_y_x()):
+            if safe_util.tk(self.pointer.get_coordernada_y_x()):
                 self.mover_spot_util.movimentar((157, 58))
 
             while True:
@@ -146,7 +146,7 @@ class PickKanturuUseCase(BaseController):
                     mouse_util.left_clique(self.handle, 281, 207)
                     time.sleep(2)
 
-                if safe_util.k1():
+                if safe_util.k1(self.pointer.get_coordernada_y_x()):
                     break
 
     def _resetar_coordenadas(self):

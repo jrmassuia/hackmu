@@ -1,10 +1,9 @@
-import time
-
 from services.alterar_char_sala_service import AlterarCharSalaService
 from utils import mouse_util, safe_util
 
 
 class MovimentacaoVotaK3ParaK2Service:
+
     def __init__(self, handle, mover_spot_util, arduino, senha):
         self.handle = handle
         self.mover_spot_util = mover_spot_util
@@ -14,7 +13,7 @@ class MovimentacaoVotaK3ParaK2Service:
 
     def mover_para_k3(self):
 
-        if safe_util.tk():
+        if safe_util.tk(self.mover_spot_util.pointer.get_coordernada_y_x()):
             while True:
                 self.mover_spot_util.movimentar((157, 58))
                 movimentou = self.mover_spot_util.movimentar((8, 199), verficar_se_movimentou=True,

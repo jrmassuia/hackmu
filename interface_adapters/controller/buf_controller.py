@@ -10,7 +10,7 @@ from interface_adapters.bean.BpConfig import BpConfig
 from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.controller.DiscordBotController import DiscordBotController
 from sessao_handle import get_handle_atual
-from utils import mouse_util, buscar_coordenada_util, screenshot_util, safe_util, \
+from utils import mouse_util, screenshot_util, safe_util, \
     acao_menu_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.json_file_manager_util import JsonFileManager
@@ -45,12 +45,12 @@ class BufController(BaseController):
     def _prepare(self):
         self.handle = get_handle_atual()
         self.tela = win32gui.GetWindowText(self.handle)
-        self.pointers = Pointers()
+        self.pointer = Pointers()
         self.teclado_util = Teclado_util()
         self.mover_spot_util = MoverSpotUtil()
         self.buscar_imagem = BuscarItemUtil()
         #
-        self.classe = self.pointers.get_classe()
+        self.classe = self.pointer.get_classe()
         self.channel_id_sl_bp = 1272950663466324008
         self.channel_id_sl_terminal = 1397939857443000371
         self.arquivo_json = "./data/autobuf.json"
@@ -137,7 +137,7 @@ class BufController(BaseController):
             deve_voltar_para_bp = True
             while tempo_esperado < tempo_total_espera:
                 segundos_restantes = tempo_total_espera - tempo_esperado
-                nome_personagem = self.pointers.get_nome_char()
+                nome_personagem = self.pointer.get_nome_char()
                 print(f"[{nome_personagem}] Verificando se estouro está na safe. "
                       f"Tempo restante: {segundos_restantes} segundos...")
 
@@ -184,7 +184,7 @@ class BufController(BaseController):
                 movimentacao_posterior = self.versao_mapa_atual == nova_versao and self._ler_estouro_safe()
 
                 if primeira_movimentacao or movimentacao_posterior:
-                    print(f"[{self.pointers.get_nome_char()}] Esperando troca de mapa pelo BK... "
+                    print(f"[{self.pointer.get_nome_char()}] Esperando troca de mapa pelo BK... "
                           f"Versão: {self.versao_mapa_atual} - Mapa: {self.ultimo_mapa}")
                     time.sleep(10)
                     continue
@@ -194,7 +194,7 @@ class BufController(BaseController):
                     break
 
         print(
-            f"[{self.pointers.get_nome_char()}] Novo mapa detectado, versão: "
+            f"[{self.pointer.get_nome_char()}] Novo mapa detectado, versão: "
             f"{self.versao_mapa_atual} - {self.ultimo_mapa}")
 
     def _mover_bp(self):
@@ -229,11 +229,11 @@ class BufController(BaseController):
             time.sleep(1)
 
             if movimentou is False:
-                print(f"[{self.pointers.get_nome_char()}] Tentando Movimentar!")
+                print(f"[{self.pointer.get_nome_char()}] Tentando Movimentar!")
                 self._mover_bp_para_mapa(bp)
 
-            elif movimentou and (bp.coordy == self.pointers.get_cood_y() and bp.coordx == self.pointers.get_cood_x()):
-                print(f"[{self.pointers.get_nome_char()}] Movimentou!")
+            elif movimentou and (bp.coordy == self.pointer.get_cood_y() and bp.coordx == self.pointer.get_cood_x()):
+                print(f"[{self.pointer.get_nome_char()}] Movimentou!")
                 return True
 
     def selecionar_party_se_for_bk(self):
@@ -294,13 +294,13 @@ class BufController(BaseController):
         notificou_discord = False
 
         while True:
-            if self.pointers.get_zen() >= int(self._ler_json_zen()):
+            if self.pointer.get_zen() >= int(self._ler_json_zen()):
                 break
             else:
                 if not notificou_discord:
                     notificou_discord = True
                     self._notificar_discord_char_sem_zen()
-                    print(f"[{self.pointers.get_nome_char()}] CHAR SEM ZEN!")
+                    print(f"[{self.pointer.get_nome_char()}] CHAR SEM ZEN!")
                 time.sleep(10)
 
     def _verificar_se_bp_esta_conectada(self):
@@ -310,9 +310,11 @@ class BufController(BaseController):
         return False
 
     def _verifica_se_esta_na_safe(self):
-        return (safe_util.lorencia() or safe_util.devias() or
-                safe_util.atlans() or safe_util.losttower() or
-                safe_util.noria())
+        return (safe_util.lorencia(self.pointer.get_coordernada_y_x()) or safe_util.devias(
+            self.pointer.get_coordernada_y_x()) or
+                safe_util.atlans(self.pointer.get_coordernada_y_x()) or safe_util.losttower(
+                    self.pointer.get_coordernada_y_x()) or
+                safe_util.noria(self.pointer.get_coordernada_y_x()))
 
     def _esperar_na_safe_se_necessario(self):
         if self.classe != BufController.CLASSE_BK:
@@ -511,7 +513,7 @@ class BufController(BaseController):
 
     def _notificar_discord_local_bp(self):
         if self.classe == BufController.CLASSE_BK:
-            coordenadas = buscar_coordenada_util.coordernada()
+            coordenadas = self.pointer.get_coordernada_y_x()
             mapa = self._formatar_nome_mapa(self.ultimo_mapa)
             texto = (
                 "---\n"
@@ -525,8 +527,8 @@ class BufController(BaseController):
         texto = (
             "---\n"
             f"🚨️️ **STATUS DO CHAR**\n"
-            f"🧙‍ CHAR [{self.pointers.get_nome_char()}] está sem Zen!\n"
-            f"💰 Zen atual: {self.pointers.get_zen()}\n"
+            f"🧙‍ CHAR [{self.pointer.get_nome_char()}] está sem Zen!\n"
+            f"💰 Zen atual: {self.pointer.get_zen()}\n"
             f"🛒 É necessário comprar um item da loja pessoal para conseguir mover o personagem."
         )
         self._enviar_mensagem_discord(self.channel_id_sl_terminal, texto)
@@ -543,7 +545,7 @@ class BufController(BaseController):
         texto = (
             "---\n"
             f"🚨️🚨️🚨️ ***BP SEM PARTY*** 🚨️🚨️🚨️\n"
-            f"🧙‍ CHAR [{self.pointers.get_nome_char()}] não está como dono PT!\nFale com o ADMINISTRADOR DA PT!"
+            f"🧙‍ CHAR [{self.pointer.get_nome_char()}] não está como dono PT!\nFale com o ADMINISTRADOR DA PT!"
         )
 
         self._enviar_mensagem_discord(self.channel_id_sl_terminal, texto)
@@ -552,7 +554,7 @@ class BufController(BaseController):
         texto = (
             "---\n"
             f"🚨️🚨️🚨️ ***BP DESCONECTADA*** 🚨️🚨️🚨️\n"
-            f"🧙‍ CHAR [{self.pointers.get_nome_char()}] está desconectado!\nFale com o ADMINISTRADOR DA PT!"
+            f"🧙‍ CHAR [{self.pointer.get_nome_char()}] está desconectado!\nFale com o ADMINISTRADOR DA PT!"
         )
 
         self._enviar_mensagem_discord(self.channel_id_sl_terminal, texto)

@@ -21,14 +21,14 @@ class UpLorenciaUseCase:
         self._mover_lorencia()
 
     def _mover_lorencia(self):
-        if safe_util.lorencia():
+        if safe_util.lorencia(self.pointer.get_coordernada_y_x()):
             self._pegar_buf()
             MoverSpotUtil().movimentar((139, 221),
                                        max_tempo=120,
                                        verficar_se_movimentou=True,
                                        movimentacao_proxima=True)
 
-            if safe_util.lorencia():
+            if safe_util.lorencia(self.pointer.get_coordernada_y_x()):
                 self._mover_lorencia()
             self.up_util.ativar_up()
 

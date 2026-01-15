@@ -6,6 +6,7 @@ from interface_adapters.pk.use_case.pk_kanturu_use_case import PkKanturuUseCase
 from interface_adapters.pk.use_case.pk_knv_use_case import PkKnvUseCase
 from interface_adapters.pk.use_case.pk_tarkan_use_case import PktarkanUseCase
 from utils import safe_util
+from utils.pointer_util import Pointers
 from utils.rota_util import PathFinder
 
 
@@ -15,12 +16,12 @@ class PKController(BaseController):
         pass
 
     def _run(self):
-
-        if safe_util.tk():
+        pointer = Pointers()
+        if safe_util.tk(pointer.get_coordernada_y_x()):
             self.pklizar_tarkan()
-        elif safe_util.k3():
+        elif safe_util.k3(pointer.get_coordernada_y_x()):
             self.pklizar_k3()
-        elif safe_util.k1():
+        elif safe_util.k1(pointer.get_coordernada_y_x()):
             self.pklizar_kanturus()
         else:
             self.pklizar_aida()

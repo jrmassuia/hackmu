@@ -7,8 +7,7 @@ import win32gui
 from interface_adapters.controller.BaseController import BaseController
 from interface_adapters.up.up_util.up_util import Up_util
 from sessao_handle import get_handle_atual
-from utils import mouse_util, buscar_item_util, acao_menu_util, screenshot_util, buscar_coordenada_util, \
-    safe_util
+from utils import mouse_util, buscar_item_util, acao_menu_util, screenshot_util, safe_util
 from utils.buscar_item_util import BuscarItemUtil
 from utils.mover_spot_util import MoverSpotUtil
 from utils.pointer_util import Pointers
@@ -44,7 +43,7 @@ class RefinarPequenaController(BaseController):
             self._refinar()
 
     def _mover_noria(self):
-        if safe_util.noria() is False:
+        if safe_util.noria(self.pointer.get_coordernada_y_x()) is False:
             self.teclado_util.escrever_texto('/move noria')
             time.sleep(1)
 

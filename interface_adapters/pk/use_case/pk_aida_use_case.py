@@ -157,7 +157,7 @@ class PkAidaUseCase(PkBase):
         return spots
 
     def _sair_da_safe(self):
-        if safe_util.aida():
+        if safe_util.aida(self.pointer.get_coordernada_y_x()):
             self._desbugar_goblin()
             saiu = self.mover_spot.movimentar(
                 (115, 13),
@@ -177,4 +177,4 @@ class PkAidaUseCase(PkBase):
             mouse_util.left_clique(self.handle, 38, 369)
 
     def _esta_na_safe(self) -> bool:
-        return safe_util.aida()
+        return safe_util.aida(self.pointer.get_coordernada_y_x())

@@ -19,7 +19,6 @@ class ResetUseCase:
         self.classe = self.pointer.get_classe()
         self.selecionar_char = SelecionarCharUtil(self.handle)
 
-
     def executar(self):
         if self.resets >= 250:
             self._resetar_lorencia_desafio()
@@ -76,7 +75,8 @@ class ResetUseCase:
     def selecionar_char_no_launcher(self):
         while True:
             self.selecionar_char.selecionar_char_no_launcher()
-            if safe_util.lorencia() or safe_util.noria():
+            if safe_util.lorencia(self.pointer.get_coordernada_y_x()) or safe_util.noria(
+                    self.pointer.get_coordernada_y_x()):
                 break
             else:
                 print('Char não está na safe de lorencia/noria!')
