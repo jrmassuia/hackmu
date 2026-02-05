@@ -8,7 +8,7 @@ from utils.teclado_util import Teclado_util
 
 
 def main():
-    window_title = "[1/3] MUCABRASIL"
+    window_title = "[2/3] MUCABRASIL"
     handle = find_window_handle_by_partial_title(window_title)
 
     mouse_util.left_clique(handle, 750, 550)  # clica para abrir email
@@ -17,23 +17,22 @@ def main():
     caminho_arquivo = "nomes.txt"
     nomes = ler_nomes_do_arquivo(caminho_arquivo)
 
-    titulo = 'ToHeLL Recruta Sala 7 KNV!!!'
-    corpo = 'É ativo ou voltou a jogar?\n'
-    corpo = corpo + 'Estamos recrutando jogadores ativos para nossa guild,\n'
-    corpo = corpo + 'e juntos vamos fortalecer a Sala 7!\n\n'
-    corpo = corpo + 'Na ToHeLL, você terá:\n'
-    corpo = corpo + 'Discord, PK, BP, UP, Boss, Eventos, CS, Tretas!\n\n'
-    corpo = corpo + 'Passe seu WhatsApp que entraremos em contato ou fale com o GM pelo: 67 99615 1861\n\n'
-    corpo = corpo + 'Acesse e faça seu cadastro: https://www.tohellguild.com.br\n\n'
-    corpo = corpo + 'Venha para a ToHeLL, e faça parte dessa família!'
+    # titulo = 'ToHeLL Recruta Sala 7 KNV!!!'
+    # corpo = 'É ativo ou voltou a jogar?\n'
+    # corpo = corpo + 'Estamos recrutando jogadores ativos para nossa guild,\n'
+    # corpo = corpo + 'e juntos vamos fortalecer a Sala 7!\n\n'
+    # corpo = corpo + 'Na ToHeLL, você terá:\n'
+    # corpo = corpo + 'Discord, PK, BP, UP, Boss, Eventos, CS, Tretas!\n\n'
+    # corpo = corpo + 'Passe seu WhatsApp que entraremos em contato ou fale com o GM pelo: 67 99615 1861\n\n'
+    # corpo = corpo + 'Acesse e faça seu cadastro: https://www.tohellguild.com.br\n\n'
+    # corpo = corpo + 'Venha para a ToHeLL, e faça parte dessa família!'
 
-    # titulo = "AVISO REESTRUTURAÇÃO DA ToHeLL5"
-    # corpo = "A ToHeLL5 passará por uma reestruturação completa e será recriada nos próximos dias.n\n\n"
-    # corpo = corpo + 'ATENÇÃO: Procure URGENTE um dos outros GMs da ToHeLL para garantir sua vaga em outra guild antes da reformulação.\n\n'
-    # corpo = corpo + 'Em caso de dúvidas, fale comigo no WhatsApp: (67) 99674-3107\n\n'
+    titulo = "AVISO REESTRUTURAÇÃO DA ToHeLL5"
+    corpo = "A ToHeLL5 passará por uma reestruturação completa e será recriada nos próximos dias.n\n\n"
+    corpo = corpo + 'ATENÇÃO: Procure URGENTE um dos outros GMs da ToHeLL para garantir sua vaga em outra guild antes da reformulação.\n\n'
 
     qtd = 0
-    teclado = Teclado_util()
+    teclado = Teclado_util(handle)
     for nome in nomes:
         mouse_util.left_clique(handle, 510, 520)  # clica no escrever
         teclado.digitar_texto_email(nome.replace(" ", ""), titulo, corpo)

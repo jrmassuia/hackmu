@@ -21,6 +21,8 @@ class Teclado_util:
     def __init__(self, handle=None):
         if handle is None:
             self.handle = get_handle_atual()
+        else:
+            self.handle = handle
         self.arduino = Arduino()
         self.foco_mutex = FocoMutexService()
 

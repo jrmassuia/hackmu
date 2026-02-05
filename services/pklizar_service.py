@@ -225,7 +225,7 @@ class PklizarService:
 
     def eh_char_bloqueado(self, nome: str) -> bool:
         nomes_bloqueados = {
-            "Dynast_", "Dynasty_", "Baal",
+            "Dynast_", "Dynasty_", "Baal", "OverNight",
             "INFECTRIX", "SisteMatyc", "SM_Troyer", "AlfaVictor", "LAZLU", "_Offensive"
         }
         return any(nome_bloqueado in nome for nome_bloqueado in nomes_bloqueados)

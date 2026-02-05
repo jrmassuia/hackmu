@@ -82,6 +82,9 @@ class Pointers:
             self.X_POINTER = self.get_pointer(self.CLIENT + 0x025A3AF8, offsets=[0xA8])
             self.NIVEL_PK_POINTER = self.get_pointer(self.CLIENT + 0x025A3AF8, offsets=[0x20])
             #
+            self.Y_FINAL_POINTER = self.get_pointer(self.CLIENT + 0x002572BC, offsets=[0x0])
+            self.X_FINAL_POINTER = self.get_pointer(self.CLIENT + 0x002587EC, offsets=[0x0])
+            #
             # self.MAGIA_POINTER = self.get_pointer(self.CLIENT + 0x0006067C, offsets=[0x0])
             #
             self.HP_POINTER = self.get_pointer(self.CLIENT + 0x0352D14C, offsets=[0x28])
@@ -204,6 +207,8 @@ class Pointers:
         print('ZEN:' + str(self.get_zen()))
         print('Y:' + str(self.get_cood_y()))
         print('X:' + str(self.get_cood_x()))
+        print('Y FINAL:' + str(self.get_cood_y_final()))
+        print('X FINAL :' + str(self.get_cood_x_final()))
         print('NOME:' + str(self.get_nome_char()))
         print('PONTO LVL:' + str(self.get_ponto_lvl()))
         print('RESET:' + str(self.get_reset()))
@@ -221,6 +226,12 @@ class Pointers:
 
     def get_cood_y(self):
         return self.read_value(self.Y_POINTER, data_type="int")
+
+    def get_cood_x_final(self):
+        return self.read_value(self.X_FINAL_POINTER, data_type="int")
+
+    def get_cood_y_final(self):
+        return self.read_value(self.Y_FINAL_POINTER, data_type="int")
 
     def get_coordernada_y_x(self):
         return self.get_cood_y(), self.get_cood_x()

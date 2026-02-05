@@ -229,7 +229,7 @@ class PkBase(ABC):
                         if not resultados:
                             continue
 
-                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=50)
+                        proximos = self.servico_buscar_personagem.ordenar_proximos(resultados, limite=80)
                         if len(proximos) >= 3:
                             proximos = proximos[:3]
 
@@ -316,15 +316,15 @@ class PkBase(ABC):
 
             agora = time.monotonic()
 
+            # Mantém pressão do direito (se for a sua estratégia)
+            mouse_util.ativar_click_direito(self.handle)
+
             # Usa Q só onde precisa e com ritmo
             if (self.mapa == PathFinder.MAPA_AIDA or
                     self.mapa == PathFinder.MAPA_KANTURU_1_E_2):
                 if agora >= proximo_tap_q:
                     self.teclado.tap_tecla("Q")
                     proximo_tap_q = agora + intervalo_q
-
-            # Mantém pressão do direito (se for a sua estratégia)
-            mouse_util.ativar_click_direito(self.handle)
 
             selecionado = self.pointer.get_char_pk_selecionado()
 
@@ -353,10 +353,10 @@ class PkBase(ABC):
         self.teclado.selecionar_skill_1()
 
     def definir_prioriadade_pk_sala7(self):
-        self.sala_pk = [7, 3]
+        self.sala_pk = [7, 3, 4, 5, 6, 8, 9]
 
     def definir_prioriadade_pk_sala3(self):
-        self.sala_pk = [3, 7]
+        self.sala_pk = [3, 7, 4, 5, 6, 8, 9]
 
     @abstractmethod
     def _definir_tipo_pk_e_senha(self) -> str:
